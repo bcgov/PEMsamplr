@@ -1,6 +1,6 @@
   #' Create landform classes
   #'
-  #' Creates standard landform classes from a TPI generated from a DEM following the rules in
+  #' Generates a TPI layer from a 25m DEM standard and  converts to landform classes from a following the rules in
   #' https://github.com/gianmarcoalberti/GmAMisc/blob/master/R/landfClass.R
   #'
   #' Classes derived from TPI calculated from a 25m DEM
@@ -119,4 +119,5 @@ if (n.classes == "six") {
 
 return(land_class)
 }
+
 
