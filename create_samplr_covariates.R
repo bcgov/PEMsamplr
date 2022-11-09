@@ -1,0 +1,288 @@
+#' Generate landscape level covariate rasters for cLHS sample plan
+#'
+#' Takes a 25m TRIM dtm and via SAGA GIS generates the covariates and converts to classes
+#' This script has been tested with SAGA 8.4 on Windows
+#' Depending on your system the path to `saga_cmd` may need to be specified.
+#'
+#'
+#' @param dtm is a 25m dtm raster object ideally cropped to the AOI watershed boundaries
+#' @param SAGApath Is the location of SAGA on your system.  On linux systems with SAGA GIS installed Use `SAGApath = ""`
+#' @param output Location of where rasters will be saved.
+#' @param layers The covariates that will be generated.  A full list of covariates is listed at: ADD
+#' @keywords SAGA, covariates, predictors, raster
+#' @export
+#' @examples
+#' ##
+
+#setwd("D:/GitHub/PEMsamplr")
+dtm <- terra::rast("./temp_data/dem.tif")
+dtm2 <- raster::raster("./temp_data/dem.tif")
+SAGApath <- "C:/SAGA/"
+layers = "all"
+output = "./landscape_covariates"
+
+create_samplr_covariates <- function(dtm, SAGApath = "",
+                              output = "./landscape_covariates",
+                              layers = "all"){
+  {
+  ### In future this would be good to set as a lookup table and then have a single
+  # sub-function that uses the table parameters
+
+  ####### Options -- All the possible covariates ########
+  options <- c("slope_aspect_curve","dah", "TPI" , "MultiResFlatness")
+
+
+  ####### flag all to run #######################
+  if (layers == "all") {  ## currently gives warning ... but functions as expected.
+    layers <- options
+  }
+
+
+  ####### Error handling -- unspecified layers ############
+  err.layers <- setdiff(layers, options)
+
+  if (length(err.layers) == 1) {
+    stop(paste(err.layers, "is not a valid covariate" ))
+  }
+
+  if (length(err.layers) > 1) {
+    print(err.layers)
+    stop("Specified covariates are not a valid options" )
+  }
+
+
+
+  ############# Set up Environment ########################
+
+  ##### Link SAGA to R --------------------------------------------------
+  if(Sys.info()['sysname']=="Windows"){saga_cmd = paste0(SAGApath, "saga_cmd.exe")
+  } else {saga_cmd = "saga_cmd"}  ;
+  z<- system(paste(saga_cmd, "-v"), intern = TRUE)  ## prints that SAGA version number -- confirming it works.
+  print(z)
+
+
+  # OUTPUTS: ------------------------------------------------------------
+  ifelse(!dir.exists(file.path(output)),              #if tmpOut Does not Exists
+         dir.create(file.path(output)), print("Directory Already Exists"))        #create tmpOut
+
+  saga_tmp_files <- paste0(output,"/saga/")
+  ifelse(!dir.exists(file.path(saga_tmp_files)),              #if tmpOut Does not Exists
+         dir.create(file.path(saga_tmp_files)), print("Directory Already Exists"))        #create tmpOut
+
+
+### A HACK THAT WOULD BE GOOD TO FIX
+  ## Convert to Saga format for processing ---------------------------------------
+  rtnwd <- getwd() ## wd to return to
+  setwd(saga_tmp_files)
+
+  sDTM <- "dtm.tif"
+  # sDTM <- paste0(saga_tmp_files, sDTM)
+  #terra::writeRaster(sDTM, saga_tmp_files, overwrite = TRUE)  # drivername = "GTiff",save SAGA Version using rgdal
+  raster::writeRaster(dtm, sDTM,  overwrite = TRUE)#drivername = "GTiff",
+  ## Bit of a hack here -- SAGA does not like the output from raster package
+  ## save it as gTiff, re-open using rgdal and export as SAGA ...
+  dtm <- rgdal::readGDAL(sDTM)
+
+  sDTM <- "dtm.sdat"
+  ## If the file exists delete and save over.
+  if(file.exists(sDTM)){
+    unlink(sDTM)
+    rgdal::writeGDAL(dtm, sDTM, drivername = "SAGA")  ## TRUE
+  } else {
+    rgdal::writeGDAL(dtm, sDTM, drivername = "SAGA" )               ## FALSE
+  }
+  ## END HACK ------------------
+
+
+
+  ############################### BEGIN PROCESSING ###############################
+
+  ####### >> 1 -- Fill Sinks XXL (Wang and Liu)  -----------------------------
+
+  # Fill sinks in dem to prepare base DEM for other layers:
+
+  #### STEP 1: clip DEM to larger AOI?
+
+
+  ##### >> 2 -- Slope Aspect and Curvature -------------------------------
+
+  if ("slope_aspect_curve" %in% layers) {
+    # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_0.html
+    slope <- "slope.sgrd"
+    # slope = file.path(paste0(output, "/saga/", slope))
+    aspect <- "aspect.sgrd"
+    # aspect = file.path(tmpOut, aspect)
+    #gencurve <- "gencurve.sgrd"
+    # gencurve = file.path(tmpOut, gencurve)
+    #totcurve <- "totcurve.sgrd"
+    # totcurve = file.path(tmpOut, totcurve)
+
+
+    sysCMD <- paste(saga_cmd, "ta_morphometry 0", "-ELEVATION",
+                    # file.path(gsub("sdat","sgrd", sDTM)),     # Input DTM
+                    sDTM,
+                    "-SLOPE", slope,
+                    "-ASPECT", aspect,                     # Outputs
+                    #"-C_GENE", gencurve,
+                    #"-C_TOTA", totcurve,                # Outputs
+                    "-METHOD", 6,
+                    "-UNIT_SLOPE", 0,
+                    "-UNIT_ASPECT", 0       # Default Parameters
+    )
+    system(sysCMD)
+  }
+
+  # STILL TO DO : need to re-run gen curve and tot curve
+  # slope and aspect are correct - gen curve and tot curve need to the rerun
+
+
+
+   ##### >> 8 -- Landscape MRVBF -----------------------------------------------------
+  # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_8.html
+  if ("MultiResFlatness" %in% layers) {
+
+    MRVBF <- "mrvbf.sgrd"
+    MRRTF <- "mrrtf.sgrd"
+
+    # MRVBF = file.path(tmpOut, MRVBF)
+    # MRRTF  = file.path(tmpOut, MRRTF)
+
+    # use new landscape parameters
+    sysCMD <- paste(saga_cmd, "ta_morphometry 8", "-DEM",
+                    # file.path(gsub("sdat","sgrd", sDTM)),
+                    sDTM,
+                    "-MRVBF", MRVBF,
+                    "-MRRTF", MRRTF,                       # Outputs
+                    "-T_SLOPE", 64,
+                    "-T_PCTL_V", 6,
+                    "-T_PCTL_R", 2,    # Default Parameters
+                    "-P_SLOPE", 4.0,
+                    "-P_PCTL", 3.0,
+                    "-UPDATE", 1,
+                    "-CLASSIFY", 1,
+                    "-MAX_RES", 100
+    )
+    system(sysCMD)
+  }
+  # Test a Variety of paramter and method versions.
+  # Note these need to be converted from XML chain format to standard format
+
+  ##### >> 12 -- Diuranal Anisotropic Heating -----------------------------
+  # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_12.html
+
+  if ("dah" %in% layers) {
+    dah <- "dah.sgrd"
+    sysCMD <- paste(saga_cmd, "ta_morphometry 12", "-DEM",
+                    # file.path(gsub("sdat","sgrd", sDTM)), # Input DTM
+                    sDTM,
+                    "-DAH", dah,                                            # Output
+                    "-ALPHA_MAX", 202.5                                     # Default Parameters
+    )
+    system(sysCMD)
+  }
+
+
+
+  ##### >> 13 -- Topographic Position Index --------------------------------
+  # # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_18.html
+  # if ("TPI" %in% layers) {
+  #   tpi <- "tpi.sgrd"
+  #   # tpi= file.path(tmpOut, tpi)
+  #
+  #   sysCMD <- paste(saga_cmd, "ta_morphometry 18", "-DEM",
+  #                   # file.path(gsub("sdat","sgrd", sDTM)),# Input DTM
+  #                   sDTM,
+  #                   "-TPI", tpi,                                            # Output
+  #                   "-STANDARD", 0,
+  #                   "-RADIUS_MIN", 0,
+  #                   "-RADIUS_MAX", 100,   # Default Parameters
+  #                   "-DW_WEIGHTING", 0,
+  #                   "-DW_IDW_POWER", 1,
+  #                   "-DW_IDW_OFFSET", 1,
+  #                   "-DW_BANDWIDTH", 75
+  #   )
+  #   system(sysCMD)
+  # }
+  # re-run - may need to adjust the radius min and radius max???
+
+
+
+  ################ Covariate Generation Complete ####################
+
+
+
+  #### Convert to GeoTif --------------------------------
+  setwd(rtnwd)
+  setwd("D:/GitHub/PEMsamplr")
+  ## Collect tmp saga file names
+
+  ## TEST paramaters
+  # output <- "e:/tmp"
+
+  tmpFiles <- paste(output, "saga", sep = "/")
+  l <- list.files(path = tmpFiles, pattern = "*.sdat")
+  l <- l[!grepl(".xml", l)] ## removes xmls from the list
+  print(l)
+
+  ## OutFile Suffix Use resolution as suffix for out filename
+  r <- terra::rast(paste(tmpFiles, l[1], sep= "/"))
+  #subFolder <- raster::res(r)[1]  ##
+  #suf <- paste0("_", subFolder, ".tif")
+  outList <- gsub(".sdat", "_ls.tif", l)
+
+  ## Loop through files and convert to tif
+  for(i in 1:length(l)){
+
+    ## parms for testing
+    # i <- 1
+
+    #actions
+    r <- l[i]
+    inFile <- paste(tmpFiles, r, sep = "/")
+    # print(inFile)
+    r <- terra::rast(inFile)
+
+
+
+    outFile <- paste(output,  outList[i], sep = "/")  ## Names output
+
+    ifelse(!dir.exists(file.path(paste(output,  sep = "/"))),              #if tmpOut Does not Exists
+           dir.create(file.path(paste(output,  sep = "/"))),
+           "Directory Already Exisits")        #create tmpOut
+
+    terra::writeRaster(r, outFile, overwrite = TRUE)  ## Saves at 25m resolution
+
+
+  }
+
+  ## Remove tmp saga files
+  unlink(paste(output, "saga", sep = "/"), recursive = TRUE)
+}
+
+#####Convert covariates into classes
+
+#### Landform classes
+source("D:/GitHub/PEMsamplr/R/create_landform_classes.R")
+land_class <- create_landform_classes (dtm2)
+outFile <- paste(output,  "landform_ls.tif", sep = "/")
+terra::writeRaster(land_class, outFile, overwrite = TRUE)
+
+### DAH classes
+source("D:/GitHub/PEMsamplr/R/create_aspect_classes.R")
+dah <- terra::rast(file.path(paste(output,  "dah_ls.tif", sep = "/")))
+aspect_class <- create_aspect_classes (dah)
+outFile <- paste(output,  "dah_ls.tif", sep = "/")
+terra::writeRaster(aspect_class, outFile, overwrite = TRUE)
+
+## MRVBF classes
+mrvbf <- terra::rast(file.path(paste(output,  "mrvbf_ls.tif", sep = "/")))
+#mrvbf <- raster(mrvbf)
+
+mrvbf <- crop(mrvbf, dem_template)
+# set threshold value
+threshold <- 0
+
+values(mrvbf)[values(mrvbf) < threshold] = NA
+outFile <- paste(output,  "mrvbf_ls.tif", sep = "/")
+terra::writeRaster(mrvbf, outFile, overwrite = TRUE)
+}
