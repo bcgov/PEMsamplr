@@ -15,11 +15,11 @@
 #' ##
 
 #setwd("D:/GitHub/PEMsamplr")
-dtm <- terra::rast("./temp_data/dem.tif")
-dtm2 <- raster::raster("./temp_data/dem.tif")
-SAGApath <- "C:/SAGA/"
-layers = "all"
-output = "./landscape_covariates"
+# dtm <- terra::rast("./temp_data/dem.tif")
+# dtm2 <- raster::raster("./temp_data/dem.tif")
+# SAGApath <- "C:/SAGA/"
+# layers = "all"
+# output = "./landscape_covariates"
 
 create_samplr_covariates <- function(dtm, SAGApath = "",
                               output = "./landscape_covariates",
