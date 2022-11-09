@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 See https://github.com/BCDevExchange/Our-Project-Docs/blob/master/discussion/projectstates.md
 If you have bcgovr installed and you use RStudio, click the 'Insert BCDevex Badge' Addin. -->
 
-# PEMr
+# PEMsamplr
 
 Description of package
 
@@ -38,7 +38,7 @@ This is a basic example which shows you how to solve a common problem:
 
 ### Getting Help or Reporting an Issue
 
-To report bugs/issues/feature requests, please file an [issue](https://github.com/bcgov/PEMr/issues/).
+To report bugs/issues/feature requests, please file an [issue](https://github.com/bcgov/PEMsamplr/issues/).
 
 ### How to Contribute
 
