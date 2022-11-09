@@ -1,8 +1,8 @@
 ---
-title: "PEMr"
+title: "PEMsamplr"
 output: rmarkdown::html_vignette
 vignette: >
-  #%\VignetteIndexEntry{PEMr}
+  #%\VignetteIndexEntry{PEMsamplr}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
