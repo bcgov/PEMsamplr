@@ -1,6 +1,7 @@
   #' Create landform classes
   #'
-  #' Creates standard landform classes from https://github.com/gianmarcoalberti/GmAMisc/blob/master/R/landfClass.R
+  #' Creates standard landform classes from a TPI generated from a DEM following the rules in
+  #' https://github.com/gianmarcoalberti/GmAMisc/blob/master/R/landfClass.R
   #'
   #' Classes derived from TPI calculated from a 25m DEM
   #'
@@ -14,10 +15,10 @@
   #' @keywords landform, classes
   #' @export
   #' @examples
-  #' data(elev)
+  #' data(dem)
   #'
 #x = raster::raster("./temp_data/dem.tif")
-scale = 3; sn=3; ln=7; n.classes="six"; add.tpi=FALSE; stand.tpi = FALSE
+#scale = 3; sn=3; ln=7; n.classes="six"; add.tpi=FALSE; stand.tpi = FALSE
 create_landform_classes <- function (x, scale = 3, sn=3, ln=7, n.classes="six", add.tpi=FALSE, stand.tpi = FALSE) {
 
 win = "rectangle"
