@@ -17,14 +17,14 @@
   #' @examples
   #' data(dem)
   #'
-#x = raster::raster("./temp_data/dem.tif")
-#scale = 3; sn=3; ln=7; n.classes="six"; add.tpi=FALSE; stand.tpi = FALSE
+x = dtm2
+scale = 3; sn=3; ln=7; n.classes="six"; add.tpi=FALSE; stand.tpi = FALSE
 create_landform_classes <- function (x, scale = 3, sn=3, ln=7, n.classes="six", add.tpi=FALSE, stand.tpi = FALSE) {
 
 win = "rectangle"
 
 #calculate the slope from the input DTM, to be used for either the six or ten class slope position
-slp <- terra::terrain(x, v="slope", unit="degrees", neighbors=8)
+#slp <- terra::terrain(x, v="slope", unit="degrees", neighbors=8)
 
 win = "rectangle"
 
