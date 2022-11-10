@@ -17,13 +17,14 @@
 #' @examples
 #' ##
 
-setwd("D:/GitHub/PEMsamplr")
-dtm <- ("./temp_data/dem.tif")
-SAGApath <- "C:/SAGA/"
-layers = "all"
-output = "./landscape_covariates"
+# setwd("D:/GitHub/PEMsamplr")
+# dtm <- ("./temp_data/dem.tif")
+# SAGApath <- "C:/SAGA/"
+# layers = "all"
+# output = "./landscape_covariates"
+# sieve_size = 10
 
-create_samplr_covariates <- function(dtm, SAGApath = "",
+create_samplr_covariates <- function(dtm, SAGApath = "C:/SAGA/",
                               output = "./landscape_covariates",
                               layers = "all",
                               sieve_size = 10){
@@ -54,7 +55,6 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
     print(err.layers)
     stop("Specified covariates are not a valid options" )
   }
-
 
 
   ############# Set up Environment ########################
@@ -100,47 +100,26 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
 
 
 
-  ############################### BEGIN PROCESSING ###############################
-
-  ####### >> 1 -- Fill Sinks XXL (Wang and Liu)  -----------------------------
-
-  # Fill sinks in dem to prepare base DEM for other layers:
-
-  #### STEP 1: clip DEM to larger AOI?
-
+  ############################### BEGIN GENERATING cOVARIATES#################
 
   ##### >> 2 -- Slope Aspect and Curvature -------------------------------
 
   if ("slope_aspect_curve" %in% layers) {
     # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_0.html
     slope <- "slope.sgrd"
-    # slope = file.path(paste0(output, "/saga/", slope))
     aspect <- "aspect.sgrd"
-    # aspect = file.path(tmpOut, aspect)
-    #gencurve <- "gencurve.sgrd"
-    # gencurve = file.path(tmpOut, gencurve)
-    #totcurve <- "totcurve.sgrd"
-    # totcurve = file.path(tmpOut, totcurve)
-
 
     sysCMD <- paste(saga_cmd, "ta_morphometry 0", "-ELEVATION",
                     # file.path(gsub("sdat","sgrd", sDTM)),     # Input DTM
                     sDTM,
                     "-SLOPE", slope,
                     "-ASPECT", aspect,                     # Outputs
-                    #"-C_GENE", gencurve,
-                    #"-C_TOTA", totcurve,                # Outputs
                     "-METHOD", 6,
                     "-UNIT_SLOPE", 0,
                     "-UNIT_ASPECT", 0       # Default Parameters
     )
     system(sysCMD)
   }
-
-  # STILL TO DO : need to re-run gen curve and tot curve
-  # slope and aspect are correct - gen curve and tot curve need to the rerun
-
-
 
    ##### >> 8 -- Landscape MRVBF -----------------------------------------------------
   # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_8.html
@@ -169,8 +148,6 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
     )
     system(sysCMD)
   }
-  # Test a Variety of paramter and method versions.
-  # Note these need to be converted from XML chain format to standard format
 
   ##### >> 12 -- Diuranal Anisotropic Heating -----------------------------
   # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_12.html
@@ -180,49 +157,19 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
     sysCMD <- paste(saga_cmd, "ta_morphometry 12", "-DEM",
                     # file.path(gsub("sdat","sgrd", sDTM)), # Input DTM
                     sDTM,
-                    "-DAH", dah,                                            # Output
-                    "-ALPHA_MAX", 202.5                                     # Default Parameters
+                    "-DAH", dah,    # Output
+                    "-ALPHA_MAX", 202.5   # Default Parameters
     )
     system(sysCMD)
   }
 
 
 
-  ##### >> 13 -- Topographic Position Index --------------------------------
-  # # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_18.html
-  # if ("TPI" %in% layers) {
-  #   tpi <- "tpi.sgrd"
-  #   # tpi= file.path(tmpOut, tpi)
-  #
-  #   sysCMD <- paste(saga_cmd, "ta_morphometry 18", "-DEM",
-  #                   # file.path(gsub("sdat","sgrd", sDTM)),# Input DTM
-  #                   sDTM,
-  #                   "-TPI", tpi,                                            # Output
-  #                   "-STANDARD", 0,
-  #                   "-RADIUS_MIN", 0,
-  #                   "-RADIUS_MAX", 100,   # Default Parameters
-  #                   "-DW_WEIGHTING", 0,
-  #                   "-DW_IDW_POWER", 1,
-  #                   "-DW_IDW_OFFSET", 1,
-  #                   "-DW_BANDWIDTH", 75
-  #   )
-  #   system(sysCMD)
-  # }
-  # re-run - may need to adjust the radius min and radius max???
-
-
-
   ################ Covariate Generation Complete ####################
 
-
-
-  #### Convert to GeoTif --------------------------------
+  #### Convert .sdat to to GeoTif --------------------------------
   setwd(rtnwd)
   setwd("D:/GitHub/PEMsamplr")
-  ## Collect tmp saga file names
-
-  ## TEST paramaters
-  # output <- "e:/tmp"
 
   tmpFiles <- paste(output, "saga", sep = "/")
   l <- list.files(path = tmpFiles, pattern = "*.sdat")
@@ -247,15 +194,13 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
     # print(inFile)
     r <- terra::rast(inFile)
 
-
-
     outFile <- paste(output,  outList[i], sep = "/")  ## Names output
 
-    ifelse(!dir.exists(file.path(paste(output,  sep = "/"))),              #if tmpOut Does not Exists
+    ifelse(!dir.exists(file.path(paste(output,  sep = "/"))), #if tmpOut Does not Exists
            dir.create(file.path(paste(output,  sep = "/"))),
            "Directory Already Exisits")        #create tmpOut
 
-    terra::writeRaster(r, outFile, overwrite = TRUE)  ## Saves at 25m resolution
+    terra::writeRaster(r, outFile, overwrite = TRUE)  ## Saves to landscape_cov
 
 
   }
@@ -264,15 +209,15 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
   unlink(paste(output, "saga", sep = "/"), recursive = TRUE)
 }
 
-#####Convert covariates into classes
+#####Convert covariates into classes##############
 
 #### Landform classes
 #source("D:/GitHub/PEMsamplr/R/create_landform_classes.R")
 land_class <- create_landform_classes (dtm2)
-land_class2 <- terra::rast(land_class) %>%
+land_class <- terra::rast(land_class) %>%
   terra::sieve(threshold = sieve_size, directions=8) %>%
   terra::subst(from = 0, to = NA)
-terra::plot(land_class2)
+#terra::plot(land_class)
 outFile <- paste(output,  "landform_ls.tif", sep = "/")
 terra::writeRaster(land_class, outFile, overwrite = TRUE)
 
@@ -282,18 +227,17 @@ dah <- terra::rast(file.path(paste(output,  "dah_ls.tif", sep = "/")))
 aspect_class <- create_aspect_classes (dah) %>%
   terra::sieve(threshold = sieve_size, directions=8) %>%
   terra::subst(from = 0, to = NA)
+terra::plot(aspect_class)
 outFile <- paste(output,  "dah_ls.tif", sep = "/")
 terra::writeRaster(aspect_class, outFile, overwrite = TRUE)
 
 ## MRVBF classes
-mrvbf <- terra::rast(file.path(paste(output,  "mrvbf_ls.tif", sep = "/"))) %>%
-  terra::sieve(threshold = sieve_size, directions=8) %>%
-  terra::subst(from = 0, to = NA)
-
+mrvbf <- terra::rast(file.path(paste(output,  "mrvbf_ls.tif", sep = "/"))) # %>%
+  # terra::sieve(threshold = sieve_size, directions=8) %>%
+  # terra::subst(from = 0, to = NA)
+terra::plot(mrvbf )
 outFile <- paste(output,  "mrvbf_ls.tif", sep = "/")
 terra::writeRaster(mrvbf, outFile, overwrite = TRUE)
-
-
 
 
 }
