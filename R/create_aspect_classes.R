@@ -1,7 +1,8 @@
   #' Create aspect classes
   #'
   #' Creates a 3-class aspect from DAH. classes from a TPI generated from a DEM following the rules in
-  #' https://github.com/gianmarcoalberti/GmAMisc/blob/master/R/landfClass.R
+  #' https://github.com/gianmarcoalberti/GmAMisc/blob.master/R/landfClass.r
+  #'
   #'
   #' Thresholds of 0.2 - 0.3 are reasonable setting
   #'
@@ -12,7 +13,7 @@
   #' @return
   #' @export
   #' @examples
-  #' data(dem)
+  #' data(dah)
   #'
 
 create_aspect_classes <- function (x, threshold = 0.2) {
