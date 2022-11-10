@@ -7,25 +7,19 @@
 create_aspect_classes(x, threshold = 0.2)
 }
 \arguments{
-<<<<<<< HEAD
-\item{x:}{input 25m dah created in SAGA (.tif).}
-
-\item{threshold:}{sets the DAH threshold where <x are cold aspects and >x are warm aspects. The rest are neutral.}
-=======
 \item{x}{input 25m dah created in SAGA}
 
 \item{threshold}{sets the DAH threshold where less than x are cold aspects and greater than x are warm aspects. The rest are neutral.}
 }
 \value{
 classifies SpatRaster
->>>>>>> 25bdd0626afd03f45edb326efa078706ca0d2aae
 }
 \description{
-Creates a 3-class aspect from DAH. classes from a TPI generated from a DEM following the rules in
+Creates a 3 class aspect from DAH. classes from a TPI generated from a DEM following the rules in
 https://github.com/gianmarcoalberti/GmAMisc/blob.master/R/landfClass.r
 }
 \details{
-Thresholds of 0.2 - 0.3 are reasonable setting
+Thresholds of 0.2 to 0.3 are reasonable setting
 }
 \examples{
 data(dah)

@@ -14,7 +14,6 @@
 #'
 #' @keywords SAGA, covariates, predictors, raster
 #' @export
-#' @examples
 #' ##
 
 # setwd("D:/GitHub/PEMsamplr")

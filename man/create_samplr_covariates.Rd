@@ -6,9 +6,10 @@
 \usage{
 create_samplr_covariates(
   dtm,
-  SAGApath = "",
+  SAGApath = "C:/SAGA/",
   output = "./landscape_covariates",
-  layers = "all"
+  layers = "all",
+  sieve_size = 10
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ create_samplr_covariates(
 \item{output}{Location of where rasters will be saved.}
 
 \item{layers}{The covariates that will be generated.  A full list of covariates is listed at: ADD}
+
+\item{sieve_size}{Remove isolated clusters of below the threshold number of cells}
 }
 \description{
 Generates base landscape covariates from a 25m TRIM DEM using SAGA GIS and converts to classes for use in the sample plan cLHS
@@ -26,9 +29,6 @@ Generates base landscape covariates from a 25m TRIM DEM using SAGA GIS and conve
 \details{
 This script has been tested with SAGA 8.4 on Windows
 Depending on your system the path to \code{saga_cmd} may need to be specified.
-}
-\examples{
-##
 }
 \keyword{SAGA,}
 \keyword{covariates,}
