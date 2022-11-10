@@ -30,7 +30,7 @@ create_landform_classes(
 \item{stand.tpi:}{specifies whether the returned TPI raster will be un- or standardized (FALSE is default).}
 }
 \description{
-Creates standard landform classes from a TPI generated from a DEM following the rules in
+Generates a TPI layer from a 25m DEM standard and  converts to landform classes from a following the rules in
 https://github.com/gianmarcoalberti/GmAMisc/blob/master/R/landfClass.R
 }
 \details{

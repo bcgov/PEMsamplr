@@ -1,26 +1,18 @@
-
-# Create a landscape with binned variables to assess the landscape environmental space.
-# The output can be used to
-# input can be a folder or a list of names (filepath locations)
-
-
-#if(dir.exists(input)){ print ("dir exists")}
-
-
-# # # when individual files
-#  input <- c("D:\\PEM_DATA\\PEMprepr\\temp\\covar\\dah_LS.tif",
-#  "D:\\PEM_DATA\\PEMprepr\\temp\\covar\\mrvbf_LSss.tif",
-#  "D:\\PEM_DATA\\PEMprepr\\temp\\covar\\landform_LSss.tif")
-# #
-# # #rnames = list of names of the covars to use
-# #
-# # # cov_folder
-# input = "D:\\PEM_DATA\\PEMprepr\\temp\\covar\\"
-#
-# # out_folder
-# out_folder = "D:\\PEM_DATA\\PEMprepr\\temp\\covar\\out\\"
-
-
+#' Create binned landscape
+#'
+#' Create a landscape with binned variables to assess the landscape environmental space.
+#'
+#' Can use either folder or individual files to assess landscape covariate space
+#'
+#' @param input text string with either folder location or individual files
+#'
+#' @return **SpatRaster**
+#'
+#' @export
+#'
+#' @examples
+#'
+#' create_landscape_bins()
 
 create_landscape_bins <- function(input){
 
