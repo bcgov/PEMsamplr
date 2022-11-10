@@ -10,26 +10,29 @@
 #' @param SAGApath Is the location of SAGA on your system.  On linux systems with SAGA GIS installed Use `SAGApath = ""`
 #' @param output Location of where rasters will be saved.
 #' @param layers The covariates that will be generated.  A full list of covariates is listed at: ADD
+#' @param sieve_size Remove isolated clusters of below the threshold number of cells
+#'
 #' @keywords SAGA, covariates, predictors, raster
 #' @export
 #' @examples
 #' ##
 
-#setwd("D:/GitHub/PEMsamplr")
-# dtm <- terra::rast("./temp_data/dem.tif")
-# dtm2 <- raster::raster("./temp_data/dem.tif")
-# SAGApath <- "C:/SAGA/"
-# layers = "all"
-# output = "./landscape_covariates"
+setwd("D:/GitHub/PEMsamplr")
+dtm <- ("./temp_data/dem.tif")
+SAGApath <- "C:/SAGA/"
+layers = "all"
+output = "./landscape_covariates"
 
 create_samplr_covariates <- function(dtm, SAGApath = "",
                               output = "./landscape_covariates",
-                              layers = "all"){
+                              layers = "all",
+                              sieve_size = 10){
   {
   ### In future this would be good to set as a lookup table and then have a single
   # sub-function that uses the table parameters
-    dtm <- terra::rast(dtm)
     dtm2 <- raster::raster(dtm)
+    dtm <- terra::rast(dtm)
+
   ####### Options -- All the possible covariates ########
   options <- c("slope_aspect_curve","dah", "TPI" , "MultiResFlatness")
 
@@ -80,7 +83,7 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
   sDTM <- "dtm.tif"
   # sDTM <- paste0(saga_tmp_files, sDTM)
   #terra::writeRaster(sDTM, saga_tmp_files, overwrite = TRUE)  # drivername = "GTiff",save SAGA Version using rgdal
-  raster::writeRaster(dtm, sDTM,  overwrite = TRUE)#drivername = "GTiff",
+  raster::writeRaster(dtm2, sDTM,  overwrite = TRUE)#drivername = "GTiff",
   ## Bit of a hack here -- SAGA does not like the output from raster package
   ## save it as gTiff, re-open using rgdal and export as SAGA ...
   dtm <- rgdal::readGDAL(sDTM)
@@ -264,28 +267,29 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
 #####Convert covariates into classes
 
 #### Landform classes
-source("D:/GitHub/PEMsamplr/R/create_landform_classes.R")
+#source("D:/GitHub/PEMsamplr/R/create_landform_classes.R")
 land_class <- create_landform_classes (dtm2)
-terra::sieve(threshold = 100, directions=8)
+land_class2 <- terra::rast(land_class) %>%
+  terra::sieve(threshold = sieve_size, directions=8) %>%
+  terra::subst(from = 0, to = NA)
+terra::plot(land_class2)
 outFile <- paste(output,  "landform_ls.tif", sep = "/")
 terra::writeRaster(land_class, outFile, overwrite = TRUE)
 
 ### DAH classes
-source("D:/GitHub/PEMsamplr/R/create_aspect_classes.R")
+#source("D:/GitHub/PEMsamplr/R/create_aspect_classes.R")
 dah <- terra::rast(file.path(paste(output,  "dah_ls.tif", sep = "/")))
-aspect_class <- create_aspect_classes (dah)
+aspect_class <- create_aspect_classes (dah) %>%
+  terra::sieve(threshold = sieve_size, directions=8) %>%
+  terra::subst(from = 0, to = NA)
 outFile <- paste(output,  "dah_ls.tif", sep = "/")
 terra::writeRaster(aspect_class, outFile, overwrite = TRUE)
 
 ## MRVBF classes
-mrvbf <- terra::rast(file.path(paste(output,  "mrvbf_ls.tif", sep = "/")))
-#mrvbf <- raster(mrvbf)
+mrvbf <- terra::rast(file.path(paste(output,  "mrvbf_ls.tif", sep = "/"))) %>%
+  terra::sieve(threshold = sieve_size, directions=8) %>%
+  terra::subst(from = 0, to = NA)
 
-mrvbf <- crop(mrvbf, dem_template)
-# set threshold value
-threshold <- 0
-
-values(mrvbf)[values(mrvbf) < threshold] = NA
 outFile <- paste(output,  "mrvbf_ls.tif", sep = "/")
 terra::writeRaster(mrvbf, outFile, overwrite = TRUE)
 
@@ -293,3 +297,4 @@ terra::writeRaster(mrvbf, outFile, overwrite = TRUE)
 
 
 }
+
