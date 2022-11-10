@@ -1,6 +1,7 @@
 #' Generate landscape level covariate rasters for cLHS sample plan
 #'
-#' Takes a 25m TRIM dtm and via SAGA GIS generates the covariates and converts to classes
+#' Generates base landscape covariates from a 25m TRIM DEM using SAGA GIS and converts to classes for use in the sample plan cLHS
+#'
 #' This script has been tested with SAGA 8.4 on Windows
 #' Depending on your system the path to `saga_cmd` may need to be specified.
 #'
@@ -27,7 +28,8 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
   {
   ### In future this would be good to set as a lookup table and then have a single
   # sub-function that uses the table parameters
-
+    dtm <- terra::rast(dtm)
+    dtm2 <- raster::raster(dtm)
   ####### Options -- All the possible covariates ########
   options <- c("slope_aspect_curve","dah", "TPI" , "MultiResFlatness")
 
@@ -264,6 +266,7 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
 #### Landform classes
 source("D:/GitHub/PEMsamplr/R/create_landform_classes.R")
 land_class <- create_landform_classes (dtm2)
+terra::sieve(threshold = 100, directions=8)
 outFile <- paste(output,  "landform_ls.tif", sep = "/")
 terra::writeRaster(land_class, outFile, overwrite = TRUE)
 
@@ -285,4 +288,8 @@ threshold <- 0
 values(mrvbf)[values(mrvbf) < threshold] = NA
 outFile <- paste(output,  "mrvbf_ls.tif", sep = "/")
 terra::writeRaster(mrvbf, outFile, overwrite = TRUE)
+
+
+
+
 }
