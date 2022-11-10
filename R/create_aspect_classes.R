@@ -6,8 +6,8 @@
   #'
   #' Thresholds of 0.2 - 0.3 are reasonable setting
   #'
-  #' @param x input 25m dah created in SAGA (.tif).
-  #' @param threshold sets the DAH threshold where <x are cold aspects and >x are warm aspects. The rest are neutral.
+  #' @param x input 25m dah created in SAGA
+  #' @param threshold sets the DAH threshold where less than x are cold aspects and greater than x are warm aspects. The rest are neutral.
   #' @keywords diurnal anisotropic heating, aspect classes
   #'
   #' @return classifies SpatRaster

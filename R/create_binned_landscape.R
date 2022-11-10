@@ -22,7 +22,6 @@ create_landscape_bins <- function(input){
   suppressWarnings({
     if(dir.exists(input) & length(input) == 1){
       print ("using entire directory")
-
       rastlist <- list.files(input, full.names = T, include.dirs = FALSE, pattern = "\\..*")
       ancDat <- terra::rast(rastlist)
 
