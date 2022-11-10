@@ -17,13 +17,13 @@
 
 create_aspect_classes <- function (x, threshold = 0.2) {
 
-m <- c( -10, (threshold*-1), 1,
-        (threshold*-1 ), threshold, 2,
-        threshold, 10,  3)
+  m <- c( -10, (threshold*-1), 1,
+          (threshold*-1 ), threshold, 2,
+          threshold, 10,  3)
 
-rclmat <- matrix(m, ncol=3, byrow =TRUE)
-rc <- terra::classify(x , rclmat)
-return(rc)
+  rclmat <- matrix(m, ncol=3, byrow =TRUE)
+  rc <- terra::classify(x , rclmat)
+  return(rc)
 
 }
 
