@@ -22,222 +22,58 @@
 # layers = "all"
 # output = "./landscape_covariates"
 # sieve_size = 10
+  unattributed_files <- list.files(output_cleaned_dir, pattern = ".gpkg$", full.names = TRUE)
+  #unattributed_files <- unattributed_files[4:8]
 
-create_samplr_covariates <- function(dtm, SAGApath = "C:/SAGA/",
-                              output = "./landscape_covariates",
-                              layers = "all",
-                              sieve_size = 10){
-  {
-  ### In future this would be good to set as a lookup table and then have a single
-  # sub-function that uses the table parameters
-    dtm2 <- raster::raster(dtm)
-    dtm <- terra::rast(dtm)
+  template <- terra::rast(file.path(cov_dir, res_folder,"template.tif"))
 
-  ####### Options -- All the possible covariates ########
-  options <- c("slope_aspect_curve","dah", "TPI" , "MultiResFlatness")
+  cov_dir2 <- list.files(file.path(cov_dir, res_folder), pattern = ".tif$",
+                             full.names = TRUE)
+  att_folder <- file.path(final_path, paste0("att_",res_folder))
+  if(!dir.exists(att_folder)) dir.create(att_folder, recursive = TRUE)
 
 
-  ####### flag all to run #######################
-  if (layers == "all") {  ## currently gives warning ... but functions as expected.
-    layers <- options
-  }
+add_neighbours <- function(trainpts, template, cov_dir){
+
+    model_id <- gsub(".gpkg$", "_att.gpkg", basename(trainpoints))
+
+    #cycle through all the different types of points
 
 
-  ####### Error handling -- unspecified layers ############
-  err.layers <- setdiff(layers, options)
+  #for(i in unattributed_files) {
 
-  if (length(err.layers) == 1) {
-    stop(paste(err.layers, "is not a valid covariate" ))
-  }
+    #i = unattributed_files[1]
+    cov_dat <- list.files(file.path(cov_dir, res_folder), pattern = ".tif$",
+               full.names = TRUE)
+    template <- terra::rast(file.path(cov_dir,res_folder,"template.tif"))
 
-  if (length(err.layers) > 1) {
-    print(err.layers)
-    stop("Specified covariates are not a valid options" )
-  }
+    # Extra neighbouring pixals for all points
+    dat_pts <- st_read(trainpts, quiet = TRUE)
+    dat_pts$ptsID <- 1:nrow(dat_pts)
+    dat_atts <- as.data.table(st_drop_geometry(dat_pts))
+    pts <- vect(dat_pts)
+    cellNums <- cells(template, pts)
+    cell_lookup <- data.table(ID = pts$ptsID,cell = cellNums)
 
+    adjCells <- adjacent(template,cells = cellNums[,2],directions = "queen",include = T)
+    adjCells <- as.data.table(adjCells)
+    setnames(adjCells, c("Orig",paste("Adj",1:8,sep = "")))
+    adjCells[,ID := 1:nrow(adjCells)]
+    adjLong <- melt(adjCells, id.vars = "ID", value.name = "CellNum", variable.name = "Position")
+    setorder(adjLong,"ID","Position")
+    values(template) <- 1:ncell(template)
+    cellnums <- 1:ncell(template)
+    template[!cellnums %in% adjLong$CellNum] <- NA
+    pts <- as.points(template,values = T, na.rm = T)
+    pts2 <- st_as_sf(pts)
+    pts2 <- as.data.table(pts2)
+    setnames(pts2,c("CellNum","geometry"))
+    allPts <- merge(pts2, adjLong, by = "CellNum", all = T)
+    #allPts[cell_lookup, ptID := i.ID, on = c(CellNum = "cell.cell")]
+    allPts <- merge(allPts, dat_atts, by.x = "ID",by.y = "ptsID",all = T)
+    allPts <- vect(st_as_sf(allPts))
 
-  ############# Set up Environment ########################
-
-  ##### Link SAGA to R --------------------------------------------------
-  if(Sys.info()['sysname']=="Windows"){saga_cmd = paste0(SAGApath, "saga_cmd.exe")
-  } else {saga_cmd = "saga_cmd"}  ;
-  z<- system(paste(saga_cmd, "-v"), intern = TRUE)  ## prints that SAGA version number -- confirming it works.
-  print(z)
-
-
-  # OUTPUTS: ------------------------------------------------------------
-  ifelse(!dir.exists(file.path(output)),              #if tmpOut Does not Exists
-         dir.create(file.path(output)), print("Directory Already Exists"))        #create tmpOut
-
-  saga_tmp_files <- paste0(output,"/saga/")
-  ifelse(!dir.exists(file.path(saga_tmp_files)),              #if tmpOut Does not Exists
-         dir.create(file.path(saga_tmp_files)), print("Directory Already Exists"))        #create tmpOut
-
-
-### A HACK THAT WOULD BE GOOD TO FIX
-  ## Convert to Saga format for processing ---------------------------------------
-  rtnwd <- getwd() ## wd to return to
-  setwd(saga_tmp_files)
-
-  sDTM <- "dtm.tif"
-  # sDTM <- paste0(saga_tmp_files, sDTM)
-  #terra::writeRaster(sDTM, saga_tmp_files, overwrite = TRUE)  # drivername = "GTiff",save SAGA Version using rgdal
-  raster::writeRaster(dtm2, sDTM,  overwrite = TRUE)#drivername = "GTiff",
-  ## Bit of a hack here -- SAGA does not like the output from raster package
-  ## save it as gTiff, re-open using rgdal and export as SAGA ...
-  dtm <- rgdal::readGDAL(sDTM)
-
-  sDTM <- "dtm.sdat"
-  ## If the file exists delete and save over.
-  if(file.exists(sDTM)){
-    unlink(sDTM)
-    rgdal::writeGDAL(dtm, sDTM, drivername = "SAGA")  ## TRUE
-  } else {
-    rgdal::writeGDAL(dtm, sDTM, drivername = "SAGA" )               ## FALSE
-  }
-  ## END HACK ------------------
-
-
-
-  ############################### BEGIN GENERATING cOVARIATES#################
-
-  ##### >> 2 -- Slope Aspect and Curvature -------------------------------
-
-  if ("slope_aspect_curve" %in% layers) {
-    # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_0.html
-    slope <- "slope.sgrd"
-    aspect <- "aspect.sgrd"
-
-    sysCMD <- paste(saga_cmd, "ta_morphometry 0", "-ELEVATION",
-                    # file.path(gsub("sdat","sgrd", sDTM)),     # Input DTM
-                    sDTM,
-                    "-SLOPE", slope,
-                    "-ASPECT", aspect,                     # Outputs
-                    "-METHOD", 6,
-                    "-UNIT_SLOPE", 0,
-                    "-UNIT_ASPECT", 0       # Default Parameters
-    )
-    system(sysCMD)
-  }
-
-   ##### >> 8 -- Landscape MRVBF -----------------------------------------------------
-  # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_8.html
-  if ("MultiResFlatness" %in% layers) {
-
-    MRVBF <- "mrvbf.sgrd"
-    MRRTF <- "mrrtf.sgrd"
-
-    # MRVBF = file.path(tmpOut, MRVBF)
-    # MRRTF  = file.path(tmpOut, MRRTF)
-
-    # use new landscape parameters
-    sysCMD <- paste(saga_cmd, "ta_morphometry 8", "-DEM",
-                    # file.path(gsub("sdat","sgrd", sDTM)),
-                    sDTM,
-                    "-MRVBF", MRVBF,
-                    "-MRRTF", MRRTF,                       # Outputs
-                    "-T_SLOPE", 64,
-                    "-T_PCTL_V", 6,
-                    "-T_PCTL_R", 2,    # Default Parameters
-                    "-P_SLOPE", 4.0,
-                    "-P_PCTL", 3.0,
-                    "-UPDATE", 1,
-                    "-CLASSIFY", 1,
-                    "-MAX_RES", 100
-    )
-    system(sysCMD)
-  }
-
-  ##### >> 12 -- Diuranal Anisotropic Heating -----------------------------
-  # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_12.html
-
-  if ("dah" %in% layers) {
-    dah <- "dah.sgrd"
-    sysCMD <- paste(saga_cmd, "ta_morphometry 12", "-DEM",
-                    # file.path(gsub("sdat","sgrd", sDTM)), # Input DTM
-                    sDTM,
-                    "-DAH", dah,    # Output
-                    "-ALPHA_MAX", 202.5   # Default Parameters
-    )
-    system(sysCMD)
-  }
-
-
-
-  ################ Covariate Generation Complete ####################
-
-  #### Convert .sdat to to GeoTif --------------------------------
-  setwd(rtnwd)
-  setwd("D:/GitHub/PEMsamplr")
-
-  tmpFiles <- paste(output, "saga", sep = "/")
-  l <- list.files(path = tmpFiles, pattern = "*.sdat")
-  l <- l[!grepl(".xml", l)] ## removes xmls from the list
-  print(l)
-
-  ## OutFile Suffix Use resolution as suffix for out filename
-  r <- terra::rast(paste(tmpFiles, l[1], sep= "/"))
-  #subFolder <- raster::res(r)[1]  ##
-  #suf <- paste0("_", subFolder, ".tif")
-  outList <- gsub(".sdat", "_ls.tif", l)
-
-  ## Loop through files and convert to tif
-  for(i in 1:length(l)){
-
-    ## parms for testing
-    # i <- 1
-
-    #actions
-    r <- l[i]
-    inFile <- paste(tmpFiles, r, sep = "/")
-    # print(inFile)
-    r <- terra::rast(inFile)
-
-    outFile <- paste(output,  outList[i], sep = "/")  ## Names output
-
-    ifelse(!dir.exists(file.path(paste(output,  sep = "/"))), #if tmpOut Does not Exists
-           dir.create(file.path(paste(output,  sep = "/"))),
-           "Directory Already Exisits")        #create tmpOut
-
-    terra::writeRaster(r, outFile, overwrite = TRUE)  ## Saves to landscape_cov
-
-
-  }
-
-  ## Remove tmp saga files
-  unlink(paste(output, "saga", sep = "/"), recursive = TRUE)
-}
-
-#####Convert covariates into classes##############
-
-#### Landform classes
-#source("D:/GitHub/PEMsamplr/R/create_landform_classes.R")
-land_class <- create_landform_classes (dtm2)
-land_class <- terra::rast(land_class) %>%
-  terra::sieve(threshold = sieve_size, directions=8) %>%
-  terra::subst(from = 0, to = NA)
-#terra::plot(land_class)
-outFile <- paste(output,  "landform_ls.tif", sep = "/")
-terra::writeRaster(land_class, outFile, overwrite = TRUE)
-
-### DAH classes
-#source("D:/GitHub/PEMsamplr/R/create_aspect_classes.R")
-dah <- terra::rast(file.path(paste(output,  "dah_ls.tif", sep = "/")))
-aspect_class <- create_aspect_classes (dah) %>%
-  terra::sieve(threshold = sieve_size, directions=8) %>%
-  terra::subst(from = 0, to = NA)
-terra::plot(aspect_class)
-outFile <- paste(output,  "dah_ls.tif", sep = "/")
-terra::writeRaster(aspect_class, outFile, overwrite = TRUE)
-
-## MRVBF classes
-mrvbf <- terra::rast(file.path(paste(output,  "mrvbf_ls.tif", sep = "/"))) # %>%
-  # terra::sieve(threshold = sieve_size, directions=8) %>%
-  # terra::subst(from = 0, to = NA)
-terra::plot(mrvbf )
-outFile <- paste(output,  "mrvbf_ls.tif", sep = "/")
-terra::writeRaster(mrvbf, outFile, overwrite = TRUE)
-
+    return(allPts)
 
 }
 
