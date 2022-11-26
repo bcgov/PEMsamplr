@@ -1,5 +1,5 @@
 ---
-title: "PEMsamplr"
+title: "How to develop a sample plan"
 output: rmarkdown::html_vignette
 vignette: >
   #%\VignetteIndexEntry{PEMsamplr}
@@ -15,20 +15,55 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-#library(PEMr)
+library(PEMprepr)
+library(PEMsamplr)
+library(sf)
+
 
 ```
 
-## Project Set up. 
+## Develop a Sample Plan
 
-1) Set up a new project to house all data.  ie. "Deception". 
-2) Generate folder structure
+Sample plan requires running the PEMprepr functions to acquire and prepare all base data. 
+Help in doing this can be found in the [PEMprepr package](https://github.com/bcgov/PEMprepr).
+
+
+1) Generate AOI for landscape varibles 
 
 ```{r}
 
-setupfolders()
+# read in AOI
 
-# run the function
-setupfolders(AOI)
+aoi_raw <- system.file("extdata", "aoi.gpkg", package ="PEMprepr")
+aoi_raw <- sf::st_read(aoi_raw)
+
+# 1) snap to regular size 
+# aoi <- PEMprepr::aoi_snap(aoi_raw, "expand")
+# mapview::mapview(aoi)
+
+# 2) snap to adjoining watersheds to provide wider landscape context 
+
+aoi_landscape <- PEMprepr::aoi_snap_landscape(aoi_raw)
+
+# generate a 25m template for 
+t25 <- create_template(aoi_landscape, 25)
+
+
+# Read in DEM or access via freely available TRIM source
+# read in base DEM (this is only cut to the size of standard aoi 
+dem <- system.file("extdata", "DTM.tif",package = "PEMprepr")
+dem <- terra::rast(dem)
+
+
+# Or : get external TRIM data for DEM
+library(bcmaps)
+trim_raw <- cded_raster(aoi_landscape)
+
+# convert the trim to matching raster 
+trim <- terra::rast(trim_raw)
+trim <- terra::project(trim, t25)
+
+
+
 
 ```
