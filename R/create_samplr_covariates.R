@@ -23,6 +23,7 @@
 # output = "./landscape_covariates"
 # sieve_size = 10
 
+
 create_samplr_covariates <- function(dtm, SAGApath = "C:/SAGA/",
                               output = "./landscape_covariates",
                               layers = "all",
@@ -30,8 +31,8 @@ create_samplr_covariates <- function(dtm, SAGApath = "C:/SAGA/",
   {
   ### In future this would be good to set as a lookup table and then have a single
   # sub-function that uses the table parameters
-    dtm2 <- raster::raster(dtm)
-    dtm <- terra::rast(dtm)
+    #dtm2 <- raster::raster(dtm)
+    #dtm <- terra::rast(dtm)
 
   ####### Options -- All the possible covariates ########
   options <- c("slope_aspect_curve","dah", "TPI" , "MultiResFlatness")
