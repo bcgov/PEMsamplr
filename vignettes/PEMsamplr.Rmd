@@ -64,6 +64,6 @@ trim <- terra::rast(trim_raw)
 trim <- terra::project(trim, t25)
 
 
-
+# generate the covariate at landscape
 
 ```
