@@ -1,0 +1,147 @@
+---
+title: "Generate sample plan"
+output: rmarkdown::html_vignette
+vignette: >
+  #%\VignetteIndexEntry{PEMsamplr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(PEMprepr)
+library(PEMsamplr)
+library(sf)
+
+```
+
+## Generate sample plan 
+
+Sample plan requires running the PEMprepr functions to acquire and prepare all base data. 
+Help in doing this can be found in the [PEMprepr package](https://github.com/bcgov/PEMprepr) with a detailed vinette [here](https://github.com/bcgov/PEMprepr/blob/master/vignettes/SetUpNewAOI.Rmd)
+
+We will continue to follow the vignette using the example Canyon Creek study area. 
+
+
+```{r}
+
+# prepare base layers for layers
+
+
+vec_dir  = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector" #location of baselayers
+cov_dir = "D:\\PEM_DATA\\PEMsamplr\\temp\\date\\25m" #location of dem
+# #
+# # out_dir = where to save the cost output
+# zz <- prep_cost_layers(vec_dir, cov_dir)
+#
+#
+
+
+# read in AOI
+aoi_raw <- system.file("extdata", "aoi.gpkg", package ="PEMprepr")
+aoi_raw <- sf::st_read(aoi_raw)
+
+# 2) snap to adjoining watersheds to provide wider landscape context 
+aoi_landscape <- PEMprepr::aoi_snap_landscape(aoi_raw)
+
+# generate a 25m template for 
+t25 <- create_template(aoi_landscape, 25)
+
+# read in DEM data from CDED
+trim_raw <- bcmaps::cded_raster(aoi_landscape)
+
+# convert the trim to matching raster 
+trim <- terra::rast(trim_raw)
+trim <- terra::project(trim, t25)
+
+# generate the covariates at landscape
+
+outpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
+
+SAGApath_dir ="C:/SAGA/saga-7.7.0_x64/"
+
+template = terra::rast("D:/PEM_DATA/PEMsamplr/CanyonCreek/10_clean_inputs/20_covariates/25m/bec.tif")
+
+template
+
+create_samplr_covariates(trim, SAGApath =  SAGApath_dir,
+                              output =  outpath,
+                              sieve_size = 10,
+                              rtemplate = template)
+
+
+## generate the BEC template and then match the covariates to size
+# 
+# bec_sf <- sf::st_read(file.path(fid$shape_dir_1010[1], "bec.gpkg")) %>%
+#   sf::st_cast(., "MULTIPOLYGON") 
+# 
+# bec_code <- bec_sf %>% st_drop_geometry()  %>% dplyr::select(MAP_LABEL) %>%
+#     unique() 
+# 
+# bec_code <- bec_code %>% 
+#     dplyr::mutate(bgc_unique_code = seq(1, length(bec_code$MAP_LABEL),1))
+# 
+# bec_sf <- dplyr::left_join(bec_sf, bec_code)
+# 
+# bec_vec <- terra::vect(bec_sf)
+# 
+# # generate a 25m raster
+
+# bec_ras25 <- terra::rasterize(bec_vec, r25, field = "MAP_LABEL")
+# 
+# terra::writeRaster(bec_ras25, file.path(fid$cov_dir_1020[2], "25m", "bec.tif"), overwrite = TRUE)
+
+
+# run all covariates 
+
+
+
+```
+
+Assess how well the covariates describe the landscape and adjust as needed. Write out the landscape variability validation layer.
+
+```{r}
+
+outpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
+
+fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif")
+
+landscapes <- create_binned_landscape(outpath)
+
+terra::plot(landscapes)
+
+writeout 
+
+terra::writeRaster(landscapes$id, file.path(outpath, "landscape_variable_validation.tif"))
+
+```
+
+Assess how well the environmental space is spread for each BGCs 
+
+```{r}
+
+becpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/10_clean_inputs/10_vector'
+#becpath <-fid$shape_dir_1010[1]
+
+bec <- sf::st_read(file.path(becpath, "bec.gpkg")) %>%
+   sf::st_cast(., "MULTIPOLYGON") 
+
+binned_landscape <- landscapes$id
+
+routdf <- check_bgc_landscapes(bec, binned_landscape)
+
+p1 <- ggplot2::ggplot(routdf, aes(id)) +
+  ggplot2::geom_histogram()+
+  ggplot2::facet_wrap(~MAP_LABEL)
+
+p1
+
+
+```
+
