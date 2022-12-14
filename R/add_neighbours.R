@@ -2,36 +2,18 @@
 #'
 #' For use in the accuracy metrics this function adds all surrounding pixels to each origin pixel in the training data
 #'
-#' This script has been tested with SAGA 8.4 on Windows
-#' Depending on your system the path to `saga_cmd` may need to be specified.
 #'
 #'
-#' @param dtm is a 25m dtm raster object ideally cropped to the AOI watershed boundaries
-#' @param SAGApath Is the location of SAGA on your system.  On linux systems with SAGA GIS installed Use `SAGApath = ""`
-#' @param output Location of where rasters will be saved.
-#' @param layers The covariates that will be generated.  A full list of covariates is listed at: ADD
-#' @param sieve_size Remove isolated clusters of below the threshold number of cells
+#' @param trainpts training points/pixels from sampled transects
+#' @param template the baseline raster template for the entire map area
+#' @param cov_dir Folder location where the covariate/predictors rasters are stored
+
 #'
-#' @keywords SAGA, covariates, predictors, raster
+#' @keywords training data, accuracy assessment, neighbours
 #' @export
 #' ##
 
-# setwd("D:/GitHub/PEMsamplr")
-# dtm <- ("./temp_data/dem.tif")
-# SAGApath <- "C:/SAGA/"
-# layers = "all"
-# output = "./landscape_covariates"
-# sieve_size = 10
-#   unattributed_files <- list.files(output_cleaned_dir, pattern = ".gpkg$", full.names = TRUE)
-#   #unattributed_files <- unattributed_files[4:8]
-#
-#   template <- terra::rast(file.path(cov_dir, res_folder,"template.tif"))
-#
-#   cov_dir2 <- list.files(file.path(cov_dir, res_folder), pattern = ".tif$",
-#                              full.names = TRUE)
-#   att_folder <- file.path(final_path, paste0("att_",res_folder))
-#   if(!dir.exists(att_folder)) dir.create(att_folder, recursive = TRUE)
-#
+
 #
 add_neighbours <- function(trainpts, template, cov_dir){
 
