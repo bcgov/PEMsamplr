@@ -90,10 +90,6 @@ create_samplr_covariates(trim, SAGApath =  SAGApath_dir,
 # terra::writeRaster(bec_ras25, file.path(fid$cov_dir_1020[2], "25m", "bec.tif"), overwrite = TRUE)
 
 
-# run all covariates 
-
-
-
 ```
 
 Assess how well the covariates describe the landscape and adjust as needed. Write out the landscape variability validation layer.
