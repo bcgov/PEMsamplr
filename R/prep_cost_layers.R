@@ -1,92 +1,83 @@
 #' prepare_cost_layers
 #'
+#' Use roads speed and slope to calculate initial cost of travel to be used in cost layer
+#'
 #' @param vec_dir directory where clean vector layers are stored
-#' @param cov_dir directory where covariates are stored (25m by default)
+#' @param dem digital terrain model .SpatRast
 #' @import magrittr
-#' @return TRUE
+#' @return **SpatRast** cost surface to be used in cost layer creation
 #' @export
 #' @examples
-#' prep_cost_layers(vec_dir, cov_dir)
+#' prep_cost_layers(vec_dir, dem)
 #'
 #'
 
 # Prepare the input layers for the cost layers
-#
-# vec_dir  = "D:\\PEM_DATA\\PEMsamplr\\temp\\date\\base_layers" #location of baselayers
-# cov_dir = "D:\\PEM_DATA\\PEMsamplr\\temp\\date\\25m" #location of dem
-# #
-# # out_dir = where to save the cost output
-# zz <- prep_cost_layers(vec_dir, cov_dir)
-#
-#
-# prep_cost_layers <- function(vec_dir, cov_dir) {
-#
-#   #alt <- terra::rast(file.path(cov_dir, "dem.tif"))
-#   #terra::crs(alt) <- "epsg:3005"
-#
-#   #template <- terra::rast(file.path(cov_dir, "template.tif"))
-#
-#   ## read in the major roads
-#   roads <- sf::st_read(file.path(vec_dir, "road_surroundings.gpkg")) %>%
-#     sf::st_zm()
-#
-#   roads$ROAD_CLASS[roads$trail == 1] <- "trail"
-#   roads <- roads[,c("ROAD_SURFA","ROAD_CLASS", "ROAD_NAM_7")]
-#   roads <- roads %>% dplyr::rename('road_surface' = ROAD_CLASS,
-#                                    'surface' = ROAD_SURFA,
-#                                    'name' = "ROAD_NAM_7")
-#   rdsAll <-  data.table::as.data.table(roads) %>% sf::st_as_sf()
-#   rSpd <- dplyr::tibble(
-#       "road_surface" = c("resource", "unclassified", "recreation", "trail", "local", "collector", "highway", "service", "arterial", "freeway", "strata", "lane", "private", "yield", "ramp", "restricted", "water", "ferry"),
-#       #"speed" = c(30, 30, 50, 4.5, 50, 80, 80, 50, 80, 80, 30, 30, 4.5, 30, 60, 4.5, 0.1, 0.1))
-#       "speed" = c(3000, 3000, 5000, 4.5, 5000, 8000, 8000, 50, 8000, 8000, 3000, 3000, 4.5, 3000, 6000, 4.5, 0.1, 3000))
-#
+
+prep_cost_layers <- function(vec_dir, dem) {
+
+  ## read in the major roads
+  roads <- sf::st_read(file.path(vec_dir, "road_major.gpkg")) %>%
+    sf::st_zm()
+
+   roads$ROAD_CLASS[roads$trail == 1] <- "trail"
+   roads <- roads[,c("ROAD_SURFACE","ROAD_CLASS", "ROAD_NAME_FULL")]
+   roads <- roads %>% dplyr::rename('road_surface' = ROAD_CLASS,
+                                    'surface' = ROAD_SURFACE,
+                                    'name' = ROAD_NAME_FULL)
+   rdsAll <-  data.table::as.data.table(roads) %>% sf::st_as_sf()
+   rSpd <- dplyr::tibble(
+       "road_surface" = c("resource", "unclassified", "recreation", "trail", "local", "collector", "highway", "service", "arterial", "freeway", "strata", "lane", "private", "yield", "ramp", "restricted", "water", "ferry"),
+       #"speed" = c(30, 30, 50, 4.5, 50, 80, 80, 50, 80, 80, 30, 30, 4.5, 30, 60, 4.5, 0.1, 0.1))
+       "speed" = c(3000, 3000, 5000, 4.5, 5000, 8000, 8000, 50, 8000, 8000, 3000, 3000, 4.5, 3000, 6000, 4.5, 0.1, 3000))
+
 #   # convert speed to pace
-#   rSpd <- data.table::as.data.table(rSpd) %>% dplyr::mutate(pace = 1.5*(1/speed)) %>% dplyr::select(-speed) # km/h to minutes per 25m pixal
-#   rdsAll <- merge(rdsAll, rSpd, by = "road_surface", all = F)
-#   rdsAll <- rdsAll[,"pace"]
-#   allRast <- terra::rasterize(rdsAll, alt)
-#
+    rSpd <- data.table::as.data.table(rSpd) %>% dplyr::mutate(pace = 1.5*(1/speed)) %>% dplyr::select(-speed) # km/h to minutes per 25m pixal
+    rdsAll <- merge(rdsAll, rSpd, by = "road_surface", all = F)
+    rdsAll <- rdsAll[,"pace"]
+    allRast <- terra::rasterize(rdsAll, dem)
+
 #   # create a roads raster (buffered)
-#   rdsAll <- sf::st_buffer(rdsAll, dist = 25, endCapStyle = "SQUARE", joinStyle = "MITRE")
-#   rdsAll <- sf::st_cast(rdsAll, "MULTIPOLYGON")
-#   rdsRast <- terra::rasterize(rdsAll, allRast, field = "pace")
-#   rm(allRast)
-#
-#   print("road layers prepared")
-#
+    rdsAll <- sf::st_buffer(rdsAll, dist = 25, endCapStyle = "SQUARE", joinStyle = "MITRE")
+    rdsAll <- sf::st_cast(rdsAll, "MULTIPOLYGON")
+    rdsRast <- terra::rasterize(rdsAll, allRast, field = "pace")
+    rm(allRast)
+
+    print("road layers prepared")
+
 #   # prepare the water data
-#   alt <- terra::rast(file.path(cov_dir, "dem.tif"))
-#   terra::crs(alt) <- "epsg:3005"
-#
-#   water <- sf::st_read(file.path(vec_dir, "water.gpkg")) %>%
-#     dplyr::filter(WATERBODY_TYPE != "W") %>%
-#     dplyr::mutate(cost = 10000) %>%
-#     sf::st_cast("MULTIPOLYGON") %>%
-#     dplyr::select(cost)
-#   water_r <- terra::rasterize(water, alt, field = "cost")
-#
-#   alt[water_r] <- 0
-#   terra::plot(alt)
-#   rm(water_r)
-#
-#   print("water layer prepared")
-#
+
+  water <- sf::st_read(file.path(vec_dir, "water.gpkg")) %>%
+    dplyr::filter(WATERBODY_TYPE != "W") %>%
+    dplyr::mutate(cost = 10000) %>%
+    sf::st_cast("MULTIPOLYGON") %>%
+    dplyr::select(cost)
+    water_r <- terra::rasterize(water, dem, field = "cost")
+
+  dem[water_r] <- 0
+  terra::plot(dem)
+  rm(water_r)
+
+  print("water layer prepared")
+
 #   # prepare walking terrain function
-#   slope <- terra::terrain(alt, v = "slope", neighbors = 8, unit = "radians") # convert these radians to rise/run in next line
-#
-#   alt <- (3/5) * 6*exp(-3.5*abs(tan(slope) + 0.05)) * (40/60)## this converts km/hr to minutes/25m pixel
-#   # 40 x 25 = 1lm / 60 minutes from hours
-#   alt4 <- 1/alt %>% round(3)
-#   altAll <- terra::merge(rdsRast, alt4)
-#
-#   print("walking terrain surface (minutes by 25m pixal) prepared")
-#
-#   gc()
-#
-#   return(altAll)
-# }
-# #
+  slope <- terra::terrain(dem, v = "slope", neighbors = 8, unit = "radians") # convert these radians to rise/run in next line
+
+  dem <- (3/5) * 6*exp(-3.5*abs(tan(slope) + 0.05)) * (40/60)## this converts km/hr to minutes/25m pixel
+  # 40 x 25 = 1lm / 60 minutes from hours
+  dem_toblers <- 1/dem %>% round(3)
+  altAll <- terra::merge(rdsRast,dem_toblers)
+
+  print("walking terrain surface (minutes by 25m pixal) prepared")
+
+  gc()
+
+  return(altAll)
+
+ }
+
+
+
 # # Vineyettw
 # #
 # #
