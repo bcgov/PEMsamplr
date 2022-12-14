@@ -3,6 +3,7 @@
 export("##")
 export(.assign_highcost)
 export(check_bgc_cost)
+export(check_bgc_landscapes)
 export(create_aspect_classes)
 export(create_clhs)
 export(create_landform_classes)
