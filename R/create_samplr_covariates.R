@@ -10,12 +10,13 @@
 #' @param SAGApath Is the location of SAGA on your system.  On linux systems with SAGA GIS installed Use `SAGApath = ""`
 #' @param output Location of where rasters will be saved.
 #' @param sieve_size Remove isolated clusters of below the threshold number of cells
+#' @param rtemplate template of 25m raster to match final output to
 #' @import spatialEco magrittr
 #' @keywords SAGA, covariates, predictors, raster
 #' @export
 #' ##
-
-# # get a base raster that is correct size
+#
+# # # get a base raster that is correct size
 #  aoi_raw <- system.file("extdata", "aoi.gpkg", package ="PEMprepr")
 #  aoi_raw <- sf::st_read(aoi_raw)
 #  aoi <- PEMprepr::aoi_snap(aoi_raw, "shrink")
@@ -24,40 +25,22 @@
 #  trim_raw <- cded_raster(aoi)
 #  trim <- terra::rast(trim_raw)
 #  dtm <- terra::project(trim, t25)
-# sieve_size = 10
-#
+#  sieve_size = 10
+#  fid <- setup_folders("canyoncreek")
+#  #output =  fid$sampling_input_landscape[[2]]
+#  output <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
+#  SAGApath ="C:/SAGA/saga-7.7.0_x64/"
+
 #  create_samplr_covariates(dtm,
-#                               output =  filelist$sampling_input_landscape[[2]],
+#                               output =  output,
 #                               SAGApath ="C:/SAGA/saga-7.7.0_x64/",
 #                                sieve_size = 10)
 #
 
 
-create_samplr_covariates <- function(dtm, SAGApath = "",
-                              output = "./cv-rasters",
-                              sieve_size = 10){
-
-
-  # # testing lines
-  # # get a base raster that is correct size
-  # aoi_raw <- system.file("extdata", "aoi.gpkg", package ="PEMprepr")
-  # aoi_raw <- sf::st_read(aoi_raw)
-  # aoi <- PEMprepr::aoi_snap(aoi_raw, "shrink")
-  # t25 <- create_template(aoi, 25)
-  # library(bcmaps)
-  # trim_raw <- cded_raster(aoi)
-  # trim <- terra::rast(trim_raw)
-  # dtm <- terra::project(trim, t25)
-  # filelist <- setup_folders("canyoncreek")
-  #
-  #
-  # dtm
-  # SAGApath = "C:/SAGA/saga-7.7.0_x64/"
-  # output = filelist$sampling_input_2010[[2]]
-  # #layers = "all"
-  # sieve_size = 10
-  #
-  # end testing lines
+create_samplr_covariates <- function(dtm, rtemplate,  SAGApath = "",
+                                     output = "./cv-rasters",
+                                     sieve_size = 10){
 
   ##### Link SAGA to R --------------------------------------------------
   if(Sys.info()['sysname']=="Windows"){
@@ -82,8 +65,6 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
   # OUTPUTS: ------------------------------------------------------------
   ifelse(!dir.exists(file.path(output)),              #
          dir.create(file.path(output)), print("Directory Already Exists"))        #create tmpOut
-
-  #rn <- terra::res(dtm)[1] ## Get the resolution
 
   saga_tmp_files <- paste(output)
   ifelse(!dir.exists(file.path(saga_tmp_files)),              #if tmpOut Does not Exists
@@ -135,12 +116,10 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
 
   mrvbf_r <- terra::rast(gsub(".sgrd", ".sdat", MRVBF)) %>%
     terra::sieve(threshold = sieve_size, directions=8)# %>%
-    #terra::subst(from = 0, to = NA)
 
-   #terra::plot(mrvbf_r)
+  mrvbf_rcrop <- terra::crop(mrvbf_r, rtemplate)
 
-   terra::writeRaster(mrvbf_r, file.path(saga_tmp_files, "mrvbf_LS.tif"), overwrite = TRUE)
-
+  terra::writeRaster(mrvbf_rcrop, file.path(saga_tmp_files, "mrvbf_LS.tif"), overwrite = TRUE)
 
 
   ## 2.  Landscape Diuranal Anisotropic Heating
@@ -178,7 +157,9 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
   rc <- rc %>%
     terra::sieve(threshold = sieve_size, directions=8)
 
-  terra::writeRaster(rc, file.path(saga_tmp_files, "dah_LS.tif"), overwrite = TRUE)
+  rc_crop <- terra::crop(rc, rtemplate)
+
+  terra::writeRaster(rc_crop, file.path(saga_tmp_files, "dah_LS.tif"), overwrite = TRUE)
 
 
   ## 3. Landform Class
@@ -190,13 +171,18 @@ create_samplr_covariates <- function(dtm, SAGApath = "",
     terra::sieve(threshold = sieve_size, directions=8) %>%
     terra::subst(from = 0, to = NA)
 
+  land_class <- terra::crop(land_class, rtemplate)
+  names(land_class)<- "landclass"
+
   terra::writeRaster(land_class, file.path(saga_tmp_files, "landform_LS.tif"), overwrite = TRUE)
-
-
 
   # remove temp Saga files
   # unlink(paste(output, "saga", sep = "/"), recursive = TRUE)
   # delete the files
 
-}
+  to_delete <- grep(".tif", list.files(file.path(saga_tmp_files), full.names = TRUE), value = T, invert = TRUE)
+  file.remove(to_delete)
 
+  return(TRUE)
+
+}

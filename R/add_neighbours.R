@@ -7,7 +7,6 @@
 #' @param trainpts training points/pixels from sampled transects
 #' @param template the baseline raster template for the entire map area
 #' @param cov_dir Folder location where the covariate/predictors rasters are stored
-
 #'
 #' @keywords training data, accuracy assessment, neighbours
 #' @export
