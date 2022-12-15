@@ -1,6 +1,7 @@
 #' Create cost penalty layer
 #'
 #' @param vec_dir folder location of base vector layers
+#' @param dem SpatRast or Raster of cost layer
 #' @param cost SpatRast or Raster of cost layer
 #' @param costval Numeric value of assigned high cost
 #' @import magrittr
@@ -8,34 +9,10 @@
 #' @export
 #'
 #' @examples
-#' create_cost_penalty(vec_dir, cost, costval = 3000)
+#' create_cost_penalty(vec_dir, dem, cost, costval = 3000)
 #'
 
-#
-# # Prepare the
-# #
-# vec_dir  = "D:\\PEM_DATA\\PEMsamplr\\temp\\date\\base_layers" #location of baselayers
-# cov_dir = "D:\\PEM_DATA\\PEMsamplr\\temp\\date\\25m" #location of dem
-# cost <- file.path(cov_dir, "dem.tif")
-# template <- file.path(cov_dir, "template.tif")
-#
-#
-# rcost <- terra::rast(cost)
-# terra::crs(rcost) <- "epsg:3005"
-# names(rcost) = "cost"
-#
-#
-# rtemp <- terra::rast(template)
-# terra::crs(rtemp) <- "epsg:3005"
-# names(cost) = "cost"
-#
-# cost <- rcost
-
-#shape <- file.path(vec_dir, "cutblocks.gpkg")
-#assign_highcost(shape, crs = 3005, costval = 3000)
-
 # function to assign high cost and format output
-
 .assign_highcost = function(shape, crs = 3005, costval, cost) {
 
       hcsf <- sf::st_read(shape) %>%
@@ -47,48 +24,86 @@
 
       rhc <- terra::rasterize( hcsf, cost, field = "cost")
       return(rhc)
-
 }
 
 
-create_cost_penalty <- function(vec_dir, cost, costval = 3000) {
+create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
 
   # 1. Assign high cost for cutblocks
-  rcutblock<- .assign_highcost(file.path(vec_dir, "cutblocks.gpkg"), costval = costval, cost = cost)
-  hc <- terra::merge(rcutblock, cost)
+  if(file.exists(file.path(vec_dir, "cutblocks.gpkg"))){
+
+    rcutblock<- .assign_highcost(file.path(vec_dir, "cutblocks.gpkg"), costval = costval, cost = cost)
+    hc <- terra::merge(rcutblock, cost)
+  }
 
   # 2. Assign high cost to age class 1 and 2
+  if(file.exists(file.path(vec_dir, "vri_class1_2.gpkg"))){
   rvri12_class <- .assign_highcost(file.path(vec_dir, "vri_class1_2.gpkg"), costval = costval, cost = cost)
   hc <- terra::merge(rvri12_class, hc)
 
+  }
+
   # 3. Assign a slightly lower cost to age class 3.
-  rvri3_class <- .assign_highcost(file.path(vec_dir, "vri_class3.gpkg"), costval = costval, cost = cost)
-  hc <- terra::merge(rvri3_class, hc)
+  if(file.exists(file.path(vec_dir, "vri_class3.gpkg"))){
+    rvri3_class <- .assign_highcost(file.path(vec_dir, "vri_class3.gpkg"), costval = costval, cost = cost)
+    hc <- terra::merge(rvri3_class, hc)
+  }
 
   # for some AOIS;
   # 3a Assign a high cost to deciduous leading species area
 
-  # # fix the trycatch section ## STILL TO FIX
-  # rvri_decid <- tryCatch({.assign_highcost(file.path(vec_dir, "vri_decid.gpkg"), costval = costval,cost = cost))
-  # hc <- terra::merge(rvri_decid , hc)
-  #
-  # })
+  if(file.exists(file.path(vec_dir, "vri_decid.gpkg"))){
+
+   rvri_decid <- .assign_highcost(file.path(vec_dir, "vri_decid.gpkg"), costval = costval,cost = cost)
+   hc <- terra::merge(rvri_decid , hc)
+  }
 
   # 4. Assign high cost to private lands
+  if(file.exists(file.path(vec_dir, "private.gpkg"))){
+
   rpriv <- .assign_highcost(file.path(vec_dir, "private.gpkg"), costval = costval, cost = cost)
   hc <- terra::merge(rpriv, hc)
+  }
 
   # 5. Add high cost for high and medium intensity fire areas or all fires
+  if(file.exists(file.path(vec_dir, "fire_int.gpkg"))){
   rfireint <- .assign_highcost(file.path(vec_dir,"fire_int.gpkg"), costval = costval, cost = cost)
   hc <- terra::merge(rfireint, hc)
+  }
 
   # 6. Add high cost for all fires
+  if(file.exists(file.path(vec_dir, "fires.gpkg"))){
   rfires <- .assign_highcost(file.path(vec_dir,"fires.gpkg"), costval = costval, cost = cost)
   hc <- terra::merge(rfires, hc)
+  }
 
   # 7. Assign high cost to transmission lines
+  if(file.exists(file.path(vec_dir, "translines.gpkg"))){
   rtrans <- .assign_highcost(file.path(vec_dir,"translines.gpkg"), costval = costval, cost = cost)
   hc <- terra::merge(rtrans, hc)
+  }
+
+
+  # 8. Very steep areas
+  #STILL TO ADD
+  slope <- terra::terrain(dem, v = "slope", neighbors = 8, unit = "degrees") # convert these radians to rise/run in next line
+  # add a threshold value here
+  # degrees (45 degrees = 100%, use around 30 degrees ~ 60% )
+
+   m <- c( 0, 30, NA,
+          30, 45, 3000)
+
+    rclmat <- matrix(m, ncol=3, byrow =TRUE)
+    rc <- terra::classify(slope, rclmat)
+
+  # need to fix this still..... problem with merge
+    hc1 <- terra::merge( terra::rast(hc),rc)
+    return(rc)
+
+  }
+
+
+
 
   return(hc)
 }
