@@ -43,5 +43,36 @@ dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem_preproc.sdat"))
 
 costprep <- prep_cost_layers(vec_dir, dem)
 
+# Define start points 
+# 1) used pre defined the start location using nearest town
+
+cities <- st_read(file.path(vec_dir, "major_towns_bc.gpkg"))
+nearest_town = "Granisle"
+start <- cities[cities$NAME == nearest_town,"NAME"]%>% 
+  as("Spatial")
+
+
+cost <- create_cost_layer(costprep, start)
+
+terra::plot(cost)
+# note if you get an error here - be sure the town name is located on the road network of might fail. 
+
+
+
+# generate cost penalty 
+
+#vec_dir = fid$shape_dir_1010[2]
+vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector" 
+cost <- cost 
+dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem_preproc.sdat"))
+costval = 3000
+
+final_cost <- create_cost_penalty(vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector", 
+                                  cost = cost, 
+                                  dem = dem , 
+                                  costval = 3000)
+terra::plot(final_cost)
+
+
 
 
