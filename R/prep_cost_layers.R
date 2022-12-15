@@ -17,7 +17,7 @@
 prep_cost_layers <- function(vec_dir, dem) {
 
   ## read in the major roads
-  roads <- sf::st_read(file.path(vec_dir, "road_major.gpkg")) %>%
+  roads <- sf::st_read(file.path(vec_dir, "road_major.gpkg"), quiet = TRUE) %>%
     sf::st_zm()
 
    roads$ROAD_CLASS[roads$trail == 1] <- "trail"
@@ -32,10 +32,15 @@ prep_cost_layers <- function(vec_dir, dem) {
        "speed" = c(3000, 3000, 5000, 4.5, 5000, 8000, 8000, 50, 8000, 8000, 3000, 3000, 4.5, 3000, 6000, 4.5, 0.1, 3000))
 
 #   # convert speed to pace
-    rSpd <- data.table::as.data.table(rSpd) %>% dplyr::mutate(pace = 1.5*(1/speed)) %>% dplyr::select(-speed) # km/h to minutes per 25m pixal
+    rSpd <- data.table::as.data.table(rSpd) %>%
+      dplyr::mutate(pace = 1.5*(1/speed)) %>%
+      dplyr::select(-speed) # km/h to minutes per 25m pixal
+
     rdsAll <- merge(rdsAll, rSpd, by = "road_surface", all = F)
     rdsAll <- rdsAll[,"pace"]
     allRast <- terra::rasterize(rdsAll, dem)
+    #allRast[is.nan(allRast[])] <- NA
+
 
 #   # create a roads raster (buffered)
     rdsAll <- sf::st_buffer(rdsAll, dist = 25, endCapStyle = "SQUARE", joinStyle = "MITRE")
@@ -47,7 +52,7 @@ prep_cost_layers <- function(vec_dir, dem) {
 
 #   # prepare the water data
 
-  water <- sf::st_read(file.path(vec_dir, "water.gpkg")) %>%
+  water <- sf::st_read(file.path(vec_dir, "water.gpkg"),quiet = TRUE) %>%
     dplyr::filter(WATERBODY_TYPE != "W") %>%
     dplyr::mutate(cost = 10000) %>%
     sf::st_cast("MULTIPOLYGON") %>%
@@ -66,7 +71,21 @@ prep_cost_layers <- function(vec_dir, dem) {
   dem <- (3/5) * 6*exp(-3.5*abs(tan(slope) + 0.05)) * (40/60)## this converts km/hr to minutes/25m pixel
   # 40 x 25 = 1lm / 60 minutes from hours
   dem_toblers <- 1/dem %>% round(3)
-  altAll <- terra::merge(rdsRast,dem_toblers)
+  altAll <- terra::merge(rdsRast, dem_toblers)
+
+  # testing
+ # dem_toblers[rdsRast] = rdsRast
+#  altAll = dem_toblers
+
+  #rdsRast <- terra::as.raster(rdsRast)
+  #dem_toblers <- terra::as.raster(dem_toblers)
+  #altAll <- merge(rdsRast, dem_toblers)
+  #terra::plot(altAll)
+
+  # this is not quite working correctly
+  #altAll <- terra::merge( dem_toblers,rdsRast)
+  #altAll <- c(rdsRast, dem_toblers)
+  #altAll <- terra::overlay(rdsRast, dem_toblers)
 
   print("walking terrain surface (minutes by 25m pixal) prepared")
 
