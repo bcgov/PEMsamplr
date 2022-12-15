@@ -1,4 +1,3 @@
-#'
 #'Create CLHS sample plan
 #'
 #'This function takes a terra stack of covariates (and cost), and uses conditional latin hypercube sampling to create the specified number of points in slices.
