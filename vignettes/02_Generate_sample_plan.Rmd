@@ -40,8 +40,12 @@ fid <- setup_folders("CanyonCreek")
 vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector" 
 
 dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem_preproc.sdat"))
+#sort(unique(round(terra::values(dem),0)))
+
 
 costprep <- prep_cost_layers(vec_dir, dem)
+
+terra::plot(costprep)
 
 # Define start points 
 # 1) used pre defined the start location using nearest town
@@ -51,11 +55,18 @@ nearest_town = "Granisle"
 start <- cities[cities$NAME == nearest_town,"NAME"]%>% 
   as("Spatial")
 
-
 cost <- create_cost_layer(costprep, start)
 
 terra::plot(cost)
+
 # note if you get an error here - be sure the town name is located on the road network of might fail. 
+
+# Check how the cost is distributed per 
+
+
+
+
+
 
 
 

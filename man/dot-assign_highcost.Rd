@@ -12,6 +12,8 @@
 \item{cost}{SpatRast or Raster of cost layer}
 
 \item{vec_dir}{folder location of base vector layers}
+
+\item{dem}{SpatRast or Raster of cost layer}
 }
 \value{
 SpatRast
@@ -20,6 +22,6 @@ SpatRast
 Create cost penalty layer
 }
 \examples{
-create_cost_penalty(vec_dir, cost, costval = 3000)
+create_cost_penalty(vec_dir, dem, cost, costval = 3000)
 
 }
