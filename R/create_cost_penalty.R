@@ -95,15 +95,11 @@ create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
 
     rclmat <- matrix(m, ncol=3, byrow =TRUE)
     rc <- terra::classify(slope, rclmat)
+    hc1  <- terra::cover(rc, terra::rast(hc))
 
-  # need to fix this still..... problem with merge
-    hc1 <- terra::merge( terra::rast(hc),rc)
-    return(rc)
+    return(hc1)
 
-  }
-
-
-
-
-  return(hc)
 }
+
+
+
