@@ -38,15 +38,16 @@ prep_cost_layers <- function(vec_dir, dem) {
 
     rdsAll <- merge(rdsAll, rSpd, by = "road_surface", all = F)
     rdsAll <- rdsAll[,"pace"]
-    allRast <- terra::rasterize(rdsAll, dem)
+    #allRast <- terra::rasterize(rdsAll, dem, field = "pace")
     #allRast[is.nan(allRast[])] <- NA
 
 
 #   # create a roads raster (buffered)
     rdsAll <- sf::st_buffer(rdsAll, dist = 25, endCapStyle = "SQUARE", joinStyle = "MITRE")
     rdsAll <- sf::st_cast(rdsAll, "MULTIPOLYGON")
-    rdsRast <- terra::rasterize(rdsAll, allRast, field = "pace")
-    rm(allRast)
+    rdsRast <- terra::rasterize(rdsAll, dem, field = "pace")
+    rdsRast[is.nan(rdsRast[])] <- NA
+    #rm(allRast)
 
     print("road layers prepared")
 
@@ -60,7 +61,6 @@ prep_cost_layers <- function(vec_dir, dem) {
     water_r <- terra::rasterize(water, dem, field = "cost")
 
   dem[water_r] <- 0
-  terra::plot(dem)
   rm(water_r)
 
   print("water layer prepared")
@@ -71,21 +71,9 @@ prep_cost_layers <- function(vec_dir, dem) {
   dem <- (3/5) * 6*exp(-3.5*abs(tan(slope) + 0.05)) * (40/60)## this converts km/hr to minutes/25m pixel
   # 40 x 25 = 1lm / 60 minutes from hours
   dem_toblers <- 1/dem %>% round(3)
-  altAll <- terra::merge(rdsRast, dem_toblers)
 
-  # testing
- # dem_toblers[rdsRast] = rdsRast
-#  altAll = dem_toblers
-
-  #rdsRast <- terra::as.raster(rdsRast)
-  #dem_toblers <- terra::as.raster(dem_toblers)
-  #altAll <- merge(rdsRast, dem_toblers)
-  #terra::plot(altAll)
-
-  # this is not quite working correctly
-  #altAll <- terra::merge( dem_toblers,rdsRast)
-  #altAll <- c(rdsRast, dem_toblers)
-  #altAll <- terra::overlay(rdsRast, dem_toblers)
+  altAll  <- terra::cover(rdsRast, dem_toblers)
+ #terra::plot(altAll)
 
   print("walking terrain surface (minutes by 25m pixal) prepared")
 
