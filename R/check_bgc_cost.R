@@ -15,11 +15,6 @@
 
 check_bgc_cost <- function(bgc, binned_landscape, cost){
 
-  #   # test
-  # bgc = bec
-  # binned_landscape = landscapes
-  # cost = cost
-
   # create a bgc raster
   rbgc <- terra::rasterize(bgc, binned_landscape, field = "MAP_LABEL")
   rcost <- c(rbgc, binned_landscape, cost)
