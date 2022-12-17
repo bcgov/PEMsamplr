@@ -100,13 +100,13 @@ outpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/
 
 fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif")
 
-landscapes <- create_binned_landscape(outpath)
+filesoi <- list.files(outpath, full.names = TRUE)[list.files(outpath) %in% fileoi]
+
+landscapes <- create_binned_landscape(filesoi)
 
 terra::plot(landscapes)
 
-writeout 
-
-terra::writeRaster(landscapes$id, file.path(outpath, "landscape_variable_validation.tif"))
+terra::writeRaster(landscapes, file.path(outpath, "landscape_variable_validation.tif"), overwrite = TRUE)
 
 ```
 
@@ -120,16 +120,20 @@ becpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/10_clean_inputs/10_vector'
 bec <- sf::st_read(file.path(becpath, "bec.gpkg")) %>%
    sf::st_cast(., "MULTIPOLYGON") 
 
-binned_landscape <- landscapes$id
+routdf <- check_bgc_landscapes(bec, landscapes )
 
-routdf <- check_bgc_landscapes(bec, binned_landscape)
+library(ggplot2)
 
-p1 <- ggplot2::ggplot(routdf, aes(id)) +
-  ggplot2::geom_histogram()+
+p1 <- ggplot2::ggplot(routdf, aes(landscape)) +
+  ggplot2::geom_histogram() +
   ggplot2::facet_wrap(~MAP_LABEL)
 
 p1
 
+p2 <- ggplot2::ggplot(routdf, aes(landscape, fill = MAP_LABEL)) +
+  ggplot2::geom_histogram() 
+
+p2
 
 ```
 
