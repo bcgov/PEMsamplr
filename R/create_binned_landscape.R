@@ -12,12 +12,11 @@
 #'
 #' @examples
 #'
-#' create_landscape_bins()
+#' create_binned_landscape()
 
-create_landscape_bins <- function(input){
+create_binned_landscape <- function(input){
 
-  # specify the folder
-  # if folder then do this
+  input <- filesoi
 
   suppressWarnings({
     if(dir.exists(input) & length(input) == 1){
@@ -40,11 +39,12 @@ create_landscape_bins <- function(input){
   comb.df <- as.data.frame(combinations)
   comb.df <- na.omit(comb.df) # remove NA values
 
-  comb.df$id = seq(1,length(comb.df[,1]),1)
+  comb.df$landscape = seq(1,length(comb.df[,1]),1)
   ancDat.df <- as.data.frame(ancDat, xy = TRUE)
   anc_class <- dplyr::left_join(ancDat.df, comb.df)
 
   out_rast <- terra::rast(anc_class, type="xyz", crs= terra::crs(ancDat), digits=6)
+  out_rast <- out_rast$landscape
 
   return(out_rast)
 
