@@ -33,7 +33,6 @@ We will continue to follow the vignette using the example Canyon Creek study are
 #  define folder names in object fid
 fid <- setup_folders("CanyonCreek")
 
-
 ## prepare base layers for cost layer
 
 #vec_dir = fid$shape_dir_1010[2]
@@ -41,7 +40,6 @@ vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector"
 
 dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem_preproc.sdat"))
 #sort(unique(round(terra::values(dem),0)))
-
 
 costprep <- prep_cost_layers(vec_dir, dem)
 
@@ -56,17 +54,32 @@ start <- cities[cities$NAME == nearest_town,"NAME"]%>%
   as("Spatial")
 
 cost <- create_cost_layer(costprep, start)
-
+cost <- terra::rast(cost)
+names(cost) <- "cost"
 terra::plot(cost)
 
 # note if you get an error here - be sure the town name is located on the road network of might fail. 
 
-# Check how the cost is distributed per 
+
+# Check how the cost is distributed per BGC
+becpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/10_clean_inputs/10_vector'
+#becpath <-fid$shape_dir_1010[1]
+
+bec <- sf::st_read(file.path(becpath, "bec.gpkg")) %>%
+   sf::st_cast(., "MULTIPOLYGON") 
 
 
+binned_path <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
 
+# binned landscape
+landscape <- terra::rast(file.path(binned_path, "landscape_variable_validation.tif"))
 
+bgccost <- check_bgc_cost(bgc = bec, binned_landscape = landscape, cost = cost)
 
+# map the costs per BGC
+p3 <- ggplot2::ggplot(bgccost, ggplot2::aes(landscape, fill = cost_code)) +
+    ggplot2::geom_histogram(bins = 30) +
+    ggplot2::facet_wrap(~MAP_LABEL)
 
 
 
