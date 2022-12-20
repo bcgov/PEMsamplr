@@ -97,6 +97,20 @@ final_cost <- create_cost_penalty(vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCree
                                   costval = 3000)
 terra::plot(final_cost)
 
+# create no sample areas 
+
+cost_masked <- create_cost_nosample(vec_dir = vec_dir, 
+                                           cost = final_cost)
+
+#terra::plot(sample_cost_masked)
+
+
+# generate a BGC cost mask per BGC in map area
+vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector" 
+out_path <- fid$sampling_input_exclusion[2]
+cost_masked <- cost_masked
+
+create_bgc_mask(vec_dir, cost_masked, out_path)
 
 
 
