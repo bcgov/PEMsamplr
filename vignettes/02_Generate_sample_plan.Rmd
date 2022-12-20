@@ -1,5 +1,5 @@
 ---
-title: "Generate heli sample plan"
+title: "Generate sample plan"
 output: rmarkdown::html_vignette
 vignette: >
   #%\VignetteIndexEntry{PEMsamplr}
@@ -155,6 +155,30 @@ start <- cities[cities$NAME == nearest_town,"NAME"]
 
 3) Generate the additional transect information 
 
+```{r}
+
+sampleplan_outdir <- "D:\\PEM_DATA\PEMsamplr\\CanyonCreek\\20_sample_plan\\10_standard_sample\\30_sampleplan_final\\transect"
+  
+clhs_dir <- list.files(file.path("D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\20_sample_plan\\10_standard_sample\\20_sampleplan_draft\\clhs"), full.names = T)
+  
+clhs_final <- sf::st_read(clhs_dir[16])
+
+landscape_dir <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
+
+cost <- terra::rast(file.path( landscape_dir, "cost.tif"))
+
+
+mask <- 
+  
+  
+  
+
+pem_create_maps <- function(sample_points, out_name, centroid_distance = 400){
+  
+ sample_points =  clhs_final 
+ b = unique(ptCoords$subzone)
+
+```
 
 
 

@@ -1,5 +1,5 @@
 ---
-title: "Generate sample plan"
+title: "Generate heli sample plan"
 output: rmarkdown::html_vignette
 vignette: >
   #%\VignetteIndexEntry{PEMsamplr}
@@ -36,22 +36,22 @@ Drop locations should be defined prior to starting this process. These can eb de
 clhs_outpath <- fid$samplingplan_clhs[2]
 ifelse(!dir.exists(clhs_outpath), dir.create(clhs_outpath, recursive = TRUE), FALSE)
 
-
 #vec_dir = fid$shape_dir_1010[2]
 vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector" 
 
 dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem_preproc.sdat"))
 #sort(unique(round(terra::values(dem),0)))
 
+# prepare cost layer
 costprep <- prep_cost_layers(vec_dir, dem, heli = TRUE)
-
 terra::plot(costprep)
 
 
+# read in the heli drop points
 helidrop <- st_read(file.path(vec_dir, "helidrop.gpkg"))%>% 
   as("Spatial")
 
-
+# create cost layer 
 cost <- create_cost_layer(costprep, helidrop)
 cost <- terra::rast(cost)
 names(cost) <- "cost"
@@ -66,31 +66,29 @@ fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif")
 filesoi <- list.files(outpath, full.names = TRUE)[list.files(outpath) %in% fileoi]
 
 all_cov <- terra::rast(filesoi)
-
+all_cov <- c(all_cov, cost)
 
 
 # read in bec labels 
-
 bec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\20_sample_plan\\10_standard_sample\\10_input_raster\\exclusion" 
 
 boi <- list.files(bec_dir, pattern = ".tif")
+# note for heli sampling in most cases it will only be a specific Bec unit and will not need to use all options
 
-# for each Bec unit generate multiple plans
+b<- boi[2]
 
-for(b in boi) {
-  #b <- boi[1]
-  boi_mask <- terra::rast(file.path(bec_dir, b)) 
-  names(boi_mask) = "mask"
-  bname <- gsub("_exclude_mask.tif", "", b)
+boi_mask <- terra::rast(file.path(bec_dir, b)) 
+names(boi_mask) = "mask"
+bname <- gsub("_exclude_mask.tif", "", b)
   
-  sample_layers_masked <- c(all_cov, boi_mask) %>%  
+sample_layers_masked <- c(all_cov, boi_mask) %>%  
     terra::mask(boi_mask) 
-  sample_layers_masked <- sample_layers_masked[[1:4]]
+sample_layers_masked <- sample_layers_masked[[1:4]]
   
 # create 10 different sample plans
   
-  for(rot in 1:5){ 
-    
+for(rot in 1:5){ 
+  
     sample_points <- create_clhs(all_cov = sample_layers_masked, 
                                  num_slices = 2, 
                                  to_include = NULL, 
@@ -98,15 +96,15 @@ for(b in boi) {
                                  min_dist = 1000,
                                  num_sample = 5000000)
     
-    sf::st_write(sample_points, file.path(clhs_outpath, paste0(bname,"_clhs_sample_",rot,".gpkg")))
+    sf::st_write(sample_points, file.path(clhs_outpath, paste0(bname,"_clhs_heli_sample_",rot,".gpkg")),delete_dsn = TRUE)
     
   }
   
-} 
+
 
 ```
 
-# Alternatively generatea sample plan with helicopter
+
 
 
 
