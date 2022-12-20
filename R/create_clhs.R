@@ -22,16 +22,20 @@
 # num_slices = 3
 # to_include = NULL
 
+
+
+
 create_clhs <- function(all_cov, num_slices, to_include = NULL,
                         n_points = 5, min_dist = 600, num_sample = 5000000){
   if(num_slices < 1) stop("Hold up! Must have at least one slice.")
 
   layer_names <- names(all_cov)
-  samp_dat <- terra::spatSample(lays , size = num_sample, method = "regular", xy = TRUE, as.df = F) # sample raster
-  samp_dat <- samp_dat[!is.na(samp_dat[,3]) & !is.infinite(samp_dat[,ncol(samp_dat)]),] ##shouldn't hard code
+  samp_dat <- terra::spatSample(all_cov , size = num_sample, method = "regular", xy = TRUE, as.df = F) # sample raster
+  samp_dat <- samp_dat[!is.na(samp_dat[,"cost"]) & !is.infinite(samp_dat[,ncol(samp_dat)]),] ##shouldn't hard code
 
   coords <- samp_dat[,c("x","y")]
   curr_dat <- samp_dat[,layer_names]
+
   ##setup initial data
   if(is.null(to_include)){ ##nothing to include
     inc_idx <- NULL
@@ -39,7 +43,7 @@ create_clhs <- function(all_cov, num_slices, to_include = NULL,
   }else{
     inc_pts <- terra::extract(all_cov, to_include) ##test this
     inc_pts <- inc_pts[,-(1)]
-    inc_pts <- st_as_sf(inc_pts)
+    inc_pts <- sf::st_as_sf(inc_pts)
     inc_idx <- 1:nrow(inc_pts)
     size = n_points + nrow(inc_pts)
     curr_dat <- rbind(to_include, curr_dat) ##comine with inlcuded data
@@ -63,6 +67,7 @@ create_clhs <- function(all_cov, num_slices, to_include = NULL,
   }else{
     print("Gen-R-ating multiple slices...")
     spoints <- for(snum in 1:num_slices){
+     # snum = 1
       templhs <- clhs(curr_dat,
                       size = n_points * snum,
                       must.include = inc_idx,
