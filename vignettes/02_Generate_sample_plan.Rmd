@@ -36,6 +36,11 @@ Additional new cLHS slices can be created after the generation of the original r
 # set up folder for sample plan
 devtools::install_github("kdaust/clhs") 
 
+# set output folder for clhs plans
+clhs_outpath <- fid$samplingplan_clhs[2]
+ifelse(!dir.exists(clhs_outpath), dir.create(clhs_outpath, recursive = TRUE), FALSE)
+
+# read in the landscape covariates + cost and stack 
 
 landscape_dir <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
 
@@ -43,41 +48,104 @@ fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif", "cost.tif")
 
 filesoi <- list.files(outpath, full.names = TRUE)[list.files(outpath) %in% fileoi]
 
-
-
-
-clhs_outpath <- fid$samplingplan_clhs[2]
-ifelse(!dir.exists(clhs_outpath), dir.create(clhs_outpath, recursive = TRUE), FALSE)
-
 all_cov <- terra::rast(filesoi)
 
 
-# generate a clhs per BGC 
+# read in bec labels 
 
+bec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\20_sample_plan\\10_standard_sample\\10_input_raster\\exclusion" 
 
+boi <- list.files(bec_dir, pattern = ".tif")
 
+# for each Bec unit generate multiple plans
 
-
-
-
-
-
-
+for(b in boi) {
+  #b <- boi[1]
+  boi_mask <- terra::rast(file.path(bec_dir, b)) 
+  names(boi_mask) = "mask"
+  bname <- gsub("_exclude_mask.tif", "", b)
+  
+  sample_layers_masked <- c(all_cov, boi_mask) %>%  
+    terra::mask(boi_mask) 
+  sample_layers_masked <- sample_layers_masked[[1:4]]
+  
 # create 10 different sample plans
+  
+  for(rot in 1:5){ 
+    
+    sample_points <- create_clhs(all_cov = sample_layers_masked, 
+                                 num_slices = 2, 
+                                 to_include = NULL, 
+                                 n_points = 5 , 
+                                 min_dist = 1000,
+                                 num_sample = 5000000)
+    
+    sf::st_write(sample_points, file.path(clhs_outpath, paste0(bname,"_clhs_sample_",rot,".gpkg")))
+    
+  }
+  
+} 
 
-for(rot in 1:5){ 
+```
 
-sample_points <- create_clhs(all_cov = all_cov, 
-                             num_slices = 2, 
-                             to_include = NULL, 
-                             n_points = 5 , 
-                             min_dist = 1000,
-                             num_sample = 5000000)
+# select the clhs with the lowest sample cost
 
-sf::st_write(sample_points, file.path(clhs_outpath, paste0("clhs_sample_2",rot,".gpkg")))
+1) Using simple cost metrics 
+2) Using vehicle routing problem 
 
+```{r}
+library(foreach)
+# read in all the points per bgc, collate and assign value based on travel cost
+ 
+ftemp <- list.files(clhs_outpath, pattern = ".gpkg$", full.names = TRUE)
+
+all_samples <- foreach(fs = 1:length(ftemp), .combine = "rbind" ) %do% {
+  
+  ff <- ftemp[fs]
+  layers <- st_layers(ff)$name
+  
+  sample_points_all <- foreach(l = 1:length(layers), .combine = rbind) %do% {
+    ll = layers[l]
+    sptemp <- st_read(ff, layer = ll)
+    sptemp <- sptemp %>%
+      dplyr::mutate(clhs_repeat = basename(ff)) %>% 
+      dplyr::mutate(bgc = stringr::str_extract(layers, "[^_]+"))
+ 
+    sptemp
+  }
+  
 }
 
+# summarise the costs per sample plan
+repsum <- all_samples %>%
+  sf::st_drop_geometry() %>%
+  dplyr::select(clhs_repeat, bgc, cost)
+
+repsum <- repsum %>%
+  dplyr::group_by(clhs_repeat, bgc) %>%
+  dplyr::mutate(tcost = sum(cost)) %>%
+  dplyr::select(-cost) %>%
+  dplyr::distinct()
+
+# plot the total costs by subzone
+p1 <- ggplot(repsum, aes(y = tcost, x =  clhs_repeat )) +
+  geom_point()+
+  facet_wrap(~bgc, scales = "free_x")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+p1
+
+```
+
+2) Alternatively run Vehicle routing problem 
+
+```{r}
+# set up start location
+vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector"
+cities <- st_read(file.path(vec_dir, "major_towns_bc.gpkg"))
+nearest_town = "Granisle"
+start <- cities[cities$NAME == nearest_town,"NAME"]
+
+## THis needs work to complete vrp 
 
 ```
 
