@@ -96,6 +96,7 @@ create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
     rc <- terra::classify(slope, rclmat)
 
     hc_out  <- terra::cover( rc, hc)
+    names(hc_out)<- "cost"
 
     return(hc_out)
 
