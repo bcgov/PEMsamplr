@@ -98,6 +98,7 @@ Assess how well the covariates describe the landscape and adjust as needed. Writ
 
 outpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
 
+
 fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif")
 
 filesoi <- list.files(outpath, full.names = TRUE)[list.files(outpath) %in% fileoi]
@@ -184,7 +185,6 @@ becpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/10_clean_inputs/10_vector'
 bec <- sf::st_read(file.path(becpath, "bec.gpkg")) %>%
    sf::st_cast(., "MULTIPOLYGON") 
 
-
 binned_path <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
 
 # binned landscape
@@ -218,6 +218,7 @@ terra::plot(final_cost)
 cost_masked <- create_cost_nosample(vec_dir = vec_dir, 
                                            cost = final_cost)
 
+terra::writeRaster(cost_masked, file.path(fid$sampling_input_landscape[2],  "cost.tif"), overwrite = TRUE)
 #terra::plot(sample_cost_masked)
 
 

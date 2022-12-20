@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
+
 library(PEMprepr)
 library(PEMsamplr)
 library(sf)
@@ -32,6 +33,51 @@ We created five cLHS 'slices' of 5 sites (n=25) for sampling. Each slice represe
 Additional new cLHS slices can be created after the generation of the original run using the 'include' parameter in the cLHS function. Where sampling may involve helicopter access, additional slices could be added using a cost layer where landable clearings rather than roads are the zero cost starting points.
 
 ```{r}
+# set up folder for sample plan
+devtools::install_github("kdaust/clhs") 
+
+
+landscape_dir <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
+
+fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif", "cost.tif")
+
+filesoi <- list.files(outpath, full.names = TRUE)[list.files(outpath) %in% fileoi]
+
+
+
+
+clhs_outpath <- fid$samplingplan_clhs[2]
+ifelse(!dir.exists(clhs_outpath), dir.create(clhs_outpath, recursive = TRUE), FALSE)
+
+all_cov <- terra::rast(filesoi)
+
+
+# generate a clhs per BGC 
+
+
+
+
+
+
+
+
+
+
+# create 10 different sample plans
+
+for(rot in 1:5){ 
+
+sample_points <- create_clhs(all_cov = all_cov, 
+                             num_slices = 2, 
+                             to_include = NULL, 
+                             n_points = 5 , 
+                             min_dist = 1000,
+                             num_sample = 5000000)
+
+sf::st_write(sample_points, file.path(clhs_outpath, paste0("clhs_sample_2",rot,".gpkg")))
+
+}
+
 
 ```
 
