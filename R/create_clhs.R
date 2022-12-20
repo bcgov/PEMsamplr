@@ -23,8 +23,6 @@
 # to_include = NULL
 
 
-
-
 create_clhs <- function(all_cov, num_slices, to_include = NULL,
                         n_points = 5, min_dist = 600, num_sample = 5000000){
   if(num_slices < 1) stop("Hold up! Must have at least one slice.")
