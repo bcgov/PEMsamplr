@@ -1,6 +1,6 @@
 #' Create cost penalty layer
 #'
-#' @param vec_dir folder location of base vector layers
+#' @param vec_dir text string with folder location of base vector layers
 #' @param dem SpatRast or Raster of cost layer
 #' @param cost SpatRast or Raster of cost layer
 #' @param costval Numeric value of assigned high cost
@@ -26,27 +26,26 @@
       return(rhc)
 }
 
-
 create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
 
   # 1. Assign high cost for cutblocks
   if(file.exists(file.path(vec_dir, "cutblocks.gpkg"))){
 
     rcutblock<- .assign_highcost(file.path(vec_dir, "cutblocks.gpkg"), costval = costval, cost = cost)
-    hc <- terra::merge(rcutblock, cost)
+    hc <- terra::cover(rcutblock, cost)
   }
 
   # 2. Assign high cost to age class 1 and 2
   if(file.exists(file.path(vec_dir, "vri_class1_2.gpkg"))){
   rvri12_class <- .assign_highcost(file.path(vec_dir, "vri_class1_2.gpkg"), costval = costval, cost = cost)
-  hc <- terra::merge(rvri12_class, hc)
+  hc <- terra::cover( rvri12_class, hc)
 
   }
 
   # 3. Assign a slightly lower cost to age class 3.
   if(file.exists(file.path(vec_dir, "vri_class3.gpkg"))){
     rvri3_class <- .assign_highcost(file.path(vec_dir, "vri_class3.gpkg"), costval = costval, cost = cost)
-    hc <- terra::merge(rvri3_class, hc)
+    hc <- terra::cover(rvri3_class, hc)
   }
 
   # for some AOIS;
@@ -55,37 +54,37 @@ create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
   if(file.exists(file.path(vec_dir, "vri_decid.gpkg"))){
 
    rvri_decid <- .assign_highcost(file.path(vec_dir, "vri_decid.gpkg"), costval = costval,cost = cost)
-   hc <- terra::merge(rvri_decid , hc)
+   hc <- terra::cover( rvri_decid, hc )
   }
 
   # 4. Assign high cost to private lands
   if(file.exists(file.path(vec_dir, "private.gpkg"))){
 
   rpriv <- .assign_highcost(file.path(vec_dir, "private.gpkg"), costval = costval, cost = cost)
-  hc <- terra::merge(rpriv, hc)
+  hc <- terra::cover( rpriv, hc)
   }
 
   # 5. Add high cost for high and medium intensity fire areas or all fires
   if(file.exists(file.path(vec_dir, "fire_int.gpkg"))){
   rfireint <- .assign_highcost(file.path(vec_dir,"fire_int.gpkg"), costval = costval, cost = cost)
-  hc <- terra::merge(rfireint, hc)
+  hc <- terra::cover(hc, rfireint)
   }
 
   # 6. Add high cost for all fires
   if(file.exists(file.path(vec_dir, "fires.gpkg"))){
   rfires <- .assign_highcost(file.path(vec_dir,"fires.gpkg"), costval = costval, cost = cost)
-  hc <- terra::merge(rfires, hc)
+  hc <- terra::cover(hc,rfires)
+
   }
 
   # 7. Assign high cost to transmission lines
   if(file.exists(file.path(vec_dir, "translines.gpkg"))){
   rtrans <- .assign_highcost(file.path(vec_dir,"translines.gpkg"), costval = costval, cost = cost)
-  hc <- terra::merge(rtrans, hc)
+  hc <- terra::cover(hc, rtrans)
   }
 
 
   # 8. Very steep areas
-  #STILL TO ADD
   slope <- terra::terrain(dem, v = "slope", neighbors = 8, unit = "degrees") # convert these radians to rise/run in next line
   # add a threshold value here
   # degrees (45 degrees = 100%, use around 30 degrees ~ 60% )
@@ -95,9 +94,10 @@ create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
 
     rclmat <- matrix(m, ncol=3, byrow =TRUE)
     rc <- terra::classify(slope, rclmat)
-    hc1  <- terra::cover(rc, terra::rast(hc))
 
-    return(hc1)
+    hc_out  <- terra::cover( rc, hc)
+
+    return(hc_out)
 
 }
 
