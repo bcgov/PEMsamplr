@@ -9,8 +9,8 @@
 #' @examples
 #' create_cost(costprep, start)
 
-x <- costprep
-start <- helidrop
+#x <- costprep
+#start <- helidrop
 
 create_cost_layer <- function(x, start){
 
