@@ -1,5 +1,5 @@
 ---
-title: "Generate sample plan"
+title: "Generate heli sample plan"
 output: rmarkdown::html_vignette
 vignette: >
   #%\VignetteIndexEntry{PEMsamplr}
@@ -22,6 +22,7 @@ library(sf)
 
 ```
 
+
 ## Run Cost-Constrained Sliced cLHS
 
 A cLHS can now be run on this constrained sample space and any point selected will be support a valid transect no matter the rotation. 
@@ -31,6 +32,7 @@ We apply a minimum 1000m spacing between cLHS points to prevent possible overlap
 We created five cLHS 'slices' of 5 sites (n=25) for sampling. Each slice represents a cLHS independently so all sites from a slice must be sampled. Strictly speaking the slices must be sampled in order to maintain LHS structure as well (i.e. 1 + 2 + 3 = LHS but 1 + 2 + 4 may not be LHS). A progressive cLHS procedure has been proposed that makes any combination of slices maintain LHC structure.
 
 Additional new cLHS slices can be created after the generation of the original run using the 'include' parameter in the cLHS function. Where sampling may involve helicopter access, additional slices could be added using a cost layer where landable clearings rather than roads are the zero cost starting points.
+
 
 ```{r}
 # set up folder for sample plan
@@ -148,4 +150,11 @@ start <- cities[cities$NAME == nearest_town,"NAME"]
 ## THis needs work to complete vrp 
 
 ```
+
+
+
+3) Generate the additional transect information 
+
+
+
 

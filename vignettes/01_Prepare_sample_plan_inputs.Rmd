@@ -158,7 +158,7 @@ vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector"
 dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem_preproc.sdat"))
 #sort(unique(round(terra::values(dem),0)))
 
-costprep <- prep_cost_layers(vec_dir, dem)
+costprep <- prep_cost_layers(vec_dir, dem, heli = FALSE)
 
 terra::plot(costprep)
 
