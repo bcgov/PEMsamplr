@@ -11,7 +11,7 @@
 
 \item{cost}{SpatRast or Raster of cost layer}
 
-\item{vec_dir}{folder location of base vector layers}
+\item{vec_dir}{text string with folder location of base vector layers}
 
 \item{dem}{SpatRast or Raster of cost layer}
 }
