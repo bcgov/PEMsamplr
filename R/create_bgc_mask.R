@@ -35,9 +35,9 @@ create_bgc_mask <- function(vec_dir, cost_masked, out_dir) {
     boi_mask <- 1 + (boi_mask *0)
     terra::writeRaster(boi_mask, file.path(out_path, paste0(b,"_exclude_mask.tif")), overwrite = TRUE)
 
-    #mask_poly_boi <- terra::as.polygons(boi_mask, dissolve = TRUE)
-    #mask_poly_boi <- st_as_sf(mask_poly_boi)
-    #st_write(mask_poly_boi, file.path(out_path,paste0(b, "_exclude_poly.gpkg")), delete_layer = TRUE)
+    mask_poly_boi <- terra::as.polygons(boi_mask, dissolve = TRUE)
+    mask_poly_boi <- st_as_sf(mask_poly_boi)
+    st_write(mask_poly_boi, file.path(out_path,paste0(b, "_exclude_poly.gpkg")), delete_layer = TRUE)
   }
   return(TRUE)
 

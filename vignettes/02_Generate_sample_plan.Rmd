@@ -21,96 +21,17 @@ library(sf)
 
 ```
 
-## Generate sample plan : part 2
+## Run Cost-Constrained Sliced cLHS
 
-Sample plan requires running the PEMprepr functions to acquire and prepare all base data. 
-Help in doing this can be found in the [PEMprepr package](https://github.com/bcgov/PEMprepr) with a detailed vinette [here](https://github.com/bcgov/PEMprepr/blob/master/vignettes/SetUpNewAOI.Rmd)
+A cLHS can now be run on this constrained sample space and any point selected will be support a valid transect no matter the rotation. 
+cLHS sets are generated for each subzone individually.
+We apply a minimum 1000m spacing between cLHS points to prevent possible overlap of paired transects.
+  
+We created five cLHS 'slices' of 5 sites (n=25) for sampling. Each slice represents a cLHS independently so all sites from a slice must be sampled. Strictly speaking the slices must be sampled in order to maintain LHS structure as well (i.e. 1 + 2 + 3 = LHS but 1 + 2 + 4 may not be LHS). A progressive cLHS procedure has been proposed that makes any combination of slices maintain LHC structure.
 
-We will continue to follow the vignette using the example Canyon Creek study area. 
-
+Additional new cLHS slices can be created after the generation of the original run using the 'include' parameter in the cLHS function. Where sampling may involve helicopter access, additional slices could be added using a cost layer where landable clearings rather than roads are the zero cost starting points.
 
 ```{r}
-#  define folder names in object fid
-fid <- setup_folders("CanyonCreek")
 
-## prepare base layers for cost layer
-
-#vec_dir = fid$shape_dir_1010[2]
-vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector" 
-
-dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem_preproc.sdat"))
-#sort(unique(round(terra::values(dem),0)))
-
-costprep <- prep_cost_layers(vec_dir, dem)
-
-terra::plot(costprep)
-
-# Define start points 
-# 1) used pre defined the start location using nearest town
-
-cities <- st_read(file.path(vec_dir, "major_towns_bc.gpkg"))
-nearest_town = "Granisle"
-start <- cities[cities$NAME == nearest_town,"NAME"]%>% 
-  as("Spatial")
-
-cost <- create_cost_layer(costprep, start)
-cost <- terra::rast(cost)
-names(cost) <- "cost"
-terra::plot(cost)
-
-# note if you get an error here - be sure the town name is located on the road network of might fail. 
-
-
-# Check how the cost is distributed per BGC
-becpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/10_clean_inputs/10_vector'
-#becpath <-fid$shape_dir_1010[1]
-
-bec <- sf::st_read(file.path(becpath, "bec.gpkg")) %>%
-   sf::st_cast(., "MULTIPOLYGON") 
-
-
-binned_path <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
-
-# binned landscape
-landscape <- terra::rast(file.path(binned_path, "landscape_variable_validation.tif"))
-
-bgccost <- check_bgc_cost(bgc = bec, binned_landscape = landscape, cost = cost)
-
-# map the costs per BGC
-p3 <- ggplot2::ggplot(bgccost, ggplot2::aes(landscape, fill = cost_code)) +
-    ggplot2::geom_histogram(bins = 30) +
-    ggplot2::facet_wrap(~MAP_LABEL)
-
-
-
-# generate cost penalty 
-
-#vec_dir = fid$shape_dir_1010[2]
-vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector" 
-cost <- cost 
-dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem_preproc.sdat"))
-costval = 3000
-
-final_cost <- create_cost_penalty(vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector", 
-                                  cost = cost, 
-                                  dem = dem , 
-                                  costval = 3000)
-terra::plot(final_cost)
-
-# create no sample areas 
-
-cost_masked <- create_cost_nosample(vec_dir = vec_dir, 
-                                           cost = final_cost)
-
-#terra::plot(sample_cost_masked)
-
-
-# generate a BGC cost mask per BGC in map area
-vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector" 
-out_path <- fid$sampling_input_exclusion[2]
-cost_masked <- cost_masked
-
-create_bgc_mask(vec_dir, cost_masked, out_path)
-
-
+```
 
