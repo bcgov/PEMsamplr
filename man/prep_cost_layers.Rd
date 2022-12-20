@@ -4,12 +4,14 @@
 \alias{prep_cost_layers}
 \title{prepare_cost_layers}
 \usage{
-prep_cost_layers(vec_dir, dem)
+prep_cost_layers(vec_dir, dem, heli = FALSE)
 }
 \arguments{
 \item{vec_dir}{directory where clean vector layers are stored}
 
 \item{dem}{digital terrain model .SpatRast}
+
+\item{heli}{TRUE or FALSE to indicate if road or heli design}
 }
 \value{
 \strong{SpatRast} cost surface to be used in cost layer creation
