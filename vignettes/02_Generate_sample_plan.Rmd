@@ -171,8 +171,6 @@ cost <- terra::rast(file.path( landscape_dir, "cost.tif"))
 mask <- 
   
   
-  
-
 pem_create_maps <- function(sample_points, out_name, centroid_distance = 400){
   
  sample_points =  clhs_final 
