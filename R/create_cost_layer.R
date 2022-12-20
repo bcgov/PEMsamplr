@@ -9,8 +9,8 @@
 #' @examples
 #' create_cost(costprep, start)
 
-x <- altAll#costprep
-start <- start
+x <- costprep
+start <- helidrop
 
 create_cost_layer <- function(x, start){
 
@@ -23,8 +23,18 @@ create_cost_layer <- function(x, start){
 
   }
 
+  if(class(start)[1] =="sf") {
+
+    print("converting SpatRaster to Raster object")
+    x <- raster::raster(x)
+
+  }
+
+
+
+
   # create  transition layer
-  tr <- gdistance::transition(x, transitionFunction = function(x) 1/mean(x), directions = 8, symm = F)
+  tr <- gdistance::transition(x, transitionFunction = function(x) 1/mean(x,na.rm = T), directions = 8, symm = F)
   tr1 <- gdistance::geoCorrection(tr)
 
   rm(tr)
