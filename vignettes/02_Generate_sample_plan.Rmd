@@ -84,7 +84,9 @@ for(b in boi) {
                                  n_points = 5 , 
                                  min_dist = 1000,
                                  num_sample = 5000000)
-    sample_points <- dplyr::mutate(sample_points, bgc = bname)
+    sample_points <- sample_points %>% 
+      dplyr::mutate(bgc = bname,
+                    site_id = ) %>%
     
     sf::st_write(sample_points, file.path(clhs_outpath, paste0(bname,"_clhs_sample_",rot,".gpkg")))
     
@@ -170,7 +172,6 @@ Currently the second location is based on the least cost.
 boi <- "SBSmc2"
 clhs_set <- "SBSmc2_clhs_sample_2.gpkg"
 
-
 # define location of output 
 out_path <- fid$sampleplan_final_transect[2]
 
@@ -180,28 +181,32 @@ sample_points <- sf::st_read(list.files(fid$samplingplan_clhs[2], pattern = clhs
 # read in cost layer 
 cost <- terra::rast(file.path(fid$sampling_input_landscape[2], "cost.tif"))
 
-# exclusion filefolder
-#mask_poly <- sf::st_read(file.path(fid$sampling_input_exclusion[2], paste0(boi, "_exclude_poly.gpkg"))) %>%
-#  st_transform(3005)
+
+# Generate the transects and poinst and output as geopacakage
 
 build_site_transects(sample_points, cost, centroid_distance = 400, out_path) 
 
+
+
 # export a tracking sheet for the samples 
 
+allpoints <- grep("points_all", sf::st_layers(file.path(out_path, "s1_sampling.gpkg"))$name, value = T)
+boi <- stringr::str_extract(allpoints, "[^_]+")
+                 
+for (ii in 1:length(boi)) {
+ #ii = 1
+  b <- boi[ii]
+  points <- st_read(file.path(out_path, outname), layer = paste0(b,"_points_all")) 
+  pointsout <- points %>%
+    cbind(st_coordinates(points)) %>% 
+    dplyr::select(bgc,id, rotation, X,Y) %>% 
+    sf::st_drop_geometry() %>% 
+    dplyr::mutate(Surveyor = "", Date_Completed = "", Transect_comment = "") 
+  
+  write.csv(pointsout, file.path(out_path, paste0(b, "_tracking_sheet.csv")))
+  
+}
 
-
-
-
-
-
-
- 
- 
- 
- 
- 
- 
- 
 ```
 
 
