@@ -11,7 +11,8 @@
 #' @param output Location of where rasters will be saved.
 #' @param sieve_size Remove isolated clusters of below the threshold number of cells
 #' @param rtemplate template of 25m raster to match final output to
-#' @import spatialEco magrittr
+#' @import spatialEco
+#' @import magrittr
 #' @keywords SAGA, covariates, predictors, raster
 #' @export
 #' ##
