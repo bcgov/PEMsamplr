@@ -37,25 +37,28 @@ Additional new cLHS slices can be created after the generation of the original r
 ```{r}
 # set up folder for sample plan
 devtools::install_github("kdaust/clhs") 
+fid <- setup_folders("CanyonCreek")
+
 
 # set output folder for clhs plans
 clhs_outpath <- fid$samplingplan_clhs[2]
+
 ifelse(!dir.exists(clhs_outpath), dir.create(clhs_outpath, recursive = TRUE), FALSE)
 
 # read in the landscape covariates + cost and stack 
 
-landscape_dir <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
+landscape_dir <- fid$sampling_input_landscape[2]
 
 fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif", "cost.tif")
 
-filesoi <- list.files(outpath, full.names = TRUE)[list.files(outpath) %in% fileoi]
+filesoi <- list.files(landscape_dir, full.names = TRUE)[list.files(landscape_dir) %in% fileoi]
 
 all_cov <- terra::rast(filesoi)
 
 
 # read in bec labels 
 
-bec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\20_sample_plan\\10_standard_sample\\10_input_raster\\exclusion" 
+bec_dir = fid$sampling_input_exclusion[2]
 
 boi <- list.files(bec_dir, pattern = ".tif")
 
@@ -73,14 +76,15 @@ for(b in boi) {
   
 # create 10 different sample plans
   
-  for(rot in 1:5){ 
-    
+  for(rot in 1:3){ 
+    #rot = 1
     sample_points <- create_clhs(all_cov = sample_layers_masked, 
                                  num_slices = 2, 
                                  to_include = NULL, 
                                  n_points = 5 , 
                                  min_dist = 1000,
                                  num_sample = 5000000)
+    sample_points <- dplyr::mutate(sample_points, bgc = bname)
     
     sf::st_write(sample_points, file.path(clhs_outpath, paste0(bname,"_clhs_sample_",rot,".gpkg")))
     
@@ -142,7 +146,7 @@ p1
 
 ```{r}
 # set up start location
-vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector"
+vec_dir = fid$shape_dir_1010[2]
 cities <- st_read(file.path(vec_dir, "major_towns_bc.gpkg"))
 nearest_town = "Granisle"
 start <- cities[cities$NAME == nearest_town,"NAME"]
@@ -153,29 +157,51 @@ start <- cities[cities$NAME == nearest_town,"NAME"]
 
 
 
-3) Generate the additional transect information 
+3) Generate Location Options for Paired Samples
+
+For sampling efficiency and field safety paired transects at a cLHS points is desireable. The cLHS point is the centre point of the first transect. We generate additional points at 400m from the cLHS points in the eight cardinal and ordinal directions . This distance provides a minimum 100m spacing from the cLHS transect to any second transect. Cardinal points that fall outside the buffered cost surface are removed as candidates.
+Selection of the second (or third) transect from the available set could be made in several ways:randomly, choice of least cost, transect with maximum variable difference from cLHS point.
+
+Currently the second location is based on the least cost.
 
 ```{r}
+# select the bec variant of interest and the clhs chosen
 
-sampleplan_outdir <- "D:\\PEM_DATA\PEMsamplr\\CanyonCreek\\20_sample_plan\\10_standard_sample\\30_sampleplan_final\\transect"
-  
-clhs_dir <- list.files(file.path("D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\20_sample_plan\\10_standard_sample\\20_sampleplan_draft\\clhs"), full.names = T)
-  
-clhs_final <- sf::st_read(clhs_dir[16])
-
-landscape_dir <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
-
-cost <- terra::rast(file.path( landscape_dir, "cost.tif"))
+boi <- "SBSmc2"
+clhs_set <- "SBSmc2_clhs_sample_2.gpkg"
 
 
-mask <- 
-  
-  
-pem_create_maps <- function(sample_points, out_name, centroid_distance = 400){
-  
- sample_points =  clhs_final 
- b = unique(ptCoords$subzone)
+# define location of output 
+out_path <- fid$sampleplan_final_transect[2]
 
+# define selected clhs option
+sample_points <- sf::st_read(list.files(fid$samplingplan_clhs[2], pattern = clhs_set, full.names = TRUE))
+
+# read in cost layer 
+cost <- terra::rast(file.path(fid$sampling_input_landscape[2], "cost.tif"))
+
+# exclusion filefolder
+#mask_poly <- sf::st_read(file.path(fid$sampling_input_exclusion[2], paste0(boi, "_exclude_poly.gpkg"))) %>%
+#  st_transform(3005)
+
+build_site_transects(sample_points, cost, centroid_distance = 400, out_path) 
+
+# export a tracking sheet for the samples 
+
+
+
+
+
+
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 ```
 
 
