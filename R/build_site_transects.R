@@ -62,7 +62,10 @@ build_site_transects <- function(sample_points, cost, centroid_distance = 400, o
   #xy <- cost
   #out_path = sampleplan_outdir
 
-  sample_points <- dplyr::select(sample_points, c(slice_num, point_num, bgc))
+  sample_points <- dplyr::select(sample_points, c(slice_num, point_num, bgc)) %>%
+    dplyr::arrange(slice_num, point_num ) %>%
+    dplyr::mutate(cid = seq(1, nrow(sample_points),1))
+
 
   # convert geom to geometry
   g <- sample_points
@@ -155,10 +158,10 @@ build_site_transects <- function(sample_points, cost, centroid_distance = 400, o
     dplyr::filter(!is.na(rotation))
 
   all_points <- rbind(sample_points_clhs, sample_points_rotations)  %>%
-    dplyr::mutate(id = paste(paste(bgc,slice_num, point_num, sep = "."),rotation, sep = "_"))
+    dplyr::mutate(id = paste(paste(bgc,slice_num, point_num,cid, sep = "."),rotation, sep = "_"))
 
   paired_sample <- rbind(sample_points_clhs, sample_points_low_cost)  %>%
-    dplyr::mutate(id = paste(paste(bgc,slice_num, point_num, sep = "."),rotation, sep = "_"))
+    dplyr::mutate(id = paste(paste(bgc,slice_num, point_num,cid, sep = "."),rotation, sep = "_"))
 
   # Create triangle around each point and randomly rotate
   print( "generating site transects")
