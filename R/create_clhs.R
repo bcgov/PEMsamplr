@@ -18,9 +18,9 @@
 #'@export
 
 ###testing
-# all_cov <- lays
-# num_slices = 3
-# to_include = NULL
+#all_cov <- lays
+#num_slices = 3
+#to_include = NULL
 
 
 create_clhs <- function(all_cov, num_slices, to_include = NULL,
@@ -52,7 +52,7 @@ create_clhs <- function(all_cov, num_slices, to_include = NULL,
   if(num_slices == 1){
     print("Gen-R-ating one slice...")
 
-    spoints <- clhs(s, size = size,
+    spoints <- clhs(curr_dat, size = size,
                     must.include = inc_idx,
                     iter = 10000 ,
                     simple = FALSE,
