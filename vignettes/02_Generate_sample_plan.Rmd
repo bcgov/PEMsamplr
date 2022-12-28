@@ -65,7 +65,7 @@ boi <- list.files(bec_dir, pattern = ".tif")
 # for each Bec unit generate multiple plans
 
 for(b in boi) {
-  b <- boi[3]
+  #b <- boi[3]
   boi_mask <- terra::rast(file.path(bec_dir, b)) 
   names(boi_mask) = "mask"
   bname <- gsub("_exclude_mask.tif", "", b)
@@ -76,7 +76,7 @@ for(b in boi) {
   
 # create 10 different sample plans
   
-  for(rot in 1:3){ 
+  for(rot in 1:5){ 
     #rot = 1
     sample_points <- create_clhs(all_cov = sample_layers_masked, 
                                  num_slices = 2, 
@@ -87,7 +87,7 @@ for(b in boi) {
     sample_points <- sample_points %>% 
       dplyr::mutate(bgc = bname)
     
-    sf::st_write(sample_points, file.path(clhs_outpath, paste0(bname,"_clhs_sample_",rot,".gpkg")))
+    sf::st_write(sample_points, file.path(clhs_outpath, paste0(bname,"_clhs_sample_",rot,".gpkg")),append=FALSE )
     
   }
   
