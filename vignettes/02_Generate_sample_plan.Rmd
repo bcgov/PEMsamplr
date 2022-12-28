@@ -76,7 +76,7 @@ for(b in boi) {
   
 # create 10 different sample plans
   
-  for(rot in 1:5){ 
+  for(rot in 4:5){ 
     #rot = 1
     sample_points <- create_clhs(all_cov = sample_layers_masked, 
                                  num_slices = 2, 
