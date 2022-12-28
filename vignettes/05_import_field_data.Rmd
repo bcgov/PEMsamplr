@@ -1,0 +1,67 @@
+---
+title: "05_Import_field_data"
+author: "G. Perkins"
+date: "2022-12-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Import and Clean Field data 
+
+Once the field data has been collected, we can preprocesses. 
+Depending on the size of the study area or areas, we reccomend storing the track and point data in a spatial file or database. 
+
+In this example we will process a group of spatial files - either shapefiles or geopackages and tidy them to be put into a central database/spatial database.
+
+In this example we will use some test data
+
+```{r libraries}
+
+load_all()
+library(PEMprepr)
+library(sf)
+
+```
+
+
+```{r pressure, echo=FALSE}
+# set up the folder names
+fid <- setup_folders("CanyonCreek")
+
+# location of the transect layout (sample plan)
+trans_input <- fid$sampleplan_final_transect[2]
+trans_output <- fid$trainpts_201040[2]
+  
+# location of the raw field data
+rawdat <- fid$trainpts_transect[2]
+
+# output location for cleaned data
+cleandat <- fid$trainpts_maps[2]
+  
+```
+
+# Create a consolidated transect layout 
+
+We will firstly create a basic layer with all the transects names consolidated for each BEC. This will be used as a template for assigning incidental or transect data points 
+
+
+```{r}
+
+# test this on multiple locations 
+# 
+# inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work/KootInvCran_AOI/2_sample_design/stage1_StudyDesign/transect_layout"
+# 
+# inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\DateCreek_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
+
+inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\WilliamsLake_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
+
+transect_layout <- generate_transectlayout(inpath)
+
+transect_layout_buf <- sf::st_buffer(transect_layout, 10)
+
+st_write(transect_layout, file.path(trans_output, "transect_layout_s1.gpkg"), delete_layer = TRUE)
+```
+
