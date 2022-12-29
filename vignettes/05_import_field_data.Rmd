@@ -52,9 +52,9 @@ We will firstly create a basic layer with all the transects names consolidated f
 
 # test this on multiple locations 
 # 
-# inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work/KootInvCran_AOI/2_sample_design/stage1_StudyDesign/transect_layout"
+inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work/KootInvCran_AOI/2_sample_design/stage1_StudyDesign/transect_layout"
 # 
-# inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\DateCreek_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
+inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\DateCreek_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
 
 inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\WilliamsLake_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
 
@@ -63,5 +63,29 @@ transect_layout <- generate_transectlayout(inpath)
 transect_layout_buf <- sf::st_buffer(transect_layout, 10)
 
 st_write(transect_layout, file.path(trans_output, "transect_layout_s1.gpkg"), delete_layer = TRUE)
+
 ```
+
+
+# import and clean field data
+
+```{r}
+
+rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\DateCreek_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data"
+
+
+rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\KootInvCran_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data\\final_contractors\\_scott\\"
+
+
+
+library(foreach)
+
+points <- format_fielddata(rawdat, transect_layout_buf)
+
+
+st_write(points, file.path(cleandat, "s1_points.gpkg"), delete_layer = TRUE)
+
+
+```
+
 
