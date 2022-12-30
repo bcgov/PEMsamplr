@@ -17,21 +17,21 @@
 
 format_fielddata <- function(datafolder, transect_layout_buf){
 
-#datafolder <- rawdat
+  #datafolder <- rawdat
 
   points <- list.files(file.path(datafolder), pattern = ".gpkg$|.shp$", full.names = TRUE, recursive = TRUE)
-  #points <-  points[1:12]
+  #points <-  points[1:120]
 
   all_points <- foreach(x = points, .combine = rbind) %do% {
 
-   #x = points[127]
+   #x = points[115]
 
     s1_layers <- sf::st_layers(x)
     pts <- which(s1_layers[["geomtype"]] %in% c("Point","3D Point","3D Measured Point"))
 
     if(length(pts)>0) {
 
-      #print(x)
+     # print(x)
 
       points_read <- sf::st_read(x, quiet = TRUE) %>%
         sf::st_transform(3005) %>%
@@ -119,6 +119,7 @@ format_fielddata <- function(datafolder, transect_layout_buf){
         points_read <- points_read %>%
           dplyr::rename(edatope = x10_edatope)
       }
+
 
       # 10) comments
 
@@ -219,6 +220,21 @@ format_fielddata <- function(datafolder, transect_layout_buf){
           mapunit1 == mapunit2 ~ NA_character_,
           TRUE ~ as.character(mapunit2)
         ) )
+
+      # add back sight/ line of site check
+
+      # STILL TO ADD
+
+
+
+
+      # add missing columns if not in data
+    if("photos" %in% names(points_read)) {
+
+    } else {
+      points_read <- points_read %>%
+        dplyr::mutate(photos = NA)
+    }
 
 
      points_read <- points_read %>%
