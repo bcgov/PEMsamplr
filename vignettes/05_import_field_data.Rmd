@@ -54,9 +54,9 @@ We will firstly create a basic layer with all the transects names consolidated f
 # 
 inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work/KootInvCran_AOI/2_sample_design/stage1_StudyDesign/transect_layout"
 # 
-inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\DateCreek_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
-
-inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\WilliamsLake_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
+# inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\DateCreek_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
+# 
+# inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\WilliamsLake_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
 
 transect_layout <- generate_transectlayout(inpath)
 
@@ -72,18 +72,35 @@ st_write(transect_layout, file.path(trans_output, "transect_layout_s1.gpkg"), de
 ```{r}
 
 rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\DateCreek_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data"
+rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\WilliamsLake_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data"
 
-
-rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\KootInvCran_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data\\final_contractors\\_scott\\"
-
+rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\KootInvCran_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data\\final_contractors\\_ben\\"
 
 
 library(foreach)
 
 points <- format_fielddata(rawdat, transect_layout_buf)
 
+# covert to lines 
+processed_transects <- make_lines(GPSPoints = points, 
+                                  Transects = transect_layout_buf, 
+                                  method = "pts2lines",  
+                                  tBuffer = 20, PROJ = 3005) %>%
+#  dplyr::mutate(mapunit1 = (trimws(mapunit1)),
+#         mapunit2 = (trimws(mapunit2))) %>%
+#  dplyr::mutate(mapunit12 = paste0(mapunit1,"_", mapunit2)) %>%
+#  dplyr::mutate(mapunit12 = gsub("_NA","", mapunit12)) %>%
+#  dplyr::mutate(mapunit12 = gsub("_$","", mapunit12)) #%>%
+  dplyr::select(-TID, -ID)
 
-st_write(points, file.path(cleandat, "s1_points.gpkg"), delete_layer = TRUE)
+st_write(processed_transects,  file.path(cleandat, "proc_s1_transects_ben.gpkg"), 
+         delete_layer = TRUE)
+
+sf::st_write(points, file.path(cleandat, "s1_points_ben.gpkg"), delete_layer = TRUE)
+
+
+
+
 
 
 ```

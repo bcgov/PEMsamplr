@@ -17,29 +17,29 @@
 
 format_fielddata <- function(datafolder, transect_layout_buf){
 
-datafolder <- rawdat
+  #datafolder <- rawdat
 
   points <- list.files(file.path(datafolder), pattern = ".gpkg$|.shp$", full.names = TRUE, recursive = TRUE)
-  #points <-  points[1:12]
-
+  #points <-  points[1:120]
 
   all_points <- foreach(x = points, .combine = rbind) %do% {
 
-    x = points[2]
+   #x = points[115]
 
     s1_layers <- sf::st_layers(x)
     pts <- which(s1_layers[["geomtype"]] %in% c("Point","3D Point","3D Measured Point"))
 
     if(length(pts)>0) {
 
-      print(x)
+     # print(x)
 
       points_read <- sf::st_read(x, quiet = TRUE) %>%
         sf::st_transform(3005) %>%
         sf::st_zm() %>%
         dplyr::rename_all(.funs = tolower)
 
-      print(length(points_read$name))
+      start_length = length(points_read$name)
+
       # 1) transect name
 
       if("f01_transec" %in% names(points_read)){
@@ -120,6 +120,7 @@ datafolder <- rawdat
           dplyr::rename(edatope = x10_edatope)
       }
 
+
       # 10) comments
 
       if("x09_comment" %in% names(points_read)){
@@ -128,57 +129,54 @@ datafolder <- rawdat
       }
 
 
-      # 11 timestamp
+      # 11 timestamp # this still needs lots of work to check the
 
       if("timestamp" %in% names(points_read)){
 
         points_read <- points_read %>%
           dplyr::mutate(date_ymd = lubridate::as_date(points_read$timestamp))
 
-        tryCatch({
-          points_read <- points_read %>%
-            dplyr::mutate(time_hms =  hms::as_hms(timestamp))
-        },
-        error=function(e) {
-          message('Error: Time was unable to be calculated, using NA')
-          print(e)
+        if(stringr::str_length(points_read$timestamp[1])>10){
 
-        },
-        # warning=function(w) {
-        #   message('A Warning Occurred')
-        #   print(w)
-        #   return(NA)
-        # },
-         finally = {
+          points_read <- points_read %>%
+            dplyr::mutate(date_time = lubridate::as_datetime(points_read$timestamp))
+
+          #  points_read <- points_read %>%
+          #    dplyr::mutate(time_hms =  hms::as_hms(timestamp))
+
+          points_read <- points_read %>%
+            dplyr::mutate(time_hms = format(date_time, format = "%H:%M:%S"))
+
+        } else {
+
           points_read <- dplyr::mutate(points_read, time_hms = NA)
 
-        })
-      }
+        }
+
+      } # end of time section
+
 
       if("name" %in% names(points_read)){
         points_read <- points_read %>%
           dplyr::mutate(order = as.numeric(gsub("Placemark ", "", name)))
       }
-      print(length(points_read$order))
+
+       #print(length(points_read$order))
       #names(points_read)
 
-      # fill in transect_id if needed
-
-     # if(anyNA(points_read$transect_id)) {
+      # Transect id
 
       points_read <- points_read %>%
         sf::st_join(., transect_layout_buf, join = st_intersects) %>%
-        dplyr::rename_all(.funs = tolower)
+        dplyr::rename_all(.funs = tolower) %>%
+        dplyr::distinct()
 
       points_read <- points_read %>%
         dplyr::mutate(id = gsub("\\s", "", id)) %>%
         dplyr::mutate(transect_id = id)
-      #  dplyr::mutate(transect_id = dplyr::case_when(
-      #    is.na(transect_id) ~ id,
-      #    TRUE ~ transect_id))
 
-      #}
-      print(length(points_read$order))
+      #print(length(points_read$order))
+
       points_read <- points_read %>%
         dplyr::mutate(data_type = ifelse(is.na(transect_id), "incidental", "s1"))
 
@@ -190,12 +188,54 @@ datafolder <- rawdat
 
         } else {
 
-       print ("filling observer names")
+      # print ("filling observer names")
 
       points_read <- .fill_observer(points_read)
 
-
       }
+
+      # check the mapunit 1 is filled if mapunit 2 is not na
+
+      points_read <- points_read %>%
+        dplyr::mutate(mapunit1 = dplyr::case_when(
+          is.na(mapunit1) & !is.na(mapunit2) ~ mapunit2,
+          is.null(mapunit1) & !is.na(mapunit2) ~ mapunit2,
+          mapunit1 == " " & !is.na(mapunit2) ~ mapunit2,
+          TRUE ~ as.character(mapunit1)
+        ) )
+
+
+      # check is mapunit 1 and 2 are identical
+      # still in testing
+
+      # cc <- points_read %>%
+      #   dplyr::select(mapunit1, mapunit2)%>%
+      #   dplyr::filter(mapunit2 != " ")%>%
+      #   st_drop_geometry() %>%
+      #   dplyr::distinct()
+
+
+      points_read <- points_read %>%
+        dplyr::mutate(mapunit2 = dplyr::case_when(
+          mapunit1 == mapunit2 ~ NA_character_,
+          TRUE ~ as.character(mapunit2)
+        ) )
+
+      # add back sight/ line of site check
+
+      # STILL TO ADD
+
+
+
+
+      # add missing columns if not in data
+    if("photos" %in% names(points_read)) {
+
+    } else {
+      points_read <- points_read %>%
+        dplyr::mutate(photos = NA)
+    }
+
 
      points_read <- points_read %>%
         dplyr::select(any_of(c("order", "mapunit1", "mapunit2", "point_type", "transect_id",
@@ -206,7 +246,14 @@ datafolder <- rawdat
         dplyr::ungroup()
 
       sf::st_geometry(points_read) <- "geom"
-      print(length(points_read$order))
+
+      endlength = length(points_read$order)
+
+      if(endlength != start_length){
+
+        print("length of input file does not match cleaned file review raw data:")
+        print(x)
+      }
 
       points_read
 
@@ -220,9 +267,10 @@ datafolder <- rawdat
 
 
 
+
 .fill_observer <- function(input_data){
 
- #input_data <- points_read
+  #input_data <- points_read
 
   observer_key <- input_data %>%
     dplyr::select(transect_id, observer) %>%
@@ -240,13 +288,10 @@ datafolder <- rawdat
   }
 
   input_data <- input_data %>%
-    dplyr::left_join(observer_key, by = c("transect_id" = "transect_id")) %>%
-    dplyr::mutate(observer = trimws(observer, which = "both")) %>%
-    dplyr::mutate(observer = ifelse(is.na(observer),observer_fill, observer)) %>%
-    dplyr::mutate(observer = ifelse(observer == "" , observer_fill, observer)) %>%
-    #mutate(observer = observer_fill) %>%
-    dplyr::select(-observer_fill)
+    dplyr::group_by(transect_id) %>%
+    tidyr::fill(observer, .direction = "downup") %>%
+    dplyr::ungroup()
 
   return(input_data)
-
 }
+
