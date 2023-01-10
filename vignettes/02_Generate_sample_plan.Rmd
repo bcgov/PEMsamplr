@@ -76,13 +76,13 @@ for(b in boi) {
   
 # create 10 different sample plans
   
-  for(rot in 4:5){ 
+  for(rot in 6:7){ 
     #rot = 1
     sample_points <- create_clhs(all_cov = sample_layers_masked, 
                                  num_slices = 2, 
                                  to_include = NULL, 
                                  n_points = 5 , 
-                                 min_dist = 1000,
+                                 min_dist = 12000,
                                  num_sample = 5000000)
     sample_points <- sample_points %>% 
       dplyr::mutate(bgc = bname)
