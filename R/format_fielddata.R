@@ -17,14 +17,14 @@
 
 format_fielddata <- function(datafolder, transect_layout_buf){
 
-  #datafolder <- rawdat
+ # datafolder <- rawdat
 
   points <- list.files(file.path(datafolder), pattern = ".gpkg$|.shp$", full.names = TRUE, recursive = TRUE)
-  #points <-  points[1:120]
+  #points <-  points[1:70]
 
   all_points <- foreach(x = points, .combine = rbind) %do% {
 
-   #x = points[115]
+   #x = points[13]
 
     s1_layers <- sf::st_layers(x)
     pts <- which(s1_layers[["geomtype"]] %in% c("Point","3D Point","3D Measured Point"))
@@ -59,11 +59,19 @@ format_fielddata <- function(datafolder, transect_layout_buf){
         points_read <- points_read %>%
           dplyr::rename(transect_id = x01_transec)
       }
+      if("x01_transect_id" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(transect_id = x01_transect_id)
+      }
 
       # 2) observer
       if("x02_observe" %in% names(points_read)){
         points_read <- points_read %>%
           dplyr::rename(observer = x02_observe)
+      }
+      if("x02_observer" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(observer = x02_observer)
       }
 
       # 3) point_type
@@ -84,11 +92,22 @@ format_fielddata <- function(datafolder, transect_layout_buf){
           dplyr::rename(mapunit2 = x06_mapunit)
       }
 
+      if("x06_mapunit2" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(mapunit2 = x06_mapunit2)
+      }
+
+
       # 6) transtition
       if("x05_transit" %in% names(points_read)){
         points_read <- points_read %>%
           dplyr::rename(transition = x05_transit)
       }
+      if("x05_transition" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(transition = x05_transition)
+      }
+
 
       # 7) Stand struc
       if("x07_struc_" %in% names(points_read)){
@@ -99,6 +118,11 @@ format_fielddata <- function(datafolder, transect_layout_buf){
       if("x07_struct_" %in% names(points_read)){
         points_read <- points_read %>%
           dplyr::rename(stuc_stage = x07_struct_)
+      }
+
+      if("x07_struct_stage" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(stuc_stage = x07_struct_stage)
       }
 
 
@@ -114,6 +138,12 @@ format_fielddata <- function(datafolder, transect_layout_buf){
           dplyr::rename(stuc_mod = x08_struct_)
       }
 
+      if("x08_struct_stage_mod" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(stuc_mod = x08_struct_stage_mod)
+      }
+
+
       # 9) Edatope
       if("x10_edatope" %in% names(points_read)){
         points_read <- points_read %>%
@@ -126,6 +156,12 @@ format_fielddata <- function(datafolder, transect_layout_buf){
       if("x09_comment" %in% names(points_read)){
         points_read <- points_read %>%
           dplyr::rename(comments = x09_comment)
+      }
+
+
+      if("x09_comments" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(comments = x09_comments)
       }
 
 
