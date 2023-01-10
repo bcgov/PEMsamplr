@@ -18,10 +18,23 @@
 #'@export
 
 ###testing
-#all_cov <- lays
-#num_slices = 3
-#to_include = NULL
-
+# library(clhs)
+# library(terra)
+# library(data.table)
+# library(sf)
+#
+# covs <- c(rast("../PEM_Data/cost.tif"),
+#           rast("../PEM_Data/dah_LS.tif"),
+#           rast("../PEM_Data/landform_LS.tif"),
+#           rast("../PEM_Data/mrvbf_LS.tif"))
+# msk <- rast("../SBSmc2_exclude_mask.tif")
+# covs2 <- mask(covs, msk)
+# all_cov <- covs2
+# num_slices = 2
+# to_include = NULL
+# n_points = 5
+# min_dist = 1000
+# num_sample = 5000000
 
 create_clhs <- function(all_cov, num_slices, to_include = NULL,
                         n_points = 5, min_dist = 600, num_sample = 5000000){
@@ -52,22 +65,8 @@ create_clhs <- function(all_cov, num_slices, to_include = NULL,
   if(num_slices == 1){
     print("Gen-R-ating one slice...")
 
-    spoints <- clhs(curr_dat, size = size,
-                    must.include = inc_idx,
-                    iter = 20000 ,
-                    simple = FALSE,
-                    progress = TRUE,
-                    cost= "cost",
-                    use.cpp = T,
-                    latlon = coords,
-                    min.dist = min_dist)
-
-  }else{
-    print("Gen-R-ating multiple slices...")
-    spoints <- for(snum in 1:num_slices){
-     # snum = 1
-      templhs <- clhs(curr_dat,
-                      size = n_points * snum,
+    for(i in 1:5){
+      templhs <- clhs(curr_dat, size = size,
                       must.include = inc_idx,
                       iter = 20000 ,
                       simple = FALSE,
@@ -76,14 +75,45 @@ create_clhs <- function(all_cov, num_slices, to_include = NULL,
                       use.cpp = T,
                       latlon = coords,
                       min.dist = min_dist)
+      if(sum(templhs$final_obj_distance) == 0) break
+    }
+
+
+  }else{
+    print("Gen-R-ating multiple slices...")
+    #inc_idx = NULL
+    for(snum in 1:num_slices){
+      # snum = 2
+      #
+      for(i in 1:5){
+        templhs <- clhs(curr_dat,
+                        size = snum * size,
+                        must.include = inc_idx,
+                        iter = 20000 ,
+                        simple = FALSE,
+                        progress = TRUE,
+                        cost= "cost",
+                        use.cpp = T,
+                        latlon = coords,
+                        min.dist = min_dist)
+        if(sum(templhs$final_obj_distance) == 0){
+          break
+        }else{
+          cat("Points too close. Trying again...")
+        }
+      }
+      #print(templhs$final_obj_distance)
       inc_idx <- templhs$index_samples
       # print(templhs$final_obj_distance)
       # print(inc_idx)
     }
   }
-  out <- as.data.table(samp_dat[templhs$index_samples,])
-  out[,`:=`(slice_num = rep(num_slices:1,each = n_points),
-            point_num = rep(1:n_points, times = num_slices))]
-  out_sf <- st_as_sf(out,coords = c("x","y"),crs = 3005)
+  # uncomment to plot points and check distance
+  # out <- as.data.table(samp_dat[templhs$index_samples,])
+  # out[,`:=`(slice_num = rep(num_slices:1,each = n_points),
+  #           point_num = rep(1:n_points, times = num_slices))]
+  # out_sf <- st_as_sf(out,coords = c("x","y"),crs = 3005)
+  # st_distance(out_sf,out_sf)
+  # plot(out_sf['slice_num'], pch = 16)
   return(out_sf)
 }
