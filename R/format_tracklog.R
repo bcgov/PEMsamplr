@@ -13,7 +13,7 @@ format_tracklog <- function(datafolder, transect_layout_buf){
     #x = points[13]
 
     s1_layers <- sf::st_layers(x)
-    pts <- which(s1_layers[["geomtype"]] %in% c("Point","3D Point","3D Measured Point"))
+    pts <- which(s1_layers[["geomtype"]] %in% c("Line","LINESTRING","3D Measured Point"))
 
     if(length(pts)>0) {
 
