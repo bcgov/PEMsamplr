@@ -20,7 +20,7 @@ format_fielddata <- function(datafolder, transect_layout_buf){
  # datafolder <- rawdat
 
   points <- list.files(file.path(datafolder), pattern = ".gpkg$|.shp$", full.names = TRUE, recursive = TRUE)
-  #points <-  points[1:70]
+ # points <-  points[1:100]
 
   all_points <- foreach(x = points, .combine = rbind) %do% {
 
