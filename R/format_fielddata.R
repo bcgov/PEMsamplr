@@ -20,11 +20,12 @@ format_fielddata <- function(datafolder, transect_layout_buf){
  #datafolder <- rawdat
 
   points <- list.files(file.path(datafolder), pattern = ".gpkg$|.shp$", full.names = TRUE, recursive = TRUE)
- # points <-  points[1:90]
+  #points <-  points[1:80]
 
   all_points <- foreach(x = points, .combine = rbind) %do% {
 
-  # x = points[88]
+   #x = points[18]
+  #  print(x)
 
     s1_layers <- sf::st_layers(x)
     pts <- which(s1_layers[["geomtype"]] %in% c("Point","3D Point","3D Measured Point"))
