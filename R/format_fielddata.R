@@ -24,7 +24,7 @@ format_fielddata <- function(datafolder, transect_layout_buf){
 
   all_points <- foreach(x = points, .combine = rbind) %do% {
 
-   #x = points[18]
+   #x = points[2]
   #  print(x)
 
     s1_layers <- sf::st_layers(x)

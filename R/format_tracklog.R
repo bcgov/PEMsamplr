@@ -16,11 +16,11 @@ format_tracklog <- function(datafolder, transect_layout_buf){
  #datafolder <- rawdat
 
   lines <- list.files(file.path(datafolder), pattern = ".gpkg$|.shp$", full.names = TRUE, recursive = TRUE)
-  #lines <- lines[1:200]
+  lines <- lines[1:7500]
 
   all_lines <- foreach(x = lines, .combine = rbind) %do% {
 
-    #x = lines[1]
+    #x = lines[1007]
 
     s1_layers <- sf::st_layers(x)
     lns <- which(s1_layers[["geomtype"]] %in% c("LINE","LINESTRING","3D Line String"))
@@ -33,6 +33,10 @@ format_tracklog <- function(datafolder, transect_layout_buf){
         sf::st_transform(3005) %>%
         sf::st_zm() %>%
         dplyr::rename_all(.funs = tolower)
+
+      # if more than onw linestring then check?
+
+
 
       #start_length = length(tdat$name)
 
