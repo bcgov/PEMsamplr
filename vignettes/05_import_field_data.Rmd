@@ -52,9 +52,9 @@ We will firstly create a basic layer with all the transects names consolidated f
 
 # test this on multiple locations 
 # 
-inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work/KootInvCran_AOI/2_sample_design/stage1_StudyDesign/transect_layout"
+#inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work/KootInvCran_AOI/2_sample_design/stage1_StudyDesign/transect_layout"
 # 
-# inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\DateCreek_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
+ inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\OldFort_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
 # 
 # inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\WilliamsLake_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
 
@@ -71,11 +71,11 @@ st_write(transect_layout, file.path(trans_output, "transect_layout_s1.gpkg"), de
 
 ```{r}
 # 
-# rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\DateCreek_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data"
+ rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\OldFort_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data"
 # 
 # rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\WilliamsLake_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data"
 
-rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\KootInvCran_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data\\final_contractors\\_danielle\\"
+#rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\KootInvCran_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data\\final_contractors\\_danielle\\"
 
 
 library(foreach)
@@ -89,18 +89,23 @@ processed_transects <- make_lines(GPSPoints = points,
                                   tBuffer = 20, PROJ = 3005) %>%
   dplyr::select(-TID, -ID)
 
-st_write(processed_transects,  file.path(cleandat, "proc_s1_transects_danielle.gpkg"), 
+
+
+st_write(processed_transects,  file.path(cleandat, "proc_s1_transects_oldfort.gpkg"), 
          delete_layer = TRUE)
 
-sf::st_write(points, file.path(cleandat, "s1_points_danielle.gpkg"), delete_layer = TRUE)
+sf::st_write(points, file.path(cleandat, "s1_points_oldfort.gpkg"), delete_layer = TRUE)
+
+
+
 
 
 # format tracklog
-rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\KootInvCran_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data\\final_contractors\\"
+#rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\KootInvCran_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data\\final_contractors\\_dev\\"
 
 
 tracks <- format_tracklog(rawdat, transect_layout_buf)
-sf::st_write(tracks, file.path(cleandat, "s1_tracklog.gpkg"), delete_layer = TRUE)
+sf::st_write(tracks, file.path(cleandat, "s1_tracklog_oldfort.gpkg"), delete_layer = TRUE)
 
 ```
 
