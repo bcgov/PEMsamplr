@@ -24,7 +24,7 @@ format_fielddata <- function(datafolder, transect_layout_buf){
 
   all_points <- foreach(x = points, .combine = rbind) %do% {
 
-   #x = points[2]
+  # x = points[4]
   #  print(x)
 
     s1_layers <- sf::st_layers(x)
@@ -32,7 +32,7 @@ format_fielddata <- function(datafolder, transect_layout_buf){
 
     if(length(pts)>0) {
 
-     # print(x)
+      print(x)
 
       points_read <- sf::st_read(x, quiet = TRUE) %>%
         sf::st_transform(3005) %>%
@@ -60,6 +60,7 @@ format_fielddata <- function(datafolder, transect_layout_buf){
         points_read <- points_read %>%
           dplyr::rename(transect_id = x01_transec)
       }
+
       if("x01_transect_id" %in% names(points_read)){
         points_read <- points_read %>%
           dplyr::rename(transect_id = x01_transect_id)

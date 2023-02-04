@@ -20,7 +20,7 @@ format_tracklog <- function(datafolder, transect_layout_buf){
 
   all_lines <- foreach(x = lines, .combine = rbind) %do% {
 
-   # x = lines[1]
+   #x = lines[2]
 
     s1_layers <- sf::st_layers(x)
     lns <- which(s1_layers[["geomtype"]] %in% c("LINE","LINESTRING","3D Line String"))
