@@ -15,16 +15,21 @@
 #' clean_pts <- format_fielddata(inputfolder, transect_layout)
 
 
-format_fielddata <- function(datafolder, transect_layout_buf){
+format_fielddata <- function(datafolder = NULL, transect_layout_buf){
 
-  #datafolder <- rawdat
+  datafolder <- rawdat
+
+  if(is.null(datafolder)) {
+    print("raw data folder location is missing")
+  }
+
 
   points <- list.files(file.path(datafolder), pattern = ".gpkg$|.shp$", full.names = TRUE, recursive = TRUE)
- # points <-  points[1:2]
+  #points <-  points[1:50]
 
   all_points <- foreach(x = points, .combine = rbind) %do% {
 
-    #x = points[3]
+    #x = points[5]
     print(x)
 
     s1_layers <- sf::st_layers(x)
@@ -39,13 +44,19 @@ format_fielddata <- function(datafolder, transect_layout_buf){
         sf::st_zm() %>%
         dplyr::rename_all(.funs = tolower)
 
-      if( "name" %in% names(points_read)){
 
-        start_length = length(points_read$name)
+      sf::st_geometry(points_read) <- "geom"
 
-      } else {
-      start_length = length(points_read$geometry)
-      }
+      start_length = length(points_read$geom)
+
+      # if( "name" %in% names(points_read)){
+      #
+      #   start_length = length(points_read$name)
+      #
+      # } else {
+      #
+      #   start_length = length(points_read$geometry)
+      # }
 
       # 1) transect name
 
@@ -62,6 +73,11 @@ format_fielddata <- function(datafolder, transect_layout_buf){
 
       }
 
+      if("f01_transect_id" %in% names(points_read)){
+        dnames = names(points_read)
+        colnames(points_read) <- gsub("f0", "x0", dnames)
+
+      }
 
       if("x01_trans" %in% names(points_read)){
         points_read <- points_read %>%
@@ -81,6 +97,7 @@ format_fielddata <- function(datafolder, transect_layout_buf){
 
       if("x01_transect_id" %in% names(points_read)){
         points_read <- points_read %>%
+          dplyr::mutate() %>%
           dplyr::rename(transect_id = x01_transect_id)
       }
 
@@ -136,6 +153,10 @@ format_fielddata <- function(datafolder, transect_layout_buf){
           dplyr::rename(mapunit1 = x04_mapuni)
       }
 
+      if("x04_mapunit1" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(mapunit1 = x04_mapunit1)
+      }
 
       #  Mapunit1
       if("x2mapunit1" %in% names(points_read)){
@@ -288,6 +309,7 @@ format_fielddata <- function(datafolder, transect_layout_buf){
 
       } # end of time section
 
+      #fix the point order
 
       if("name" %in% names(points_read)){
         points_read <- points_read %>%
@@ -299,8 +321,12 @@ format_fielddata <- function(datafolder, transect_layout_buf){
           dplyr::mutate(order = as.numeric(objectid))
       }
 
+      if(("order" %in% names(points_read)) == FALSE){
+          points_read <- points_read %>%
+            dplyr::mutate(order = as.numeric(seq(1, length(points_read$geom),1)))
+        }
 
-       #print(length(points_read$order))
+      #print(length(points_read$order))
       #names(points_read)
 
       # Transect id
@@ -371,6 +397,7 @@ format_fielddata <- function(datafolder, transect_layout_buf){
 
 
       # add missing columns if not in data
+
     if("photos" %in% names(points_read)) {
 
     } else {
@@ -395,6 +422,23 @@ format_fielddata <- function(datafolder, transect_layout_buf){
           points_read <- points_read %>%
             dplyr::mutate(edatope = NA)
         }
+
+      # add missing columns if not in data
+      if("edatope" %in% names(points_read)) {
+
+      } else {
+
+        points_read <- points_read %>%
+          dplyr::mutate(edatope = NA)
+      }
+
+      # add missing columns if not in data
+      if(("date_ymd" %in% names(points_read))== FALSE) {
+       points_read <- points_read %>%
+          dplyr::mutate(date_ymd = NA,
+                        time_hms = NA)
+      }
+
 
     # subset and export
 
