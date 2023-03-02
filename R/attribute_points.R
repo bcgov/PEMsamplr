@@ -4,6 +4,8 @@
 #' @param cov_dir folder containing covariate files
 #' @return an sf object
 #' @keywords SAGA, covariates, predictors, raster
+#' @import sf
+#' @import terra
 #' @export
 #' @examples
 #' tpoints_ne <- attribute_points(dat_pts, cov_dir)
@@ -14,11 +16,11 @@ attribute_points <- function(dat_pts, cov_dir){
   if(class(cov_dir) == "character") {
     print ("reading in raster stack")
     lor <- list.files(cov_dir, pattern = ".sdat$", full.names = T)
-    rasts <- terra::rast(lor)
+    cov_dir <- terra::rast(lor)
 
   }
 
-  atts <- terra::extract(rasts, dat_pts)
+  atts <- terra::extract(cov_dir, dat_pts)
   att_all <- cbind(st_as_sf(dat_pts), atts)
 
   return(att_all)

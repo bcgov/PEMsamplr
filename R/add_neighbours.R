@@ -5,6 +5,9 @@
 #' @param dat_pts training points/pixels from sampled transects
 #' @param template the baseline raster template for the entire map area
 #' @return an sfpoints object
+#' @import datatable
+#' @import sf
+#' @import terra
 #' @keywords training data, accuracy assessment, neighbours
 #' @export
 #' @examples
