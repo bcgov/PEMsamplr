@@ -78,8 +78,7 @@ allrasts <- file.path(covdir, res_folder)
 
 allpts <- attribute_points(tpoints_ne, allrasts) 
 
-
-
+st_write(allpts, dsn = file.path(fid$training_data_1030[2], "allpts.gpkg"), delete_layer = TRUE)
 
 ```
 
