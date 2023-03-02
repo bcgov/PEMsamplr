@@ -1,0 +1,87 @@
+---
+title: "06_Attribute_field_data.Rmd"
+author: "G. Perkins"
+date: "2023-03-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Add Neighbours and Attribute Training data points
+
+We can choose to extract all adjoing points for each training point. 
+This process is done to overcome spatial missregulation errors. 
+
+
+```{r libraries}
+
+load_all()
+library(PEMprepr)
+library(sf)
+library(terra)
+
+```
+
+Create the set of folders is not already running from previous scripts
+
+```{r}
+# set up the folder names
+fid <- setup_folders("CanyonCreek")
+
+# location for cleaned data
+#cleandat <- fid$trainpts_maps[2]
+cleandat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\DateCreek_AOI\\2_sample_design\\stage1_StudyDesign\\training_pts"
+
+# location of attributed and output data 
+outdat <- fid$training_data_1030[2]
+
+#location of raster base on which modelling will be applied
+covdir <- fid$cov_dir_1020[2]
+
+res_folder = "5m"
+
+```
+
+Add the adjoining cells 
+
+```{r}
+#read in the cleaned trianing points
+
+tpoints <- st_read(file.path(cleandat, "s1_points.gpkg"))
+
+
+# read in the raster template used for modelling (i.e 5m resolution)
+trast <- terra::rast(file.path(covdir, res_folder,"template.tif"))
+
+#dat_pts <- tpoints 
+#template <- trast
+
+tpoints_ne <- add_neighbours(tpoints,trast)
+
+
+```
+
+Attribute all the data 
+
+
+```{r}
+
+head(tpoints_ne)
+
+# location of covariates to intersect with
+# read in the raster template used for modelling (i.e 5m resolution)
+
+# convert .sdat to geotif
+
+asp <- terra::rast(file.path(covdir, res_folder,"aspect.sdat"))
+
+
+allrasts <- file.path(covdir, res_folder)
+
+allpts <- attribute_points(allrasts, ) 
+
+
+```
+
