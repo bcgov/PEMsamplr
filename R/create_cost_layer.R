@@ -3,6 +3,7 @@
 #' @param x **SpatRast or RasterLayer (raster package), output from prepare_cost_layer ()
 #' @param start **SpatVec of sf object with Start Locations for the cost layer.
 #' @import magrittr
+#' @import gdistance
 #' @return RasterLayer with Cost
 #' @export
 #'
