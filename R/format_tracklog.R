@@ -13,17 +13,17 @@
 
 format_tracklog <- function(datafolder, transect_layout_buf){
 
- #datafolder <- rawdat
+# datafolder <- rawdat
 
   lines <- list.files(file.path(datafolder), pattern = ".gpkg$|.shp$", full.names = TRUE, recursive = TRUE)
  # lines <- lines[1000:1070]
 
   all_lines <- foreach(x = lines, .combine = rbind) %do% {
 
-  # x = lines[72]
+   #x = lines[2]
 
     s1_layers <- sf::st_layers(x)
-    lns <- which(s1_layers[["geomtype"]] %in% c("LINE","LINESTRING","3D Line String"))
+    lns <- which(s1_layers[["geomtype"]] %in% c("LINE","LINESTRING","3D Line String", "3D Measured Multi Line String"))
 
     if(length(lns)>0) {
 

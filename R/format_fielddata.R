@@ -17,7 +17,7 @@
 
 format_fielddata <- function(datafolder = NULL, transect_layout_buf){
 
-  datafolder <- rawdat
+  #datafolder <- rawdat
 
   if(is.null(datafolder)) {
     print("raw data folder location is missing")
@@ -25,11 +25,11 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
 
 
   points <- list.files(file.path(datafolder), pattern = ".gpkg$|.shp$", full.names = TRUE, recursive = TRUE)
-  #points <-  points[1:50]
+ #points <-  points[1:135]
 
   all_points <- foreach(x = points, .combine = rbind) %do% {
 
-    #x = points[5]
+   # x = points[76]
     print(x)
 
     s1_layers <- sf::st_layers(x)
