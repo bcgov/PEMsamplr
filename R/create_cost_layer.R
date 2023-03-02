@@ -32,8 +32,6 @@ create_cost_layer <- function(x, start){
   }
 
 
-
-
   # create  transition layer
   tr <- gdistance::transition(x, transitionFunction = function(x) 1/mean(x,na.rm = T), directions = 8, symm = F)
   tr1 <- gdistance::geoCorrection(tr)
