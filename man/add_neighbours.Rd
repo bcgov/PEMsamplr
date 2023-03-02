@@ -7,9 +7,9 @@
 add_neighbours(dat_pts, template)
 }
 \arguments{
-\item{template}{the baseline raster template for the entire map area}
+\item{dat_pts}{training points/pixels from sampled transects}
 
-\item{trainpts}{training points/pixels from sampled transects}
+\item{template}{the baseline raster template for the entire map area}
 }
 \value{
 an sfpoints object
