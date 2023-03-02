@@ -4,7 +4,7 @@
 \alias{format_fielddata}
 \title{Format field data}
 \usage{
-format_fielddata(datafolder, transect_layout_buf)
+format_fielddata(datafolder = NULL, transect_layout_buf)
 }
 \arguments{
 \item{datafolder}{text string with location of raw files in shp or gpk format}
