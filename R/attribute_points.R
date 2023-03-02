@@ -13,6 +13,10 @@
 
 attribute_points <- function(dat_pts, cov_dir){
 
+
+
+
+
   if(class(cov_dir) == "character") {
     print ("reading in raster stack")
     lor <- list.files(cov_dir, pattern = ".sdat$", full.names = T)
