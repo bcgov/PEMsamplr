@@ -109,10 +109,10 @@ create_clhs <- function(all_cov, num_slices, to_include = NULL,
     }
   }
   # uncomment to plot points and check distance
-  # out <- as.data.table(samp_dat[templhs$index_samples,])
-  # out[,`:=`(slice_num = rep(num_slices:1,each = n_points),
-  #           point_num = rep(1:n_points, times = num_slices))]
-  # out_sf <- st_as_sf(out,coords = c("x","y"),crs = 3005)
+  out <- as.data.table(samp_dat[templhs$index_samples,])
+  out[,`:=`(slice_num = rep(num_slices:1,each = n_points),
+             point_num = rep(1:n_points, times = num_slices))]
+   out_sf <- st_as_sf(out,coords = c("x","y"),crs = 3005)
   # st_distance(out_sf,out_sf)
   # plot(out_sf['slice_num'], pch = 16)
   return(out_sf)
