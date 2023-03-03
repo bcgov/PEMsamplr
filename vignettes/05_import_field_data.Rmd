@@ -23,6 +23,7 @@ In this example we will use some test data
 load_all()
 library(PEMprepr)
 library(sf)
+library(foreach)
 
 ```
 
@@ -77,8 +78,6 @@ rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\BoundaryTSA_AOI\\2_sample_design\
 # rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\WilliamsLake_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data"
 
 #rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\KootInvCran_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data\\final_contractors"
-
-library(foreach)
 
 points <- format_fielddata(rawdat, transect_layout_buf)
 #points <- all_points
