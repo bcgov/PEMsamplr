@@ -16,7 +16,7 @@
 
 create_binned_landscape <- function(input){
 
-  input <- filesoi
+ # input <- filesoi
 
   suppressWarnings({
     if(dir.exists(input) & length(input) == 1){
