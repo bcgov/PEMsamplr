@@ -39,7 +39,7 @@ fid <- setup_folders("CanyonCreek")
 aoi_raw <- system.file("extdata", "aoi.gpkg", package ="PEMprepr")
 aoi_raw <- sf::st_read(aoi_raw)
 
-# 2) snap to adjoining watersheds to provide wider landscape context 
+# 2) snap to adjoining watersheds to provide wider landscape context or
 aoi_landscape <- PEMprepr::aoi_snap_landscape(aoi_raw)
 
 # generate a 25m template for 
