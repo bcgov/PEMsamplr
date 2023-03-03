@@ -17,7 +17,10 @@
 #' build_site_transects(sample_points, cost, centroid_distance = 400, out_path)
 
 
-.rot = function(a) matrix(c(cos(a), sin(a), -sin(a), cos(a)), 2, 2)
+.rot = function(a){
+  out <- matrix(c(cos(a), sin(a), -sin(a), cos(a)), 2, 2)
+  return(out)
+}
 
 .Tri_build <- function(id, x, y){
   tris <- LearnGeom::CreateRegularPolygon(3, c(as.numeric(paste(x)),
