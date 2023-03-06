@@ -12,6 +12,8 @@ Build the associates triangles, buffered triangles and selected paired triangle 
 
 \item{cost}{\strong{SpatRast} cost layer generate for sample plan}
 
+\item{mask_poly}{\strong{sf} spatial object of mask for specific bgc}
+
 \item{centroid_distance}{Numeric value at which the triangles are placed apart, default is 400 based on albers crs meters}
 
 \item{out_path}{text string with location in which output sample plan as a geopackage is written}
