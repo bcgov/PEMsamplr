@@ -53,8 +53,8 @@ trim <- terra::rast(trim_raw)
 trim <- terra::project(trim, t25)
 
 # generate the covariates at landscape
-
-outpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
+outpath <- fid$sampling_input_landscape[2]
+#outpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
 
 SAGApath_dir ="C:/SAGA/saga-7.7.0_x64/"
 
