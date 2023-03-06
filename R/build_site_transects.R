@@ -68,6 +68,8 @@ build_site_transects <- function(sample_points, cost, mask_poly, centroid_distan
     dplyr::arrange(slice_num, point_num ) %>%
     dplyr::mutate(cid = seq(1, nrow(sample_points),1))
 
+  b <- unique(sample_points$bgc)
+
 
   # convert geom to geometry
   g <- sample_points
