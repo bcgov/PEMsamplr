@@ -4,19 +4,23 @@
 \alias{create_cost_layer}
 \title{create cost layer}
 \usage{
-create_cost_layer(x, start)
+create_cost_layer(x, start, trans_output = FALSE, transition_outdir = NULL)
 }
 \arguments{
 \item{x}{**SpatRast or RasterLayer (raster package), output from prepare_cost_layer ()}
 
 \item{start}{**SpatVec of sf object with Start Locations for the cost layer.}
+
+\item{trans_output}{TRUE/FALSE - do you want to save output of transition layer as rds (to be used in vrp)}
+
+\item{transition_outdir}{**filepath for where to output transition rds}
 }
 \value{
-RasterLayer with Cost
+RasterLayer with Cost and output the transition file for Vrp use
 }
 \description{
 create cost layer
 }
 \examples{
-create_cost(costprep, start)
+create_cost(costprep, start, outdir)
 }
