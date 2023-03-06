@@ -47,7 +47,7 @@
   ## Convert bearing from degrees to radians
   d <- ifelse(Bearing > 180, pi * ((Bearing-360)/ 180) ,  pi * (Bearing / 180))
 
-  rFeature <- (Feature_geo - PivotPoint) * rot(d)   + PivotPoint
+  rFeature <- (Feature_geo - PivotPoint) * .rot(d)   + PivotPoint
   rFeature <- sf::st_set_crs(rFeature, st_crs(Feature))
 
   Feature$geometry <- st_geometry(rFeature) ## replace the original geometry
@@ -102,7 +102,7 @@ build_site_transects <- function(sample_points, cost, centroid_distance = 400, o
       PivotPoint  <- st_geometry(pnt)
       ## Convert bearing from degrees to radians
       d <- ifelse(Bear > 180, pi * ((Bear -360)/ 180) ,  pi * (Bear / 180))
-      rFeature <- (Feature_geo - PivotPoint) * rot(d)   + PivotPoint
+      rFeature <- (Feature_geo - PivotPoint) * .rot(d)   + PivotPoint
       rFeature <- st_set_crs(rFeature, st_crs(pnt_feat))
       pnt_feat$geometry <- st_geometry(rFeature) ## replace the original geometry
       pnt_feat$Rotation <- Bear
