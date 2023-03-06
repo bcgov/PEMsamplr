@@ -28,7 +28,7 @@
 #
 # xx <- create_landform_classes(dtm, scale = 75, sn = 25,ln = 75, n.classes = "six",
 #                               add.tpi = FALSE, stand.tpi = FALSE)
-
+#
 create_landform_classes <- function (dtm,
                                      scale = 3,
                                      sn=3,

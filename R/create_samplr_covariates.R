@@ -11,13 +11,10 @@
 #' @param output Location of where rasters will be saved.
 #' @param sieve_size Remove isolated clusters of below the threshold number of cells
 #' @param rtemplate template of 25m raster to match final output to
-#' @import spatialEco
 #' @import magrittr
 #' @keywords SAGA, covariates, predictors, raster
 #' @export
-#' ##
-#
-# # # get a base raster that is correct size
+#' @examples
 #  aoi_raw <- system.file("extdata", "aoi.gpkg", package ="PEMprepr")
 #  aoi_raw <- sf::st_read(aoi_raw)
 #  aoi <- PEMprepr::aoi_snap(aoi_raw, "shrink")
@@ -28,15 +25,11 @@
 #  dtm <- terra::project(trim, t25)
 #  sieve_size = 10
 #  fid <- setup_folders("canyoncreek")
-#  #output =  fid$sampling_input_landscape[[2]]
-#  output <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
+#  output =  fid$sampling_input_landscape[[2]]
 #  SAGApath ="C:/SAGA/saga-7.7.0_x64/"
-
-#  create_samplr_covariates(dtm,
-#                               output =  output,
-#                               SAGApath ="C:/SAGA/saga-7.7.0_x64/",
-#                                sieve_size = 10)
-#
+# create_samplr_covariates(dtm,rtemplate = r25, output =  output,
+#                              SAGApath ="C:/SAGA/saga-7.7.0_x64/",
+#                               sieve_size = 10)
 
 
 create_samplr_covariates <- function(dtm, rtemplate,  SAGApath = "",

@@ -13,7 +13,6 @@
 #' @examples
 #' tpoints_ne <- add_neighbours(tpoints,trast)
 
-
 add_neighbours <- function(dat_pts, template){
 
     dat_pts$ptsID <- 1:nrow(dat_pts)

@@ -12,8 +12,6 @@
 #'
 #' check_bgc_landscapes(bec, binned_landscape)
 
-# check the variability in landscape by BGC
-
 check_bgc_landscapes <- function(bec, binned_landscape){
 
   # if not a

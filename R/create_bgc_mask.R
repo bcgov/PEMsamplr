@@ -14,7 +14,6 @@
 #' create_cost_nosample <- function(vec_dir, cost)
 #'
 
-
 create_bgc_mask <- function(vec_dir, cost_masked, out_dir) {
 
   # exclude water:

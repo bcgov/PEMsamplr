@@ -5,14 +5,12 @@
 #' @param bgc Biogeoclimatic classification vector (sf polygon/multipolygon)
 #' @param binned_landscape Raster (SpatRast) with binned landscapes, output of create_binned_landscape() function
 #' @param cost Raster layer (SpatRast) with cost layer
-#'
 #' @return data.frame
 #' @export
 #'
 #' @examples
 #'check_bgc_cost(bgc, binned_landscape, cost)
 #'
-
 check_bgc_cost <- function(bgc, binned_landscape, cost){
 
   # create a bgc raster

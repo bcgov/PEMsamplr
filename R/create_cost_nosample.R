@@ -12,8 +12,6 @@
 #' @examples
 #' create_cost_nosample <- function(vec_dir, cost)
 #'
-
-
 create_cost_nosample <- function(vec_dir, cost) {
 
   # exclude water:

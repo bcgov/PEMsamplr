@@ -12,10 +12,8 @@
 #' @import foreach
 #' @return TRUE
 #' @export
-#'
 #' @examples
 #' build_site_transects(sample_points, cost, centroid_distance = 400, out_path)
-
 
 .rot = function(a){
   out <- matrix(c(cos(a), sin(a), -sin(a), cos(a)), 2, 2)
@@ -227,7 +225,6 @@ build_site_transects <- function(sample_points, cost, centroid_distance = 400, o
 
 
 }
-
 
 #
 # .pairedPoint <- function(POC, Dist, Rotations){ #Where bearing is the bearing recorded in the transect

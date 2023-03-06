@@ -10,7 +10,7 @@
 #'
 #' @examples
 #' clean_tracks <- format_tracklog(inputfolder, transect_layout)
-
+#
 format_tracklog <- function(datafolder, transect_layout_buf){
 
 # datafolder <- rawdat

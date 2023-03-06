@@ -10,12 +10,7 @@
 #' @examples
 #' tpoints_ne <- attribute_points(dat_pts, cov_dir)
 
-
 attribute_points <- function(dat_pts, cov_dir){
-
-
-
-
 
   if(class(cov_dir) == "character") {
     print ("reading in raster stack")

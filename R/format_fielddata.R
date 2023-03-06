@@ -4,7 +4,6 @@
 #'
 #' @param transect_layout_buf sf spatial object with transect buffered data
 #' @param datafolder text string with location of raw files in shp or gpk format
-#'
 #' @author Genevieve Perkins
 #' @import foreach
 #' @return sf point data
@@ -14,7 +13,6 @@
 #'
 #' clean_pts <- format_fielddata(inputfolder, transect_layout)
 
-
 format_fielddata <- function(datafolder = NULL, transect_layout_buf){
 
   #datafolder <- rawdat
@@ -22,7 +20,6 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
   if(is.null(datafolder)) {
     print("raw data folder location is missing")
   }
-
 
   points <- list.files(file.path(datafolder), pattern = ".gpkg$|.shp$", full.names = TRUE, recursive = TRUE)
  #points <-  points[1:135]
