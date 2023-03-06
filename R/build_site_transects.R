@@ -4,6 +4,7 @@
 #'
 #' @param sample_points **sf** spatial object of clhs points
 #' @param cost **SpatRast** cost layer generate for sample plan
+#' @param mask_poly **sf** spatial object of mask for specific bgc
 #' @param centroid_distance Numeric value at which the triangles are placed apart, default is 400 based on albers crs meters
 #' @param out_path text string with location in which output sample plan as a geopackage is written
 #' @import magrittr
@@ -56,7 +57,7 @@
 
 
 
-build_site_transects <- function(sample_points, cost, centroid_distance = 400, out_path) {
+build_site_transects <- function(sample_points, cost, mask_poly, centroid_distance = 400, out_path) {
 
   # testing lines
   #xx <-sample_points
@@ -173,9 +174,9 @@ build_site_transects <- function(sample_points, cost, centroid_distance = 400, o
     #i = 1
     poc <- all_points[i, ]
 
-    triangle <- Tri_build(id = poc$id, x =  st_coordinates(poc)[1], y =  st_coordinates(poc)[2])
+    triangle <- .Tri_build(id = poc$id, x =  st_coordinates(poc)[1], y =  st_coordinates(poc)[2])
     random_rotation <- runif(1, min = 0, max = 360)
-    triangle <- rotFeature(triangle, poc, random_rotation)
+    triangle <- .rotFeature(triangle, poc, random_rotation)
 
     #  if(is.na(poc$rotation)){
     #    triangle$id <- poc$id
