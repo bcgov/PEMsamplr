@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Mapping resolution and mapping units 
 
-In many of the site series we can roll up finner classification into broader groups. To do this we need to use a build to match field calls to map units. 
+In many of the site series we can roll up finer classification into broader groups. To do this we need to use a build to match field calls to map units. 
 
 In this case we have a pre-populated legend. 
 
@@ -21,8 +21,10 @@ Once the final level of modelling is decided we convert points to line segments,
 
 ## Prepare and attribute all training data points 
 
-We can choose to extract all adjoining points for each training point. 
-This process is done to overcome spatial missregulation errors. 
+1) convert lines to points 
+2) extract neighbours 
+3) attribute points 
+4) select mapkey to use in models
 
 
 ```{r libraries}
@@ -34,66 +36,99 @@ library(terra)
 
 ```
 
+
 Create the set of folders is not already running from previous scripts
 
 ```{r}
 # set up the folder names
 fid <- setup_folders("CanyonCreek")
 
-map.key  <- read.csv(file.path(fid$AOI_dir[2], "DateCreek_MapUnitLegend.csv"), stringsAsFactor = FALSE)
+#map.key  <- read.csv(file.path(fid$AOI_dir[2], "DateCreek_MapUnitLegend.csv"), stringsAsFactor = FALSE)
 
-# clean points 
-cleandat <- fid$trainpts_maps[2]
+## clean points 
+#cleandat <- fid$trainpts_maps[2]
+cleandat <- "D:\\PEM_DATA\\DateCreek_AOI\\DateCreek_AOI\\20_sample_plan\\10_standard_sample\\40_transect_data\\clean_field_data"
 
 res_folder = "5m"
 
 #location of raster base on which modelling will be applied
-covdir <- fid$cov_dir_1020[2]
+#covdir <- fid$cov_dir_1020[2]
+covdir <- "D:\\PEM_DATA\\DateCreek_AOI\\DateCreek_AOI\\10_clean_inputs\\20_covariates"
 
 # location of attributed and output data 
-outdat <- fid$training_data_1030[2]
+#outdat <- fid$training_data_1030[2]
+outdat <- "D:\\PEM_DATA\\DateCreek_AOI\\DateCreek_AOI\\10_clean_inputs\\30_trainingdata"
+```
+
+#1) Convert lines to points 
+
+
+We can choose to extract all adjoining points for each training point. 
+This process is done to overcome spatial missregulation errors. 
+
+
+```{r}
+# read in the raster template used for modelling (i.e 5m resolution)
+trast <- terra::rast(file.path(covdir, res_folder,"template.tif"))
+
+#tpoints <- st_read(file.path(cleandat, "s2_points.gpkg"))
+
+processed_transects <- st_read(file.path(cleandat, "proc_s1_transects.gpkg"))
+
+if("ID" %in% colnames(processed_transects) == FALSE){
+  print ("adding ID column")
+  processed_transects <- processed_transects %>% 
+    mutate(ID = seq(1, length(processed_transects$order), 1))
+}
+
+processed_transects_id <- st_drop_geometry(processed_transects)
+
+# transv <- terra::vect(file.path(cleandat, "proc_s1_transects_datecreek.gpkg"))
+
+lBuff <- processed_transects %>% 
+    sf::st_buffer(., dist = 2.5, endCapStyle = "FLAT", joinStyle = "MITRE") %>%
+    sf::st_cast(.,"MULTIPOLYGON")
+
+# convert to spatVect
+transv <- terra::vect(lBuff )
+
+# extract the XY values of raster cells where crossed lines
+xys <- terra::extract(trast,transv, xy = TRUE )
+
+# add the additional points back to full dataset
+raster_points_xy <- xys %>% 
+  st_as_sf(coords = c("x", "y"), crs = 3005) %>%
+  merge(processed_transects_id) %>%
+  select(-ID, -template)
+
+# add slice and tid (transect id)
+
+allpts <-raster_points_xy %>%
+    mutate(tid = tolower(gsub("_[[:alpha:]].*","", transect_id))) %>%
+    mutate(slice = sub('.*(?=.$)', '',gsub("\\..*","", tid), perl=T))
+  
+# write out? 
 
 ```
+
 
 Add the adjoining cells 
 
 ```{r}
-#read in the cleaned trianing points
 
-tpoints <- st_read(file.path(cleandat, "s1_points.gpkg"))
-
-tlines <- st_read(file.path(cleandat, "proc_s1.gpkg"))
-
-
-
-
-
-
-
-
-# read in the raster template used for modelling (i.e 5m resolution)
-trast <- terra::rast(file.path(covdir, res_folder,"template.tif"))
-
-#dat_pts <- tpoints 
-#template <- trast
-
-tpoints_ne <- add_neighbours(tpoints,trast)
-
+tpoints_ne <- add_neighbours(allpts,trast)
 
 ```
 
 Attribute all the data 
 
-
 ```{r}
 
 head(tpoints_ne)
 
-# location of covariates to intersect with
-# read in the raster template used for modelling (i.e 5m resolution)
-
-
 allrasts <- file.path(covdir, res_folder)
+
+#cov_dir = allrasts
 
 allpts <- attribute_points(tpoints_ne, allrasts) 
 
