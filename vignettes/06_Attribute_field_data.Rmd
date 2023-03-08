@@ -62,15 +62,10 @@ Add the adjoining cells
 
 tpoints <- st_read(file.path(cleandat, "s1_points.gpkg"))
 
+tlines <- st_read(file.path(cleandat, "proc_s1.gpkg"))
 
 
 
-# covert to lines 
-processed_transects <- make_lines(GPSPoints = points, 
-                                  Transects = transect_layout_buf, 
-                                  method = "pts2lines",  
-                                  tBuffer = 20, PROJ = 3005) %>%
-  dplyr::select(-TID, -ID)
 
 
 
