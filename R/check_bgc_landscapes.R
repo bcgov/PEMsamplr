@@ -15,7 +15,8 @@
 check_bgc_landscapes <- function(bec, binned_landscape){
 
   # if not a
-  vbgc <- terra::vect(bec)
+  sfbgc <- sf::st_read(bec, quiet = T)
+  vbgc <- terra::vect(sfbgc)
   rbgc <- terra::rasterize(vbgc, landscapes, field = "MAP_LABEL")
 
   # stack
