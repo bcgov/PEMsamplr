@@ -127,7 +127,6 @@ out_dir <- cleandat
 
 trainingpt_report(tpts = tpts, trans = trans, out_dir = out_dir)
 
-#rmarkdown::render("create_fielddata_report.R", "pdf_document")
 
 ```
 
