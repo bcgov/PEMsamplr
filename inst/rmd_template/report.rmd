@@ -1,264 +1,274 @@
 ---
+title: "Field training point summary report"
+output: html_document
 params:
-  data: data
-  report_config: report_config
-  response: response
-  set_title: report_title
-title: "`r params$set_title`"
-always_allow_html: true
+  tpts: tpts
+  trans: trans
+  out_dir: out_dir
 ---
 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache=FALSE,
+                      warning = FALSE, message = FALSE,
+                      results = 'show',  fig.width = 14,
+  fig.height = 10,eval = TRUE)  ## flag eval = false for quick text edits
+```
+
+
 ```{r global_options, include=FALSE}
+
 ## Load library
 library(data.table)
 library(rmarkdown)
 library(knitr)
-## Set knitr options
-opts_chunk$set(
-  fig.width = 14,
-  fig.height = 10,
-  echo = FALSE,
-  results = "asis",
-  warning = TRUE
-)
-## Get user data
-data <- params$data
-report_config <- params$report_config
-response <- params$response
-## Create helper functions
-do_call <- function(fun_name, na_omit = FALSE) {
-  if (na_omit) data <- na.omit(data)
-  do.call(fun_name, c(list("data" = data), report_config[[fun_name]]))
-}
-## Create global data
-intro <- do_call("introduce")
+library(dplyr)
+library(ggplot2)
+
+tpts <- params$tpts
+trans <- params$trans
+out_dir <- params$out_dir
+
 ```
 
-```{r introduce}
-if ("introduce" %in% names(report_config)) {
-  memory_usage <- intro[["memory_usage"]]
-  class(memory_usage) <- "object_size"
-  intro_df <- data.frame(
-    "Name" = c("Rows", "Columns",
-               "Discrete columns", "Continuous columns", "All missing columns",
-               "Missing observations", "Complete Rows",
-               "Total observations", "Memory allocation"),
-    "Value" = c(
-      format(intro[["rows"]], big.mark = ","),
-      format(intro[["columns"]], big.mark = ","),
-      format(intro[["discrete_columns"]], big.mark = ","),
-      format(intro[["continuous_columns"]], big.mark = ","),
-      format(intro[["all_missing_columns"]], big.mark = ","),
-      format(intro[["total_missing_values"]], big.mark = ","),
-      format(intro[["complete_rows"]], big.mark = ","),
-      format(intro[["total_observations"]], big.mark = ","),
-      format(memory_usage, unit = "auto")
-    )
-  )
-  ## Render content
-  cat("### Basic Statistics", fill = TRUE)
-  cat("#### Raw Counts", fill = TRUE)
-  kable(intro_df)
-}
+
+# type of points
+
+```{r}
+ptsdf <- tpts %>%
+  sf::st_drop_geometry()
+
+pttype <- ptsdf  %>% 
+  dplyr::select(data_type) %>%
+  group_by(data_type)%>%
+  dplyr::mutate(count = n()) %>%
+  dplyr::distinct()
+
+kable(pttype)
+
+```
+# length of transect segments
+
+```{r}
+
+all_trans <- trans %>%  
+    mutate(length = st_length(.)) %>%
+    st_drop_geometry() 
+
+#all_trans_i <- all_trans %>%
+#  dplyr::filter(data_type == "incidental")
+
+# total type of points with primary and secondary 
+trans_type_p <- all_trans %>%
+  dplyr::group_by(data_type) %>%
+  dplyr::summarise(primary = sum(length, na.rm = TRUE))
+
+trans_type_s <- all_trans %>%
+  filter(!is.na(mapunit2)) %>%
+  group_by(data_type) %>%
+  dplyr::summarise(secondary = sum(length, na.rm = TRUE))
+
+trans_type <- left_join(trans_type_p, trans_type_s) %>%
+  mutate(pc.sec = round((secondary/primary * 100),1))
+
+trans_type_long <- left_join(trans_type_p, trans_type_s) %>%
+  mutate(pc.sec = secondary/primary * 100)
+
+trans_types <- unique(trans_type$data_type)
+
 ```
 
-```{r plot_intro}
-if ("plot_intro" %in% names(report_config)) {
-  cat("#### Percentages", fill = TRUE)
-  do_call("plot_intro")
-}
+A total length of `r round(sum(trans_type$primary),1)` meters was surveyed during transect collection. This include `r round(length(trans_type$data_type),1)` data types : `r trans_types`.
+
+Alternate calls were made for `r round(sum(trans_type$secondary, na.rm = TRUE),2)` meters, with an average of `r round(sum(trans_type$secondary, na.rm = TRUE)/sum(trans_type$primary, na.rm = TRUE)*100, 1) ` % of all calls.
+
+```{r}
+kable(trans_type)
 ```
 
-```{r data_structure}
-if ("plot_str" %in% names(report_config)) {
-  str_object <- do.call(plot_str, c(list("data" = data, "max_level" = report_config[["plot_str"]][["max_level"]], "print_network" = FALSE)))
-  plot_option <- report_config[["plot_str"]][setdiff(names(report_config[["plot_str"]]), c("type", "max_level", "print_network"))]
-  ## Render content
-  cat("### Data Structure", fill = TRUE)
-  if (report_config[["plot_str"]][["type"]] == "radial") {
-    do.call(radialNetwork, c(list("List" = str_object), plot_option))
-  } else {
-    do.call(diagonalNetwork, c(list("List" = str_object), plot_option))
-  }
-}
+# number of points per transects
+
+```{r}
+nopts <- ptsdf  %>% 
+  dplyr::select(transect_id) %>%
+  group_by( transect_id) %>%
+  mutate(count = n()) %>%
+  distinct()
+
+kable(nopts)
+
 ```
 
-```{r missing_profile}
-if ("plot_missing" %in% names(report_config)) {
-  cat("### Missing Data Profile", fill = TRUE)
-  do_call("plot_missing")
-}
+# Observers
+
+```{r, eval = FALSE}
+
+noobs <- ptsdf  %>% 
+  dplyr::select(observer) %>%
+  group_by(observer) %>%
+  mutate(count = n()) %>%
+  distinct()
+
+kable(noobs)
 ```
 
-```{r univariate_distribution_header}
-if (any(c("plot_bar", "plot_histogram", "plot_density", "plot_qq") %in% names(report_config))) {
-  cat("### Univariate Distribution", fill = TRUE)
-}
+
+# Call type
+
+# Primary and Secondary Calls
+
+```{r, eval = FALSE}
+# total type of points with primary and secondary 
+pt_type_p <- ptsdf  %>%
+  group_by(data_type) %>%
+  dplyr::summarise(all.calls = n())
+
+pt_type_s <- ptsdf %>%
+  filter(!is.na(mapunit2)) %>%
+  group_by(data_type) %>%
+  dplyr::summarise(sec.calls = n())
+
+pt_type <- left_join(pt_type_p, pt_type_s) %>%
+  mutate(percent.sec = sec.calls/all.calls * 100)
+
+#pt_types <- unique(pt_type$data_type)
+
+kable(pt_types)
+
 ```
 
-```{r plot_histogram}
-if ("plot_histogram" %in% names(report_config)) {
-  if (intro[["continuous_columns"]] > 0) {
-    cat("#### Histogram", fill = TRUE)
-    do_call("plot_histogram")
-  }
-}
+
+
+```{r, echo = FALSE, fig.width = 10, fig.height=10}
+#all_trans
+
+trans_f <- all_trans %>%
+  mutate(mapunit2 = ifelse(mapunit2 == "", NA, mapunit2),
+         mapunit1 = ifelse(mapunit1 == "", NA, mapunit1)) %>%
+  group_by(mapunit1, mapunit2) %>%
+  dplyr::summarise(length = sum(length)) %>%
+  ungroup()
+  
+# primary calls: 
+trans_f_p <- trans_f %>%
+  filter(is.na(mapunit2)) 
+
+# format secondary calls:
+trans_f_s12 <- trans_f %>%
+  filter(!is.na(mapunit2)) %>%
+  mutate(order = "mapunit12")
+       
+trans_f_s21 <- trans_f %>%
+  filter(!is.na(mapunit2)) %>%
+  mutate(order = "mapunit21",
+         mapunit3 = mapunit1, 
+         mapunit4 = mapunit2) %>%
+  dplyr::select(-c(mapunit1, mapunit2)) %>%
+  dplyr::rename(mapunit1 = mapunit4, 
+                mapunit2 = mapunit3)
+
+trans_secondary <- bind_rows(trans_f_s12, trans_f_s21) %>%
+  arrange(mapunit1, mapunit2) %>%
+  group_by(mapunit1, mapunit2) %>%
+  dplyr::summarise(length = sum(length)) 
+
+trans_secondary_f1 <- trans_secondary %>%
+  group_by(length) %>%
+  arrange(length, group_by = TRUE) %>%
+  aggregate(.~length, . , FUN=head, 1) %>%
+  dplyr::select(mapunit1, mapunit2, length)%>%
+  arrange(mapunit1) %>%
+  mutate(length = round(length, 2))
+
+
+trans_summary <- bind_rows(trans_f_p, trans_secondary_f1) 
+  
+trans_total <- trans_summary %>%
+  arrange(mapunit1) %>%
+  rowwise() %>%
+  mutate(bgc = unlist(strsplit(mapunit1, "/"))[1]) %>%
+  mutate(bgc = ifelse(stringr::str_detect(mapunit1, "/"), bgc, "non-forest")) %>%
+  ungroup() %>%
+  mutate(length = as.numeric(round(length, 1))) %>%
+  filter(!is.na(mapunit1)) %>%
+  mutate(mapunit12 = ifelse(is.na(mapunit2), mapunit1, paste0(mapunit1, "/", mapunit2)))
+
+bgc_list <- unique(trans_total$bgc)
+
 ```
 
-```{r plot_density}
-if ("plot_density" %in% names(report_config)) {
-  if (intro[["continuous_columns"]] > 0) {
-    cat("#### Density Estimates", fill = TRUE)
-    do_call("plot_density")
-  }
+The length of calls per bgc varied, along with proportion of primary and secondary calls. Figures below show the length of calls for all data types grouped by predominant bgc.
+
+```{r, echo = FALSE, fig.width= 12, fig.height = 16}
+# plot the freqency 
+
+for(b in bgc_list) {
+ # b = unique(pt_total$bgc)[3]
+  pt_total_bgc <- trans_total %>%
+    filter(bgc == b)
+  
+  p <- ggplot(pt_total_bgc , aes(y = reorder(mapunit12, length), x = length)) +
+  geom_bar(stat = "identity") + 
+  labs(title = b, y = "mapunit")
+  
+  print(p)
+  
 }
+
 ```
 
-```{r plot_frequency_bar}
-if ("plot_bar" %in% names(report_config)) {
-  if (intro[["discrete_columns"]] > 0) {
-    bar_option <- report_config[["plot_bar"]][setdiff(names(report_config[["plot_bar"]]), "with")]
-    cat("#### Bar Chart (with frequency)", fill = TRUE)
-    do.call(plot_bar, c(list("data" = data), bar_option))
-  }
-}
+
+```{r, eval = FALSE}
+
+# group by observer
+all_trans_ob <- all_trans %>%
+  dplyr::group_by(transect_id) %>%
+  tidyr::fill( observer, .direction = "downup")
+
+all_trans_ob_sum <- all_trans_ob %>%
+   group_by(transect_id, observer) %>%
+   dplyr::summarise(count = n())
+
+trans_ob_p <- all_trans_ob %>%
+ # dplyr::filter(is.na(mapunit2)) %>%
+  group_by(observer) %>%
+  summarise(all.calls = sum(length))
+
+trans_ob_s <- all_trans_ob %>%
+  dplyr::filter(!is.na(mapunit2)) %>%
+  group_by(observer) %>%
+  summarise(sec.calls = sum(length))
+
+trans_obs_type <- left_join(trans_ob_p, trans_ob_s) %>%
+  mutate(pc.sec = round((sec.calls/all.calls * 100),1))
+
+trans_obs_type<- trans_obs_type %>%
+  mutate(observer = case_when(
+    observer == "EAC GP" ~ "EAC",
+    observer == "EAC GCP" ~ "EAC",
+    observer == "EC" ~ "EAC",
+    observer == "CC LJ" ~ "CC",
+    observer == "DF LJ" ~ "DF",
+    observer =="DJM DF" ~ "DJM",
+    observer == "PD AR" ~ "PD", 
+    observer =="SRan" ~ "SR",
+    observer == "SR/MZ" ~ "SR",
+    observer == "WM" ~ "WHM",
+        TRUE ~ observer)) %>%
+      group_by(observer) %>%
+      summarise(across(where(is.numeric), sum)) %>%
+  mutate(pc.sec = round(sec.calls/all.calls * 100,1))
+
+
 ```
 
-```{r plot_response_bar}
-if ("plot_bar" %in% names(report_config)) {
-  if (intro[["discrete_columns"]] > 1) {
-    if (!is.null(response)) {
-      if (!is.numeric(data[[response]])) {
-        cat(paste0("#### Bar Chart (by ", response, ")"), fill = TRUE)
-        do.call(plot_bar, c(list("data" = data, "by" = response), bar_option))
-      }
-    }
-  }
-}
+There were `r length(trans_ob_s$observer)` observers recording data, including unnamed recorders (NA). The table below shows the total calls and the proportion of calls which also had a secondary call. The average proportion of transect length that has a secondary call was `r mean(trans_ob_s$pc.sec)`. Note this data does not include repeat transects, in which multiple observers recorded at the same location. 
+
+```{r, results  = "asis", hide = TRUE, echo = FALSE}
+
+kable(trans_obs_type)
+
 ```
 
-```{r plot_with_bar}
-if ("plot_bar" %in% names(report_config)) {
-  if (intro[["discrete_columns"]] > 0) {
-    with_value <- report_config[["plot_bar"]][["with"]]
-    if (!is.null(with_value)) {
-      if (response != with_value) {
-        cat(paste0("#### Bar Chart (with ", with_value, ")"), fill = TRUE)
-        do_call("plot_bar")
-      }
-    }
-  }
-}
-```
 
-```{r plot_normal_qq}
-if ("plot_qq" %in% names(report_config)) {
-  if (intro[["continuous_columns"]] > 0) {
-    qq_option <- report_config[["plot_qq"]][setdiff(names(report_config[["plot_qq"]]), "by")]
-    cat("#### QQ Plot", fill = TRUE)
-    do.call(plot_qq, c(list("data" = data), qq_option))
-  }
-}
-```
 
-```{r plot_response_qq}
-if ("plot_qq" %in% names(report_config)) {
-  if (intro[["continuous_columns"]] > 0) {
-    if (!is.null(response)) {
-      cat(paste0("#### QQ Plot (by ", response, ")"), fill = TRUE)
-      do.call(plot_qq, c(list("data" = data, "by" = response), qq_option))
-    }
-  }
-}
-```
-
-```{r plot_by_qq}
-if ("plot_qq" %in% names(report_config)) {
-  if (intro[["continuous_columns"]] > 0) {
-    by_value <- report_config[["plot_qq"]][["by"]]
-    if (!is.null(by_value)) {
-      if (response != by_value) {
-        cat(paste0("#### QQ Plot (by ", by_value, ")"), fill = TRUE)
-        do_call("plot_qq")
-      }
-    }
-  }
-}
-```
-
-```{r correlation_analysis}
-if ("plot_correlation" %in% names(report_config)) {
-  cat("### Correlation Analysis", fill = TRUE)
-  if (intro[["complete_rows"]] > 0) {
-    do_call("plot_correlation", na_omit = TRUE)
-  } else {
-    message("Insufficient complete rows! Skipping correlation analysis.")
-  }
-}
-```
-
-```{r principal_component_analysis}
-if ("plot_prcomp" %in% names(report_config)) {
-  cat("### Principal Component Analysis", fill = TRUE)
-  if (intro[["complete_rows"]] > 0) {
-    if (!is.null(response)) {
-      dt <- na.omit(data[, -response, with = FALSE])
-      do.call(plot_prcomp, c(list("data" = dt), report_config[["plot_prcomp"]]))
-    } else {
-      do_call("plot_prcomp", na_omit = TRUE)
-    }
-  } else {
-    message("Insufficient complete rows! Skipping principal component analysis.")
-  }
-}
-```
-
-```{r bivariate_distribution_header}
-if (any(c("plot_boxplot", "plot_scatterplot") %in% names(report_config)) & !is.null(response)) {
-  cat("### Bivariate Distribution", fill = TRUE)
-}
-```
-
-```{r plot_response_boxplot}
-if ("plot_boxplot" %in% names(report_config)) {
-  boxplot_option <- report_config[["plot_boxplot"]][setdiff(names(report_config[["plot_boxplot"]]), "by")]
-  if (!is.null(response)) {
-    cat(paste0("#### Boxplot (by ", response, ")"), fill = TRUE)
-    do.call(plot_boxplot, c(list("data" = data, "by" = response), boxplot_option))
-  }
-}
-```
-
-```{r plot_by_boxplot}
-if ("plot_boxplot" %in% names(report_config)) {
-  by_value <- report_config[["plot_boxplot"]][["by"]]
-  if (!is.null(by_value)) {
-    if (response != by_value) {
-      cat(paste0("#### Boxplot (by ", by_value, ")"), fill = TRUE)
-      do_call("plot_boxplot")
-    }
-  }
-}
-```
-
-```{r plot_response_scatterplot}
-if ("plot_scatterplot" %in% names(report_config)) {
-  scatterplot_option <- report_config[["plot_scatterplot"]][setdiff(names(report_config[["plot_scatterplot"]]), "by")]
-  if (!is.null(response)) {
-    cat(paste0("#### Scatterplot (by ", response, ")"), fill = TRUE)
-    do.call(plot_scatterplot, c(list("data" = data, "by" = response), scatterplot_option))
-  }
-}
-```
-
-```{r plot_by_scatterplot}
-if ("plot_scatterplot" %in% names(report_config)) {
-  by_value <- report_config[["plot_scatterplot"]][["by"]]
-  if (!is.null(by_value)) {
-    if (response != by_value) {
-      cat(paste0("#### Scatterplot (by ", by_value, ")"), fill = TRUE)
-      do_call("plot_scatterplot")
-    }
-  }
-}
-```
