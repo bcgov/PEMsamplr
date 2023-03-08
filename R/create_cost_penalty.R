@@ -11,20 +11,8 @@
 #' @examples
 #' create_cost_penalty(vec_dir, dem, cost, costval = 3000)
 #'
-
 # function to assign high cost and format output
-.assign_highcost = function(shape, crs = 3005, costval, cost) {
 
-      hcsf <- sf::st_read(shape) %>%
-        sf::st_set_crs(crs) %>%
-        dplyr::mutate(cost = costval) %>%
-        dplyr::select(cost) %>%
-        sf::st_buffer(dist = 150) %>%
-        sf::st_cast("MULTIPOLYGON")
-
-      rhc <- terra::rasterize( hcsf, cost, field = "cost")
-      return(rhc)
-}
 
 create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
 
@@ -102,5 +90,16 @@ create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
 
 }
 
+.assign_highcost = function(shape, crs = 3005, costval, cost) {
 
+  hcsf <- sf::st_read(shape) %>%
+    sf::st_set_crs(crs) %>%
+    dplyr::mutate(cost = costval) %>%
+    dplyr::select(cost) %>%
+    sf::st_buffer(dist = 150) %>%
+    sf::st_cast("MULTIPOLYGON")
+
+  rhc <- terra::rasterize( hcsf, cost, field = "cost")
+  return(rhc)
+}
 
