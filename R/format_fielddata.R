@@ -468,7 +468,7 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
 
       if(endlength != start_length){
 
-        print("length of input file does not match cleaned file review raw data:")
+        stop(print("length of input file does not match cleaned file review raw data:"))
         print(x)
       }
 
