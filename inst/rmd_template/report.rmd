@@ -133,11 +133,9 @@ pt_type <- left_join(pt_type_p, pt_type_s) %>%
 
 #pt_types <- unique(pt_type$data_type)
 
-kable(pt_types)
+kable(pt_type)
 
 ```
-
-
 
 ```{r, echo = FALSE, fig.width = 10, fig.height=10}
 #all_trans
@@ -223,7 +221,7 @@ for(b in bgc_list) {
 # group by observer
 all_trans_ob <- all_trans %>%
   dplyr::group_by(transect_id) %>%
-  tidyr::fill( observer, .direction = "downup")
+  tidyr::fill(observer, .direction = "downup")
 
 all_trans_ob_sum <- all_trans_ob %>%
    group_by(transect_id, observer) %>%
