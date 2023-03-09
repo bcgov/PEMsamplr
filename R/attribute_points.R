@@ -5,7 +5,7 @@
 #' @return an sf object
 #' @keywords SAGA, covariates, predictors, raster
 #' @import sf
-#' @import terra
+#' @importFrom terra rast extract
 #' @export
 #' @examples
 #' tpoints_ne <- attribute_points(dat_pts, cov_dir)
