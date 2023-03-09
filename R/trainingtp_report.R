@@ -10,10 +10,11 @@
 #' @param tpts  training points cleaned
 #' @param trans processed transect lines
 #' @keywords training data report
+#' @import rmarkdown
+#' @import tidyr
 #' @export
 #' @examples
-#'
-#'
+#' trainingpt_report(tpts, trans, out_dir)
 
 trainingpt_report <- function(tpts, trans,
                            out_dir){
