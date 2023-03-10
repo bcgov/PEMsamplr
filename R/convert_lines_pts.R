@@ -40,7 +40,7 @@ convert_lines_pts <- function(processed_transects, trast) {
   # add the additional points back to full dataset
   raster_points_xy <- xys %>%
     sf::st_as_sf(coords = c("x", "y"), crs = 3005) %>%
-    sf::merge(processed_transects_id) %>%
+    merge(processed_transects_id) %>%
     dplyr::select(-ID,-template)
 
   # add slice and tid (transect id)
