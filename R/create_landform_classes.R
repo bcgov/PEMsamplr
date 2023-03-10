@@ -30,7 +30,7 @@
 #                               add.tpi = FALSE, stand.tpi = FALSE)
 #
 create_landform_classes <- function (dtm,
-                                     scale = 3,
+                                     scale = 75,
                                      sn=3,
                                      ln=7,
                                      n.classes="ten",
