@@ -20,6 +20,7 @@
 #' @param PROJ is an optional the PROJ projection code with a default of BC Albers (3005).  Data imported will be transfored to this projection and final data will be exported in this projection.
 #' @keywords points, lines, convertion
 #' @export
+#' @import sf
 #' @examples
 #' ## Convert GPS waypoints to line features (i.e. transect data)
 #' transects <- convert_pts2lines(gpsData, PlannedTransects)
@@ -29,7 +30,6 @@ make_lines <- function(GPSPoints = NA,
                        Transects, method = "pts2lines",
                        sortby = "none", tBuffer = 20, PROJ = 3005) {
 
-  library(sf) ## shouldn't need this ... but just incase
 
   # # # testing
   #    GPSPoints = points
@@ -44,7 +44,6 @@ make_lines <- function(GPSPoints = NA,
     ## Transects
     planT <- Transects %>%
       dplyr::mutate(TID = dplyr::row_number()) %>%
-      # rename(TID = id)  %>% ## rename the id to not conflict with the GPS id field
       sf::st_buffer(.,tBuffer) %>% dplyr::select(TID)
 
     ## Transform data to PROJ
@@ -82,7 +81,6 @@ make_lines <- function(GPSPoints = NA,
       #x <- transects_id[1] # testing line
       GPSPoints_transect <- GPSPoints %>%
         dplyr:::filter(TID == x)
-
 
       ## Define the Line Start and End Coordinates
       ## Add XY coordinates as
@@ -130,6 +128,7 @@ make_lines <- function(GPSPoints = NA,
     all_lines <- all_lines %>% dplyr::select(-c(Xend,Yend,within, valid))
     # lines <- lines %>% dplyr::select(-c(Xend,Yend, valid))
     #lines <- lines %>% dplyr::select(TID, id, name, time, SiteSeries:Confidence)
+    all_lines <- all_lines %>% dplyr::select(-c(X,Y,TID, ID))
 
     return(all_lines)
 
