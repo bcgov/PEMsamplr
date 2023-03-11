@@ -14,6 +14,9 @@
 
 convert_lines_pts <- function(processed_transects, trast) {
 
+  # remove geometry of original points
+  processed_transects <- dplyr::select(processed_transects, c(-X, -Y))
+
   if ("ID" %in% colnames(processed_transects) == FALSE) {
     print ("adding ID column")
     processed_transects <- processed_transects %>%
