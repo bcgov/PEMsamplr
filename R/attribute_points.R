@@ -25,7 +25,7 @@ attribute_points <- function(dat_pts, cov_dir){
   if(any(names(att_all) %in% "ID.1") == TRUE){
 
       att_all<-att_all %>%
-        dplyr::select(-ID.1, -CellNum)
+        dplyr::select(-ID.1)
 
     }
 
