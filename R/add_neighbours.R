@@ -40,6 +40,8 @@ add_neighbours <- function(dat_pts, template){
     allPts <- merge(allPts, dat_atts, by.x = "ID",by.y = "ptsID",all = T)
     allPts <- terra::vect(st_as_sf(allPts))
     allPts <- sf::st_as_sf(allPts)
+    allPts <- dplyr::select(allPts, -CellNum)
+
     return(allPts)
 
 }

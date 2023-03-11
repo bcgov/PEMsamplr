@@ -22,6 +22,14 @@ attribute_points <- function(dat_pts, cov_dir){
   atts <- terra::extract(cov_dir, dat_pts)
   att_all <- cbind(st_as_sf(dat_pts), atts)
 
+  if(any(names(att_all) %in% "ID.1") == TRUE){
+
+      att_all<-att_all %>%
+        dplyr::select(-ID.1, -CellNum)
+
+    }
+
+
   return(att_all)
 
 #   # TO DO
