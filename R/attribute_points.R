@@ -21,6 +21,7 @@ attribute_points <- function(dat_pts, cov_dir){
 
   atts <- terra::extract(cov_dir, dat_pts)
   att_all <- cbind(st_as_sf(dat_pts), atts)
+  st_crs(att_all) = 3005
 
   if(any(names(att_all) %in% "ID.1") == TRUE){
 
