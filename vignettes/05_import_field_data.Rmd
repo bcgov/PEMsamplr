@@ -1,0 +1,133 @@
+---
+title: "05_Import_field_data"
+author: "G. Perkins"
+date: "2022-12-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Import and Clean Field data 
+
+Once the field data has been collected, we can preprocesses. 
+Depending on the size of the study area or areas, we reccomend storing the track and point data in a spatial file or database. 
+
+In this example we will process a group of spatial files - either shapefiles or geopackages and tidy them to be put into a central database/spatial database.
+
+In this example we will use some test data
+
+```{r libraries}
+
+devtools::load_all()
+library(PEMprepr)
+library(sf)
+library(foreach)
+
+```
+
+```{r pressure, echo=FALSE}
+# set up the folder names
+
+fid <- setup_folders("CanyonCreek")
+
+# location of the transect layout (sample plan)
+trans_input <- fid$sampleplan_final_transect[2]
+trans_output <- fid$trainpts_201040[2]
+  
+# location of the raw field data
+rawdat <- fid$trainpts_transect[2]
+
+# output location for cleaned data
+cleandat <- fid$trainpts_maps[2]
+  
+```
+
+# Create a consolidated transect layout 
+
+We will firstly create a basic layer with all the transects names consolidated for each BEC. This will be used as a template for assigning incidental or transect data points 
+
+
+```{r}
+
+# temportary test this on multiple locations 
+# trans_input <- "D:\\PEM_DATA\\BEC_DevExchange_Work/BoundaryTSA_AOI/2_sample_design/stage1_StudyDesign/transect_layout"
+
+transect_layout <- generate_transectlayout(trans_input)
+
+transect_layout_buf <- sf::st_buffer(transect_layout, 10)
+
+st_write(transect_layout, file.path(trans_output, "transect_layout_s1.gpkg"), delete_layer = TRUE)
+
+
+```
+
+
+# import and clean field data
+
+```{r}
+# tempory test on multiple locations
+# rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\BoundaryTSA_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data"
+
+points <- format_fielddata(rawdat, transect_layout_buf)
+
+
+## merge together multiple files as needed
+# all_files <- as.list(list.files(cleandat, pattern = "s1_points*", full.names = TRUE))
+# 
+# all_files_out <- foreach(fs = 1:length(all_files), .combine = "rbind" ) %do% {
+#   
+# ff <- all_files[fs]
+#   sptemp <- st_read(ff)
+#   #print(names(sptemp))
+#   sptemp
+#   }
+# 
+# sf::st_write(all_files_out, file.path(cleandat, "s1_points_boundary.gpkg"), delete_layer = TRUE)
+
+sf::st_write(points, file.path(cleandat, "s2_points.gpkg"), delete_layer = TRUE)
+
+
+
+# format tracklog
+
+tracks <- format_tracklog(rawdat, transect_layout_buf)
+
+sf::st_write(tracks, file.path(cleandat, "s1_tracklog.gpkg"), delete_layer = TRUE)
+
+
+# covert to lines 
+processed_transects <- make_lines(GPSPoints = points, 
+                                  Transects = transect_layout_buf, 
+                                  method = "pts2lines",  
+                                  tBuffer = 20, PROJ = 3005) %>%
+  dplyr::select(-TID, -ID)
+
+#st_write(processed_transects,  file.path(cleandat, "proc_s1_transects.gpkg"), 
+#         delete_layer = TRUE)
+
+st_write(processed_transects,  file.path(cleandat, "proc_s1_transects.gpkg"), 
+         delete_layer = TRUE)
+
+processed_transects <- st_read()
+
+```
+
+# Create a Summary of the training point data
+
+Generate a html report on the summary of training point data. 
+this still needs alot of work to get this running 
+
+```{r}
+library(dplyr)
+tpts<- st_read(file.path(cleandat, "s2_points.gpkg"))
+trans <- st_read(file.path(cleandat, "proc_s1_transects_datecreek.gpkg"))
+out_dir <- cleandat
+
+trainingpt_report(tpts = tpts, trans = trans, out_dir = out_dir)
+
+
+```
+
+

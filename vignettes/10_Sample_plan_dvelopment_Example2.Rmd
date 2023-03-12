@@ -1,0 +1,503 @@
+---
+title: "Example2_Sample Plan Development steps"
+author: "G. Perkins"
+date: "2023-03-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# How to set up a sample plan. 
+
+This example runs through all the steps required for developing a sample plan
+
+## Part 1: PEMprepr 
+
+```{r}
+
+#remotes::install_github("bcgov/PEMprepr", build_vignettes = TRUE)
+#devtools::load_all("D:\\PEM_DATA\\PEMprepr")
+
+library(PEMprepr)
+library(ggplot2)
+library(sf)
+library(terra)
+library(bcmaps)
+
+fid <- setup_folders("DateCreek_AOI")
+
+aoi_raw <- st_read(file.path(fid$shape_dir_0010[2], "aoi_raw.gpkg"))
+aoi <- aoi_snap(aoi_raw, "expand")
+
+sf::st_write(aoi, file.path(fid$shape_dir_1010[1], "aoi_snapped.gpkg"))
+
+
+# download all vector data layers
+
+create_base_vectors(in_aoi = aoi,
+                    out_path = fid$shape_dir_0010[1])
+
+v <- list.files(path = fid$shape_dir_0010[1], pattern = ".gpkg",
+                recursive = TRUE)
+v
+
+# Review and shift to the other file location 
+
+origindir <- fid$shape_dir_0010[1]
+filestocopy <- list.files(path = fid$shape_dir_0010[1], pattern = ".gpkg",recursive = TRUE)
+targetdir <- fid$shape_dir_1010[1]
+lapply(filestocopy, function(x) file.copy(paste (origindir, x , sep = "/"),  
+                                          paste (targetdir,x, sep = "/"), recursive = FALSE,  copy.mode = TRUE))
+#file.remove(filestocopy)
+
+
+
+
+###############################
+# Prepare Raster Data
+res_scale = "5m"
+
+# create a blank raster template
+#r5 <- create_template(aoi, 5)
+r5 <- terra::rast(file.path( fid$cov_dir_1020[2],res_scale, "template.tif"))
+#r25 <- create_template(aoi, 25)
+r25 <- terra::rast(file.path( fid$cov_dir_1020[2],"25m", "template.tif"))
+
+
+# read in base DEM and align the dEM
+demfile <- file.path( fid$cov_dir_1020[2],res_scale, "dem.tif")
+demfile25 <- file.path( fid$cov_dir_1020[2],"25m", "dem.tif")
+
+dem <- terra::rast(file.path( fid$cov_dir_1020[2],res_scale, "dem.tif"))
+
+# read in base raster
+trim_raw <- cded_raster(aoi)
+# convert the trim to matching raster 
+trim <- terra::rast(trim_raw)
+trim <- terra::project(trim, r25)
+
+
+layer_options <- c("sinksfilled", "sinkroute", "dem_preproc", "slope_aspect_curve",
+                   "tcatchment", "tca", "scatchment", "twi", "channelsnetwork",
+                   "overlandflow", "overlandflow2", "multiresflatness", "multiresflatness2",
+                   "multiresflatness3", "tri", "convergence", "openness",
+                   "dah", "tpi", "ridgevalley", "mrn", "flowaccumulation",
+                   "slopelength", "flowaccumulation2", "flowaccumulation3",
+                   "flowpathlength", "flowpathlength2", "flowpathlength3", "lsfactor",
+                   "solarrad", "convexity", "vertdistance", "tci_low",
+                   "swi", "windexp", "texture", "protection", "vrm",
+                   "mbi", "mscale_tpi", "relposition", "slopecurvatures",
+                   "steepestslope", "upslopearea")
+
+# run a test covariate
+create_covariates(dtm = demfile25,           ## raster created above
+                  SAGApath = "C:/SAGA/saga-7.7.0_x64/", ## Where SAGA GIS is installed
+                  output = file.path(fid$cov_dir_1020[2], "25m"), ## from the setup_folders above
+                  layers = "sinksfilled")        ## test one is working 
+
+# run all covariates 
+create_covariates(dtm = demfile25,           ## raster created above
+                  SAGApath = "C:/SAGA/saga-7.7.0_x64/", ## Where SAGA GIS is installed
+                  output = file.path(fid$cov_dir_1020[2],"25m"), ## from the setup_folders above
+                  layers = c( "all"))       ## use all or one of the above
+
+
+
+l <- list.files(path = fid$cov_dir_1020[2], pattern = ".sdat$",
+                recursive = TRUE)
+
+
+
+# add component to rename the outputs and combine into single folder 
+
+
+
+# generate BEC
+
+bec_sf <- sf::st_read(file.path(fid$shape_dir_1010[1], "bec.gpkg")) %>%
+  sf::st_cast(., "MULTIPOLYGON") 
+
+bec_code <- bec_sf %>% st_drop_geometry()  %>% dplyr::select(MAP_LABEL) %>%
+  unique() 
+
+bec_code <- bec_code %>% 
+  mutate(bgc_unique_code = seq(1, length(bec_code$MAP_LABEL),1))
+
+bec_sf <- dplyr::left_join(bec_sf, bec_code)
+
+
+bec_vec <- terra::vect(bec_sf)
+
+# generate a 25m raster
+
+bec_ras25 <- terra::rasterize(bec_vec, r25, field = "MAP_LABEL")
+
+terra::writeRaster(bec_ras25, file.path(fid$cov_dir_1020[2], "25m", "bec.tif"), overwrite = TRUE)
+
+
+# generate a 5m raster 
+
+bec_ras5 <- terra::rasterize(bec_vec, r5, field = "MAP_LABEL")
+
+terra::writeRaster(bec_ras5, file.path(fid$cov_dir_1020[2], "5m", "bec.tif"), overwrite = TRUE)
+
+```
+
+# part 2: PEMsamplr preparation
+
+
+```{r}
+
+#remotes::install_github("bcgov/PEMprepr", build_vignettes = TRUE)
+devtools::load_all("D:\\PEM_DATA\\PEMprepr")
+devtools::load_all("D:\\PEM_DATA\\PEMsamplr")
+
+library(PEMprepr)
+library(PEMsamplr)
+library(ggplot2)
+library(sf)
+library(terra)
+library(bcmaps)
+
+fid <- setup_folders("DateCreek_AOI")
+
+###############################################################
+# 1) Prep sample plan layers 
+
+dem <- terra::rast(file.path( fid$cov_dir_1020[2],"25m", "dem.tif"))
+
+outpath <- fid$sampling_input_landscape[2]
+
+SAGApath_dir ="C:/SAGA/saga-7.7.0_x64/"
+
+template = terra::rast(file.path( fid$cov_dir_1020[2],"25m", "template.tif"))
+
+
+# generate landscape covariates
+
+create_samplr_covariates(dem, SAGApath =  SAGApath_dir,
+                         output =  outpath,
+                         sieve_size = 10,
+                         rtemplate = template)
+
+
+fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif")
+
+filesoi <- list.files(outpath, full.names = TRUE)[list.files(outpath) %in% fileoi]
+
+# generate landscape validation 
+
+landscapes <- create_binned_landscape(outpath)
+
+terra::plot(landscapes)
+
+terra::writeRaster(landscapes, file.path(outpath, "landscape_variable_validation.tif"), overwrite = TRUE)
+
+
+# assess by bgc
+
+becpath <-fid$shape_dir_1010[1]
+bec <- sf::st_read(file.path(becpath, "bec.gpkg")) %>%
+  sf::st_cast(., "MULTIPOLYGON") 
+
+routdf <- check_bgc_landscapes(bec,landscapes )
+
+
+p1 <- ggplot2::ggplot(routdf, aes(landscape)) +
+  ggplot2::geom_histogram() +
+  ggplot2::facet_wrap(~MAP_LABEL)
+
+p1
+
+p2 <- ggplot2::ggplot(routdf, aes(landscape, fill = MAP_LABEL)) +
+  ggplot2::geom_histogram() 
+
+p2
+
+
+# generate sample plans
+# identify vector dir
+vec_dir = fid$shape_dir_1010[2]
+
+dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem.tif"))
+#sort(unique(round(terra::values(dem),0)))
+
+costprep <- prep_cost_layers(vec_dir, dem, heli = FALSE)
+
+terra::plot(costprep)
+
+
+# Define start points 
+# 1) used pre defined the start location using nearest town
+
+cities <- st_read(file.path(vec_dir, "major_towns_bc.gpkg"))
+nearest_town = "datecreek_test"
+start <- cities[cities$NAME == nearest_town,"NAME"]%>% 
+  as("Spatial")
+outpath <- fid$sampling_input_landscape[2]
+
+
+cost <- create_cost_layer(costprep, start, trans_output = TRUE, outpath)
+cost <- terra::rast(cost)
+names(cost) <- "cost"
+terra::plot(cost)
+
+# note if you get an error here - be sure the town name is located on the road network of might fail. 
+
+
+
+# binned landscape
+landscape <- terra::rast(file.path(outpath, "landscape_variable_validation.tif"))
+
+bgccost <- check_bgc_cost(bgc = bec, binned_landscape = landscape, cost = cost)
+
+# map the costs per BGC
+p3 <- ggplot2::ggplot(bgccost, ggplot2::aes(landscape, fill = cost_code)) +
+  ggplot2::geom_histogram(bins = 30) +
+  ggplot2::facet_wrap(~MAP_LABEL)
+
+p3
+
+
+# generate cost penalty 
+
+#dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem_preproc.sdat"))
+#costval = 3000
+
+final_cost <- create_cost_penalty(vec_dir = vec_dir, 
+                                  cost = cost, 
+                                  dem = dem , 
+                                  costval = 3000)
+terra::plot(final_cost)
+
+# create no sample areas 
+cost_masked <- create_cost_nosample(vec_dir = vec_dir, 
+                                    cost = final_cost)
+
+terra::writeRaster(cost_masked, file.path(fid$sampling_input_landscape[2],  "cost.tif"), overwrite = TRUE)
+#terra::plot(sample_cost_masked)
+
+
+# generate a BGC cost mask per BGC in map area
+exclusion_path <- fid$sampling_input_exclusion[2]
+
+create_bgc_mask(vec_dir, cost_masked, exclusion_path)
+
+```
+
+
+# part 3: PEMsamplr generate sample plan
+
+```{r}
+
+
+#remotes::install_github("bcgov/PEMprepr", build_vignettes = TRUE)
+devtools::load_all("D:\\PEM_DATA\\PEMprepr")
+devtools::load_all("D:\\PEM_DATA\\PEMsamplr")
+#devtools::install_github("kdaust/clhs") 
+
+library(PEMprepr)
+library(PEMsamplr)
+library(ggplot2)
+library(sf)
+library(terra)
+library(clhs)
+library(foreach)
+
+fid <- setup_folders("DateCreek_AOI")
+
+###############################################################
+# 1) generate 
+
+
+# set output folder for clhs plans
+clhs_outpath <- fid$samplingplan_clhs[2]
+
+landscape_dir <- fid$sampling_input_landscape[2]
+
+fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif", "cost.tif")
+
+filesoi <- list.files(landscape_dir, full.names = TRUE)[list.files(landscape_dir) %in% fileoi]
+
+all_cov <- terra::rast(filesoi)
+
+
+# read in bec data
+bec_dir = fid$sampling_input_exclusion[2]
+
+boi <- list.files(bec_dir, pattern = ".tif")
+
+
+for(b in boi) {
+  b <- boi[6]
+  boi_mask <- terra::rast(file.path(bec_dir, b)) 
+  names(boi_mask) = "mask"
+  bname <- gsub("_exclude_mask.tif", "", b)
+  
+  sample_layers_masked <- c(all_cov, boi_mask) %>%  
+    terra::mask(boi_mask) 
+  sample_layers_masked <- sample_layers_masked[[1:4]]
+  
+  
+  # create 10 different sample plans
+  
+  for(rot in 2:3){ 
+    #rot = 1
+    sample_points <- create_clhs(all_cov = sample_layers_masked, 
+                                 num_slices = 2, 
+                                 to_include = NULL, 
+                                 n_points = 5 , 
+                                 min_dist = 1000,
+                                 num_sample = 5000000)
+    sample_points <- sample_points %>% 
+      dplyr::mutate(bgc = bname)
+    
+    sf::st_write(sample_points, file.path(clhs_outpath, paste0(bname,"_clhs_sample_",rot,".gpkg")),append=FALSE )
+    
+  }
+  
+} 
+
+# Review the sample plans and select the method with 
+
+#1) Using simple cost metrics #or
+#2) Using vehicle routing problem 
+
+
+
+# read in all the points per bgc, collate and assign value based on travel cost
+
+ftemp <- list.files(clhs_outpath, pattern = ".gpkg$", full.names = TRUE)
+
+all_samples <- foreach(fs = 1:length(ftemp), .combine = "rbind" ) %do% {
+  
+  ff <- ftemp[fs]
+  layers <- st_layers(ff)$name
+  
+  sample_points_all <- foreach(l = 1:length(layers), .combine = rbind) %do% {
+    ll = layers[l]
+    sptemp <- st_read(ff, layer = ll)
+    sptemp <- sptemp %>%
+      dplyr::mutate(clhs_repeat = basename(ff)) %>% 
+      dplyr::mutate(bgc = stringr::str_extract(layers, "[^_]+"))
+    
+    sptemp
+  }
+  
+}
+
+# summarise the costs per sample plan
+repsum <- all_samples %>%
+  sf::st_drop_geometry() %>%
+  dplyr::select(clhs_repeat, bgc, cost)
+
+repsum <- repsum %>%
+  dplyr::group_by(clhs_repeat, bgc) %>%
+  dplyr::mutate(tcost = sum(cost)) %>%
+  dplyr::select(-cost) %>%
+  dplyr::distinct()
+
+# plot the total costs by subzone
+p1 <- ggplot(repsum, aes(y = tcost, x =  clhs_repeat )) +
+  geom_point()+
+  facet_wrap(~bgc, scales = "free_x")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+p1
+
+
+###################################################
+# Alternatively run Vehicle routing problem 
+# this is still in development 
+
+
+
+# set up start location
+vec_dir = fid$shape_dir_1010[2]
+cities <- st_read(file.path(vec_dir, "major_towns_bc.gpkg"))
+nearest_town = "datecreek_test"
+start <- cities[cities$NAME == nearest_town,"NAME"]
+
+#cost <- terra::rast(file.path(fid$sampling_input_landscape[2], "cost.tif"))
+vrp_outpath <- fid$samplingplan_vrp[2]
+
+# example with one clhs
+boi <- "ICHmc1"
+clhs_set <- "ICHmc1_clhs_sample_2.gpkg"
+
+# define selected clhs option
+sample_points <- sf::st_read(list.files(fid$samplingplan_clhs[2], pattern = clhs_set, full.names = TRUE))
+
+
+
+## THis needs work to complete vrp 
+
+
+
+
+
+
+
+
+### Once the best sample plan is selected: 
+
+#3) Generate Location Options for Paired Samples
+
+#For sampling efficiency and field safety paired transects at a cLHS points is desireable. The cLHS point is the centre point of the first transect. We generate additional points at 400m from the cLHS points in the eight cardinal and ordinal directions . This distance provides a minimum 100m spacing from the cLHS transect to any second transect. Cardinal points that fall outside the buffered cost surface are removed as candidates.
+#Selection of the second (or third) transect from the available set could be made in several ways:randomly, choice of least cost, transect with maximum variable difference from cLHS point.
+
+#Currently the second location is based on the least cost.
+
+
+
+# select the bec variant of interest and the clhs chosen
+# note this needs to be repeated for each bcg unit 
+
+
+boi <- "ICHmc1"
+clhs_set <- "ICHmc1_clhs_sample_2.gpkg"
+
+# define location of output 
+out_path <- fid$sampleplan_final_transect[2]
+
+# define selected clhs option
+sample_points <- sf::st_read(list.files(fid$samplingplan_clhs[2], pattern = clhs_set, full.names = TRUE))
+
+# read in cost layer 
+cost <- terra::rast(file.path(fid$sampling_input_landscape[2], "cost.tif"))
+
+# read in mask_poly 
+mask_poly <- sf::st_read(list.files(fid$sampling_input_exclusion[2], 
+pattern = paste0(boi,"_exclude_poly.gpkg"), full.names = TRUE))
+st_crs(mask_poly) <- 3005
+
+
+
+# Generate the transects and poinst and output as geopacakage
+
+build_site_transects(sample_points, cost, mask_poly, centroid_distance = 400, out_path) 
+
+
+# export a tracking sheet for the samples 
+
+allpoints <- grep("points_all", sf::st_layers(file.path(out_path, "s1_sampling.gpkg"))$name, value = T)
+boi <- stringr::str_extract(allpoints, "[^_]+")
+
+for (ii in 1:length(boi)) {
+  #ii = 1
+  b <- boi[ii]
+  points <- st_read(file.path(out_path, outname), layer = paste0(b,"_points_all")) 
+  pointsout <- points %>%
+    cbind(st_coordinates(points)) %>% 
+    dplyr::select(bgc,id, rotation, X,Y) %>% 
+    sf::st_drop_geometry() %>% 
+    dplyr::mutate(Surveyor = "", Date_Completed = "", Transect_comment = "") 
+  
+  write.csv(pointsout, file.path(out_path, paste0(b, "_tracking_sheet.csv")))
+  
+}
+
+
+```
+

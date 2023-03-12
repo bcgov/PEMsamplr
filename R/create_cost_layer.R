@@ -1,15 +1,18 @@
 #' create cost layer
 #'
-#' @param x RasterLayer or RasterBrick (raster package) takes output from prepare_cost_layer ()
-#' @param start Start Locations for the cost layer.
+#' @param x **SpatRast or RasterLayer (raster package), output from prepare_cost_layer ()
+#' @param start **SpatVec of sf object with Start Locations for the cost layer.
+#' @param trans_output TRUE/FALSE - do you want to save output of transition layer as rds (to be used in vrp)
+#' @param transition_outdir **filepath for where to output transition rds
 #' @import magrittr
-#' @return RasterLayer with Cost
+#' @import gdistance
+#' @return RasterLayer with Cost and output the transition file for Vrp use
 #' @export
 #'
 #' @examples
-#' create_cost(alt)
+#' create_cost(costprep, start, outdir)
 
-create_cost_layer <- function(x, start){
+create_cost_layer <- function(x, start, trans_output = FALSE, transition_outdir = NULL){
 
   # if is spatRast need to convert first
 
@@ -20,24 +23,25 @@ create_cost_layer <- function(x, start){
 
   }
 
+  if(class(start)[1] =="sf") {
+
+    print("converting SpatRaster to Raster object")
+    x <- raster::raster(x)
+
+  }
+
+
   # create  transition layer
-  tr <- gdistance::transition(x, transitionFunction = function(x) 1/mean(x), directions = 8, symm = F)
-  tr1 <- geoCorrection(tr)
-
+  tr <- gdistance::transition(x, transitionFunction = function(x) 1/mean(x,na.rm = T), directions = 8, symm = F)
+  tr1 <- gdistance::geoCorrection(tr)
   rm(tr)
-  #plot(raster(tr1))
-  #saveRDS(tr1, file.path(out_path,"input_raster", "transition_layer.rds"))
 
-  acost <- accCost(tr1,start)
+  if(trans_output == TRUE){
+  saveRDS(tr1, file.path(transition_outdir,"transition_layer.rds"))
+  }
 
-  # calculate the cost layer for travel
-  #plot(acost)
-
-  #writeRaster(acost, file.path(out_path,"input_raster", "acost.tif"), format = "GTiff", overwrite = TRUE)
-
+  acost <- gdistance::accCost(tr1,start)
   gc()
-
-  # check that it is the same extent as the raster and crop to the tempate (25m )
-
+  terra::plot(acost)
   return(acost)
 }

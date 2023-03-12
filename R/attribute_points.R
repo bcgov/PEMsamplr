@@ -1,49 +1,44 @@
 #' Add covariate predictor data to training point file
 #'
-#' Generates base landscape covariates from a 25m TRIM DEM using SAGA GIS and converts to classes for use in the sample plan cLHS
-#'
-#' This script has been tested with SAGA 8.4 on Windows
-#' Depending on your system the path to `saga_cmd` may need to be specified.
-#'
-#'
-#' @param training a file gpkg of training points
+#' @param dat_pts a file gpkg of training points
 #' @param cov_dir folder containing covariate files
-#' @param res_dir resolution subfolder
-#' @param output Location of where attributed training file will be exported
-
-#'
+#' @return an sf object
 #' @keywords SAGA, covariates, predictors, raster
+#' @import sf
+#' @importFrom terra rast extract
 #' @export
-#' ##
+#' @examples
+#' tpoints_ne <- attribute_points(dat_pts, cov_dir)
 
-# setwd("D:/GitHub/PEMsamplr")
-# dtm <- ("./temp_data/dem.tif")
-# SAGApath <- "C:/SAGA/"
-# layers = "all"
-# output = "./landscape_covariates"
-# sieve_size = 10
+attribute_points <- function(dat_pts, cov_dir){
 
-attibute_points <- function(training, cov_dir, res_dir){
+  if(class(cov_dir) == "character") {
+    print ("reading in raster stack")
+    lor <- list.files(cov_dir, pattern = ".sdat$", full.names = T, recursive = T)
+    cov_dir <- terra::rast(lor)
 
-    cov_dat <- rast(list.files(file.path(cov_dir, res_dir), pattern = ".tif$",
-                             full.names = TRUE))
+  }
 
-    atts <- terra::extract(cov_dat, allPts)
+  atts <- terra::extract(cov_dir, dat_pts)
+  att_all <- cbind(st_as_sf(dat_pts), atts)
+  st_crs(att_all) = 3005
 
-  att_all <- cbind(st_as_sf(allPts), atts)
+  if(any(names(att_all) %in% "ID.1") == TRUE){
 
-  # TO DO
-  # need to remove the id and rename id for each point?
+      att_all<-att_all %>%
+        dplyr::select(-ID.1)
 
-  # fix names abreviuation problem
-  names(att_all)
-  new_names <- gsub(".tif", "", list.files(file.path(cov_dir, res_folder), pattern = ".tif$"))
-  if(names(att_all))
-
-    #st_write(att_all,"s1_clean_neighbours_allatts.gpkg") ###final dataset
-
-    st_write(att_all, dsn = file.path(final_path, paste0("att_",res_folder), model_id), delete_layer = TRUE)
+    }
 
 
-}
+  return(att_all)
 
+#   # TO DO
+#   # need to remove the id and rename id for each point?
+#
+#   # fix names abreviuation problem
+#   names(att_all)
+#   new_names <- gsub(".tif", "", list.files(file.path(cov_dir, res_folder), pattern = ".tif$"))
+#   if(names(att_all))
+
+ }

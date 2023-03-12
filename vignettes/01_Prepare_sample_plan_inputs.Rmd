@@ -1,0 +1,233 @@
+---
+title: "Prepare sample plan input"
+output: rmarkdown::html_vignette
+vignette: >
+  #%\VignetteIndexEntry{PEMsamplr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(PEMprepr)
+library(PEMsamplr)
+library(sf)
+
+```
+
+## Develop a Sample Plan
+
+Sample plan requires running the PEMprepr functions to acquire and prepare all base data. 
+Help in doing this can be found in the [PEMprepr package](https://github.com/bcgov/PEMprepr) with a detailed vinette [here](https://github.com/bcgov/PEMprepr/blob/master/vignettes/SetUpNewAOI.Rmd)
+
+We will continue to follow the vignette using the example Canyon Creek study area. 
+
+
+1) Generate AOI for landscape variables 
+
+```{r}
+# set up the folder structure and define folder names in object fid
+fid <- setup_folders("CanyonCreek")
+
+# read in AOI
+aoi_raw <- system.file("extdata", "aoi.gpkg", package ="PEMprepr")
+aoi_raw <- sf::st_read(aoi_raw)
+
+# 2) snap to adjoining watersheds to provide wider landscape context or
+aoi_landscape <- PEMprepr::aoi_snap_landscape(aoi_raw)
+
+# generate a 25m template for 
+t25 <- create_template(aoi_landscape, 25)
+
+# read in DEM data from CDED
+trim_raw <- bcmaps::cded_raster(aoi_landscape)
+
+# convert the trim to matching raster 
+trim <- terra::rast(trim_raw)
+trim <- terra::project(trim, t25)
+
+# generate the covariates at landscape
+outpath <- fid$sampling_input_landscape[2]
+#outpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
+
+SAGApath_dir ="C:/SAGA/saga-7.7.0_x64/"
+
+template = terra::rast("D:/PEM_DATA/PEMsamplr/CanyonCreek/10_clean_inputs/20_covariates/25m/bec.tif")
+
+template
+
+create_samplr_covariates(trim, SAGApath =  SAGApath_dir,
+                              output =  outpath,
+                              sieve_size = 10,
+                              rtemplate = template)
+
+
+## generate the BEC template and then match the covariates to size
+# 
+# bec_sf <- sf::st_read(file.path(fid$shape_dir_1010[1], "bec.gpkg")) %>%
+#   sf::st_cast(., "MULTIPOLYGON") 
+# 
+# bec_code <- bec_sf %>% st_drop_geometry()  %>% dplyr::select(MAP_LABEL) %>%
+#     unique() 
+# 
+# bec_code <- bec_code %>% 
+#     dplyr::mutate(bgc_unique_code = seq(1, length(bec_code$MAP_LABEL),1))
+# 
+# bec_sf <- dplyr::left_join(bec_sf, bec_code)
+# 
+# bec_vec <- terra::vect(bec_sf)
+# 
+# # generate a 25m raster
+
+# bec_ras25 <- terra::rasterize(bec_vec, r25, field = "MAP_LABEL")
+# 
+# terra::writeRaster(bec_ras25, file.path(fid$cov_dir_1020[2], "25m", "bec.tif"), overwrite = TRUE)
+
+
+```
+
+Assess how well the covariates describe the landscape and adjust as needed. Write out the landscape variability validation layer.
+
+```{r}
+
+outpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
+
+
+fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif")
+
+filesoi <- list.files(outpath, full.names = TRUE)[list.files(outpath) %in% fileoi]
+
+landscapes <- create_binned_landscape(filesoi)
+
+terra::plot(landscapes)
+
+terra::writeRaster(landscapes, file.path(outpath, "landscape_variable_validation.tif"), overwrite = TRUE)
+
+```
+
+Assess how well the environmental space is spread for each BGCs 
+
+```{r}
+
+becpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/10_clean_inputs/10_vector'
+#becpath <-fid$shape_dir_1010[1]
+
+bec <- sf::st_read(file.path(becpath, "bec.gpkg")) %>%
+   sf::st_cast(., "MULTIPOLYGON") 
+
+routdf <- check_bgc_landscapes(bec, landscapes )
+
+library(ggplot2)
+
+p1 <- ggplot2::ggplot(routdf, aes(landscape)) +
+  ggplot2::geom_histogram() +
+  ggplot2::facet_wrap(~MAP_LABEL)
+
+p1
+
+p2 <- ggplot2::ggplot(routdf, aes(landscape, fill = MAP_LABEL)) +
+  ggplot2::geom_histogram() 
+
+p2
+
+```
+
+## Generate sample plan : part 2
+
+Sample plan requires running the PEMprepr functions to acquire and prepare all base data. 
+Help in doing this can be found in the [PEMprepr package](https://github.com/bcgov/PEMprepr) with a detailed vinette [here](https://github.com/bcgov/PEMprepr/blob/master/vignettes/SetUpNewAOI.Rmd)
+
+We will continue to follow the vignette using the example Canyon Creek study area. 
+
+
+```{r}
+#  define folder names in object fid
+fid <- setup_folders("CanyonCreek")
+
+## prepare base layers for cost layer
+
+#vec_dir = fid$shape_dir_1010[2]
+vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector" 
+
+dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem_preproc.sdat"))
+#sort(unique(round(terra::values(dem),0)))
+
+costprep <- prep_cost_layers(vec_dir, dem, heli = FALSE)
+
+terra::plot(costprep)
+
+# Define start points 
+# 1) used pre defined the start location using nearest town
+
+cities <- st_read(file.path(vec_dir, "major_towns_bc.gpkg"))
+nearest_town = "Granisle"
+start <- cities[cities$NAME == nearest_town,"NAME"]%>% 
+  as("Spatial")
+
+cost <- create_cost_layer(costprep, start)
+cost <- terra::rast(cost)
+names(cost) <- "cost"
+terra::plot(cost)
+
+# note if you get an error here - be sure the town name is located on the road network of might fail. 
+
+
+# Check how the cost is distributed per BGC
+becpath <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/10_clean_inputs/10_vector'
+#becpath <-fid$shape_dir_1010[1]
+
+bec <- sf::st_read(file.path(becpath, "bec.gpkg")) %>%
+   sf::st_cast(., "MULTIPOLYGON") 
+
+binned_path <- 'D:/PEM_DATA/PEMsamplr/CanyonCreek/20_sample_plan/10_standard_sample/10_input_raster/landscape_covariates'
+
+# binned landscape
+landscape <- terra::rast(file.path(binned_path, "landscape_variable_validation.tif"))
+
+bgccost <- check_bgc_cost(bgc = bec, binned_landscape = landscape, cost = cost)
+
+# map the costs per BGC
+p3 <- ggplot2::ggplot(bgccost, ggplot2::aes(landscape, fill = cost_code)) +
+    ggplot2::geom_histogram(bins = 30) +
+    ggplot2::facet_wrap(~MAP_LABEL)
+
+
+
+# generate cost penalty 
+
+#vec_dir = fid$shape_dir_1010[2]
+vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector" 
+cost <- cost 
+dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem_preproc.sdat"))
+costval = 3000
+
+final_cost <- create_cost_penalty(vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector", 
+                                  cost = cost, 
+                                  dem = dem , 
+                                  costval = 3000)
+terra::plot(final_cost)
+
+# create no sample areas 
+
+cost_masked <- create_cost_nosample(vec_dir = vec_dir, 
+                                           cost = final_cost)
+
+terra::writeRaster(cost_masked, file.path(fid$sampling_input_landscape[2],  "cost.tif"), overwrite = TRUE)
+#terra::plot(sample_cost_masked)
+
+
+# generate a BGC cost mask per BGC in map area
+vec_dir = "D:\\PEM_DATA\\PEMsamplr\\CanyonCreek\\10_clean_inputs\\10_vector" 
+out_path <- fid$sampling_input_exclusion[2]
+cost_masked <- cost_masked
+
+create_bgc_mask(vec_dir, cost_masked, out_path)
+
+```
+

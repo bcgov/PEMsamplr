@@ -6,20 +6,20 @@
 \usage{
 create_samplr_covariates(
   dtm,
-  SAGApath = "C:/SAGA/",
-  output = "./landscape_covariates",
-  layers = "all",
+  rtemplate,
+  SAGApath = "",
+  output = "./cv-rasters",
   sieve_size = 10
 )
 }
 \arguments{
 \item{dtm}{is a 25m dtm raster object ideally cropped to the AOI watershed boundaries}
 
+\item{rtemplate}{template of 25m raster to match final output to}
+
 \item{SAGApath}{Is the location of SAGA on your system.  On linux systems with SAGA GIS installed Use \code{SAGApath = ""}}
 
 \item{output}{Location of where rasters will be saved.}
-
-\item{layers}{The covariates that will be generated.  A full list of covariates is listed at: ADD}
 
 \item{sieve_size}{Remove isolated clusters of below the threshold number of cells}
 }

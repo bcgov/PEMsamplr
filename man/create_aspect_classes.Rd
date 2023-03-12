@@ -23,7 +23,6 @@ Thresholds of 0.2 to 0.3 are reasonable setting
 }
 \examples{
 data(dah)
-
 }
 \keyword{anisotropic}
 \keyword{aspect}

@@ -1,0 +1,212 @@
+---
+title: "Generate sample plan"
+output: rmarkdown::html_vignette
+vignette: >
+  #%\VignetteIndexEntry{PEMsamplr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+
+library(PEMprepr)
+library(PEMsamplr)
+library(sf)
+
+```
+
+
+## Run Cost-Constrained Sliced cLHS
+
+A cLHS can now be run on this constrained sample space and any point selected will be support a valid transect no matter the rotation. 
+cLHS sets are generated for each subzone individually.
+We apply a minimum 1000m spacing between cLHS points to prevent possible overlap of paired transects.
+  
+We created five cLHS 'slices' of 5 sites (n=25) for sampling. Each slice represents a cLHS independently so all sites from a slice must be sampled. Strictly speaking the slices must be sampled in order to maintain LHS structure as well (i.e. 1 + 2 + 3 = LHS but 1 + 2 + 4 may not be LHS). A progressive cLHS procedure has been proposed that makes any combination of slices maintain LHC structure.
+
+Additional new cLHS slices can be created after the generation of the original run using the 'include' parameter in the cLHS function. Where sampling may involve helicopter access, additional slices could be added using a cost layer where landable clearings rather than roads are the zero cost starting points.
+
+
+```{r}
+# set up folder for sample plan
+devtools::install_github("kdaust/clhs") 
+fid <- setup_folders("CanyonCreek")
+
+
+# set output folder for clhs plans
+clhs_outpath <- fid$samplingplan_clhs[2]
+
+ifelse(!dir.exists(clhs_outpath), dir.create(clhs_outpath, recursive = TRUE), FALSE)
+
+# read in the landscape covariates + cost and stack 
+
+landscape_dir <- fid$sampling_input_landscape[2]
+
+fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif", "cost.tif")
+
+filesoi <- list.files(landscape_dir, full.names = TRUE)[list.files(landscape_dir) %in% fileoi]
+
+all_cov <- terra::rast(filesoi)
+
+
+# read in bec labels 
+
+bec_dir = fid$sampling_input_exclusion[2]
+
+boi <- list.files(bec_dir, pattern = ".tif")
+
+# for each Bec unit generate multiple plans
+
+for(b in boi) {
+  #b <- boi[3]
+  boi_mask <- terra::rast(file.path(bec_dir, b)) 
+  names(boi_mask) = "mask"
+  bname <- gsub("_exclude_mask.tif", "", b)
+  
+  sample_layers_masked <- c(all_cov, boi_mask) %>%  
+    terra::mask(boi_mask) 
+  sample_layers_masked <- sample_layers_masked[[1:4]]
+  
+# create 10 different sample plans
+  
+  for(rot in 6:7){ 
+    #rot = 1
+    sample_points <- create_clhs(all_cov = sample_layers_masked, 
+                                 num_slices = 2, 
+                                 to_include = NULL, 
+                                 n_points = 5 , 
+                                 min_dist = 12000,
+                                 num_sample = 5000000)
+    sample_points <- sample_points %>% 
+      dplyr::mutate(bgc = bname)
+    
+    sf::st_write(sample_points, file.path(clhs_outpath, paste0(bname,"_clhs_sample_",rot,".gpkg")),append=FALSE )
+    
+  }
+  
+} 
+
+```
+
+# select the clhs with the lowest sample cost
+
+1) Using simple cost metrics 
+2) Using vehicle routing problem 
+
+```{r}
+library(foreach)
+# read in all the points per bgc, collate and assign value based on travel cost
+ 
+ftemp <- list.files(clhs_outpath, pattern = ".gpkg$", full.names = TRUE)
+
+all_samples <- foreach(fs = 1:length(ftemp), .combine = "rbind" ) %do% {
+  
+  ff <- ftemp[fs]
+  layers <- st_layers(ff)$name
+  
+  sample_points_all <- foreach(l = 1:length(layers), .combine = rbind) %do% {
+    ll = layers[l]
+    sptemp <- st_read(ff, layer = ll)
+    sptemp <- sptemp %>%
+      dplyr::mutate(clhs_repeat = basename(ff)) %>% 
+      dplyr::mutate(bgc = stringr::str_extract(layers, "[^_]+"))
+ 
+    sptemp
+  }
+  
+}
+
+# summarise the costs per sample plan
+repsum <- all_samples %>%
+  sf::st_drop_geometry() %>%
+  dplyr::select(clhs_repeat, bgc, cost)
+
+repsum <- repsum %>%
+  dplyr::group_by(clhs_repeat, bgc) %>%
+  dplyr::mutate(tcost = sum(cost)) %>%
+  dplyr::select(-cost) %>%
+  dplyr::distinct()
+
+# plot the total costs by subzone
+p1 <- ggplot(repsum, aes(y = tcost, x =  clhs_repeat )) +
+  geom_point()+
+  facet_wrap(~bgc, scales = "free_x")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+p1
+
+```
+
+2) Alternatively run Vehicle routing problem 
+
+```{r}
+# set up start location
+vec_dir = fid$shape_dir_1010[2]
+cities <- st_read(file.path(vec_dir, "major_towns_bc.gpkg"))
+nearest_town = "Granisle"
+start <- cities[cities$NAME == nearest_town,"NAME"]
+
+## THis needs work to complete vrp 
+
+```
+
+
+
+3) Generate Location Options for Paired Samples
+
+For sampling efficiency and field safety paired transects at a cLHS points is desireable. The cLHS point is the centre point of the first transect. We generate additional points at 400m from the cLHS points in the eight cardinal and ordinal directions . This distance provides a minimum 100m spacing from the cLHS transect to any second transect. Cardinal points that fall outside the buffered cost surface are removed as candidates.
+Selection of the second (or third) transect from the available set could be made in several ways:randomly, choice of least cost, transect with maximum variable difference from cLHS point.
+
+Currently the second location is based on the least cost.
+
+```{r}
+# select the bec variant of interest and the clhs chosen
+
+boi <- "SBSmc2"
+clhs_set <- "SBSmc2_clhs_sample_2.gpkg"
+
+# define location of output 
+out_path <- fid$sampleplan_final_transect[2]
+
+# define selected clhs option
+sample_points <- sf::st_read(list.files(fid$samplingplan_clhs[2], pattern = clhs_set, full.names = TRUE))
+
+# read in cost layer 
+cost <- terra::rast(file.path(fid$sampling_input_landscape[2], "cost.tif"))
+
+
+# Generate the transects and poinst and output as geopacakage
+
+build_site_transects(sample_points, cost, centroid_distance = 400, out_path) 
+
+
+
+# export a tracking sheet for the samples 
+
+allpoints <- grep("points_all", sf::st_layers(file.path(out_path, "s1_sampling.gpkg"))$name, value = T)
+boi <- stringr::str_extract(allpoints, "[^_]+")
+                 
+for (ii in 1:length(boi)) {
+ #ii = 1
+  b <- boi[ii]
+  points <- st_read(file.path(out_path, outname), layer = paste0(b,"_points_all")) 
+  pointsout <- points %>%
+    cbind(st_coordinates(points)) %>% 
+    dplyr::select(bgc,id, rotation, X,Y) %>% 
+    sf::st_drop_geometry() %>% 
+    dplyr::mutate(Surveyor = "", Date_Completed = "", Transect_comment = "") 
+  
+  write.csv(pointsout, file.path(out_path, paste0(b, "_tracking_sheet.csv")))
+  
+}
+
+```
+
+
+

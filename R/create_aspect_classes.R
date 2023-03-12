@@ -1,19 +1,17 @@
-  #' Create aspect classes
-  #'
-  #' Creates a 3 class aspect from DAH. classes from a TPI generated from a DEM following the rules in
-  #' https://github.com/gianmarcoalberti/GmAMisc/blob.master/R/landfClass.r
-  #'
-  #' Thresholds of 0.2 to 0.3 are reasonable setting
-  #'
-  #' @param x input 25m dah created in SAGA
-  #' @param threshold sets the DAH threshold where less than x are cold aspects and greater than x are warm aspects. The rest are neutral.
-  #' @keywords diurnal anisotropic heating, aspect classes
-  #'
-  #' @return classifies SpatRaster
-  #' @export
-  #' @examples
-  #' data(dah)
-  #'
+#' Create aspect classes
+#'
+#' Creates a 3 class aspect from DAH. classes from a TPI generated from a DEM following the rules in
+#' https://github.com/gianmarcoalberti/GmAMisc/blob.master/R/landfClass.r
+#'
+#' Thresholds of 0.2 to 0.3 are reasonable setting
+#'
+#' @param x input 25m dah created in SAGA
+#' @param threshold sets the DAH threshold where less than x are cold aspects and greater than x are warm aspects. The rest are neutral.
+#' @keywords diurnal anisotropic heating, aspect classes
+#' @return classifies SpatRaster
+#' @export
+#' @examples
+#' data(dah)
 
 create_aspect_classes <- function (x, threshold = 0.2) {
 
