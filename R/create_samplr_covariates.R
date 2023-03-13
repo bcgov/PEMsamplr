@@ -27,7 +27,7 @@
 #  fid <- setup_folders("canyoncreek")
 #  output =  fid$sampling_input_landscape[[2]]
 #  SAGApath ="C:/SAGA/saga-7.7.0_x64/"
-# create_samplr_covariates(dtm,rtemplate = r25, output =  output,
+# create_samplr_covariates(dtm = dtm,rtemplate = r25, output =  output,
 #                              SAGApath ="C:/SAGA/saga-7.7.0_x64/",
 #                               sieve_size = 10)
 
@@ -95,13 +95,13 @@ create_samplr_covariates <- function(dtm, rtemplate,  SAGApath = "",
                   sDTM,
                   "-MRVBF", MRVBF,
                   "-MRRTF", MRRTF,                       # Outputs
-                  "-T_SLOPE", 16,
-                  "-T_PCTL_V", 0.4,
-                  "-T_PCTL_R", 0.35,    # Default Parameters
+                  "-T_SLOPE", 64,
+                  "-T_PCTL_V", 6,
+                  "-T_PCTL_R", 2,
                   "-P_SLOPE", 4.0,
                   "-P_PCTL", 3.0,
-                  "-UPDATE", 0,
-                  "-CLASSIFY", 0,
+                  "-UPDATE", 1,
+                  "-CLASSIFY", 1,
                   "-MAX_RES", 100
   )
   system(sysCMD)

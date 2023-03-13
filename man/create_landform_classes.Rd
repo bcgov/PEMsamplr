@@ -6,7 +6,7 @@
 \usage{
 create_landform_classes(
   dtm,
-  scale = 3,
+  scale = 75,
   sn = 3,
   ln = 7,
   n.classes = "ten",

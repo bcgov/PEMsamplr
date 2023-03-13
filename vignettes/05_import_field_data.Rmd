@@ -20,16 +20,16 @@ In this example we will use some test data
 
 ```{r libraries}
 
-load_all()
+devtools::load_all()
 library(PEMprepr)
 library(sf)
 library(foreach)
 
 ```
 
-
 ```{r pressure, echo=FALSE}
 # set up the folder names
+
 fid <- setup_folders("CanyonCreek")
 
 # location of the transect layout (sample plan)
@@ -52,18 +52,14 @@ We will firstly create a basic layer with all the transects names consolidated f
 ```{r}
 
 # temportary test this on multiple locations 
-
-#trans_input <- "D:\\PEM_DATA\\BEC_DevExchange_Work/BoundaryTSA_AOI/2_sample_design/stage1_StudyDesign/transect_layout"
- 
-# inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\BoundaryTSA_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
-# 
-# inpath <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\WilliamsLake_AOI\\2_sample_design\\stage1_StudyDesign\\transect_layout"
+# trans_input <- "D:\\PEM_DATA\\BEC_DevExchange_Work/BoundaryTSA_AOI/2_sample_design/stage1_StudyDesign/transect_layout"
 
 transect_layout <- generate_transectlayout(trans_input)
 
 transect_layout_buf <- sf::st_buffer(transect_layout, 10)
 
 st_write(transect_layout, file.path(trans_output, "transect_layout_s1.gpkg"), delete_layer = TRUE)
+
 
 ```
 
@@ -72,15 +68,34 @@ st_write(transect_layout, file.path(trans_output, "transect_layout_s1.gpkg"), de
 
 ```{r}
 # tempory test on multiple locations
-
-rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\BoundaryTSA_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data"
-
-# rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\WilliamsLake_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data"
-
-#rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\KootInvCran_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data\\final_contractors"
+# rawdat <- "D:\\PEM_DATA\\BEC_DevExchange_Work\\BoundaryTSA_AOI\\2_sample_design\\stage1_StudyDesign\\transect_data"
 
 points <- format_fielddata(rawdat, transect_layout_buf)
-#points <- all_points
+
+
+## merge together multiple files as needed
+# all_files <- as.list(list.files(cleandat, pattern = "s1_points*", full.names = TRUE))
+# 
+# all_files_out <- foreach(fs = 1:length(all_files), .combine = "rbind" ) %do% {
+#   
+# ff <- all_files[fs]
+#   sptemp <- st_read(ff)
+#   #print(names(sptemp))
+#   sptemp
+#   }
+# 
+# sf::st_write(all_files_out, file.path(cleandat, "s1_points_boundary.gpkg"), delete_layer = TRUE)
+
+sf::st_write(points, file.path(cleandat, "s2_points.gpkg"), delete_layer = TRUE)
+
+
+
+# format tracklog
+
+tracks <- format_tracklog(rawdat, transect_layout_buf)
+
+sf::st_write(tracks, file.path(cleandat, "s1_tracklog.gpkg"), delete_layer = TRUE)
+
 
 # covert to lines 
 processed_transects <- make_lines(GPSPoints = points, 
@@ -92,21 +107,27 @@ processed_transects <- make_lines(GPSPoints = points,
 #st_write(processed_transects,  file.path(cleandat, "proc_s1_transects.gpkg"), 
 #         delete_layer = TRUE)
 
-st_write(processed_transects,  file.path(cleandat, "proc_s1_transects_b2019bcgov.gpkg"), 
+st_write(processed_transects,  file.path(cleandat, "proc_s1_transects.gpkg"), 
          delete_layer = TRUE)
 
-sf::st_write(points, file.path(cleandat, "s1_points_b2019bcgov.gpkg"), delete_layer = TRUE)
-
-#sf::st_write(points, file.path(cleandat, "s1_points.gpkg"), delete_layer = TRUE)
-
-
-# format tracklog
-
-tracks <- format_tracklog(rawdat, transect_layout_buf)
-
-sf::st_write(tracks, file.path(cleandat, "s1_tracklog.gpkg"), delete_layer = TRUE)
+processed_transects <- st_read()
 
 ```
 
+# Create a Summary of the training point data
+
+Generate a html report on the summary of training point data. 
+this still needs alot of work to get this running 
+
+```{r}
+library(dplyr)
+tpts<- st_read(file.path(cleandat, "s2_points.gpkg"))
+trans <- st_read(file.path(cleandat, "proc_s1_transects_datecreek.gpkg"))
+out_dir <- cleandat
+
+trainingpt_report(tpts = tpts, trans = trans, out_dir = out_dir)
+
+
+```
 
 

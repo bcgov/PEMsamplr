@@ -26,7 +26,7 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
 
   all_points <- foreach(x = points, .combine = rbind) %do% {
 
-   # x = points[76]
+   # x = points[18]
     print(x)
 
     s1_layers <- sf::st_layers(x)
@@ -436,7 +436,22 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
                         time_hms = NA)
       }
 
+      # add missing columns if not in data
+      if("stuc_stage" %in% names(points_read)) {
 
+      } else {
+
+        points_read <- points_read %>%
+          dplyr::mutate(stuc_stage = NA)
+      }
+      # add missing columns if not in data
+      if("stuc_mod" %in% names(points_read)) {
+
+      } else {
+
+        points_read <- points_read %>%
+          dplyr::mutate(stuc_mod = NA)
+      }
     # subset and export
 
      points_read <- points_read %>%
@@ -453,7 +468,7 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
 
       if(endlength != start_length){
 
-        print("length of input file does not match cleaned file review raw data:")
+        stop(print("length of input file does not match cleaned file review raw data:"))
         print(x)
       }
 

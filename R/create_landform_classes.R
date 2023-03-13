@@ -14,6 +14,7 @@
   #' @param stand.tpi specifies whether the returned TPI raster will be un- or standardized (FALSE is default).
   #' @keywords landform, classes
   #' @export
+  #' @import SpatialEco
   #' @examples
   #' create_landform_classes(dtm, scale = 75, sn = 25,ln = 75, n.classes = "six",add.tpi = FALSE, stand.tpi = FALSE)
   #'
@@ -30,7 +31,7 @@
 #                               add.tpi = FALSE, stand.tpi = FALSE)
 #
 create_landform_classes <- function (dtm,
-                                     scale = 3,
+                                     scale = 75,
                                      sn=3,
                                      ln=7,
                                      n.classes="ten",

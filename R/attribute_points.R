@@ -5,7 +5,7 @@
 #' @return an sf object
 #' @keywords SAGA, covariates, predictors, raster
 #' @import sf
-#' @import terra
+#' @importFrom terra rast extract
 #' @export
 #' @examples
 #' tpoints_ne <- attribute_points(dat_pts, cov_dir)
@@ -14,13 +14,22 @@ attribute_points <- function(dat_pts, cov_dir){
 
   if(class(cov_dir) == "character") {
     print ("reading in raster stack")
-    lor <- list.files(cov_dir, pattern = ".sdat$", full.names = T)
+    lor <- list.files(cov_dir, pattern = ".sdat$", full.names = T, recursive = T)
     cov_dir <- terra::rast(lor)
 
   }
 
   atts <- terra::extract(cov_dir, dat_pts)
   att_all <- cbind(st_as_sf(dat_pts), atts)
+  st_crs(att_all) = 3005
+
+  if(any(names(att_all) %in% "ID.1") == TRUE){
+
+      att_all<-att_all %>%
+        dplyr::select(-ID.1)
+
+    }
+
 
   return(att_all)
 

@@ -12,10 +12,19 @@
 #'
 #' check_bgc_landscapes(bec, binned_landscape)
 
+
 check_bgc_landscapes <- function(bec, binned_landscape){
 
   # if not a
-  vbgc <- terra::vect(bec)
+  if(any((class(bec) == "character"))) {
+
+    sfbgc <- sf::st_read(bec, quiet = T)
+
+  } else {
+
+    sfbgc = bec
+  }
+  vbgc <- terra::vect(sfbgc)
   rbgc <- terra::rasterize(vbgc, landscapes, field = "MAP_LABEL")
 
   # stack
