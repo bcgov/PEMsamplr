@@ -103,6 +103,7 @@ create_vrp <- function(transition, clhs_points, start_pos, number_days){
   plot(p2["DayNumber"],pch = 16)
   #plot(paths, add = T)
   return(list(Path = paths, Points = p2))
-}
+
+  }
 
 

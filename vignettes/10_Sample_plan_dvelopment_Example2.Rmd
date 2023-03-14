@@ -429,6 +429,8 @@ p1
 
 
 
+
+
 # set up start location
 vec_dir = fid$shape_dir_1010[2]
 cities <- st_read(file.path(vec_dir, "major_towns_bc.gpkg"))
