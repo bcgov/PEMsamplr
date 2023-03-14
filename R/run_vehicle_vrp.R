@@ -35,6 +35,13 @@
 # cs <- create_cs(cost)
 # dist <- create_FETE_lcps(cs,pnts,cost_distance = T)
 
+setup_python <- function(){
+  reticulate::conda_create("pemr")
+  enviros <- reticulate::conda_list()
+  reticulate::use_python(enviros[enviros$name == "pemr","python"])
+  reticulate::conda_install("ortools",envname = "pemr", pip = T)
+  py_module_available("ortools")
+}
 
 create_vrp <- function(transition, clhs_points, start_pos, number_days){
 
