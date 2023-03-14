@@ -208,40 +208,40 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
       # 7) Stand struc
       if("x07_struc_" %in% names(points_read)){
         points_read <- points_read %>%
-          dplyr::rename(stuc_stage = x07_struc_)
+          dplyr::rename(struc_stage = x07_struc_)
       }
 
       if("x07_struct" %in% names(points_read)){
         points_read <- points_read %>%
-          dplyr::rename(stuc_stage = x07_struct)
+          dplyr::rename(struc_stage = x07_struct)
       }
 
       if("x07_struct_" %in% names(points_read)){
         points_read <- points_read %>%
-          dplyr::rename(stuc_stage = x07_struct_)
+          dplyr::rename(struc_stage = x07_struct_)
       }
 
       if("x07_struct_stage" %in% names(points_read)){
         points_read <- points_read %>%
-          dplyr::rename(stuc_stage = x07_struct_stage)
+          dplyr::rename(struc_stage = x07_struct_stage)
       }
 
 
       # 8) Stand struc
       if("x08_struct" %in% names(points_read)){
         points_read <- points_read %>%
-          dplyr::rename(stuc_mod = x08_struct)
+          dplyr::rename(struc_mod = x08_struct)
       }
 
       # 8) Stand struc
       if("x08_struct_" %in% names(points_read)){
         points_read <- points_read %>%
-          dplyr::rename(stuc_mod = x08_struct_)
+          dplyr::rename(struc_mod = x08_struct_)
       }
 
       if("x08_struct_stage_mod" %in% names(points_read)){
         points_read <- points_read %>%
-          dplyr::rename(stuc_mod = x08_struct_stage_mod)
+          dplyr::rename(struc_mod = x08_struct_stage_mod)
       }
 
 
@@ -437,26 +437,26 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
       }
 
       # add missing columns if not in data
-      if("stuc_stage" %in% names(points_read)) {
+      if("struc_stage" %in% names(points_read)) {
 
       } else {
 
         points_read <- points_read %>%
-          dplyr::mutate(stuc_stage = NA)
+          dplyr::mutate(struc_stage = NA)
       }
       # add missing columns if not in data
-      if("stuc_mod" %in% names(points_read)) {
+      if("struc_mod" %in% names(points_read)) {
 
       } else {
 
         points_read <- points_read %>%
-          dplyr::mutate(stuc_mod = NA)
+          dplyr::mutate(struc_mod = NA)
       }
     # subset and export
 
      points_read <- points_read %>%
         dplyr::select(any_of(c("order", "mapunit1", "mapunit2", "point_type", "transect_id",
-                               "observer", "transition",  "stuc_stage", "stuc_mod",
+                               "observer", "transition",  "struc_stage", "struc_mod",
                                "date_ymd", "time_hms", "edatope","comments", "photos", "data_type"))) %>%
         dplyr::group_by(transect_id) %>%
         dplyr::arrange(as.numeric(order), by_group = TRUE) %>%
