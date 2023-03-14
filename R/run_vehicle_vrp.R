@@ -1,105 +1,108 @@
 #' Vehicle Routing Problem
 #'
-#' @param pnts sp object with clhs generated points
-#' @param start start location
-#' @param tr1 transition layer (.rds) format created in cost layer step
-#'
+#' @param transition gdistance transition layer
+#' @param clhs_points sample locations (sf)
+#' @param start_pos start position (sf)
+#' @param number_days number of days to sample for
 #' @return
+#' @import reticulate
+#' @import sf
+#' @import gdistance
+#' @import sp
+#' @import raster
+#' @import foreach
 #' @export
-#'
+#' @author Kiri Daust
 #' @examples
 #' #'
-#' create_vrp <- function(pnts, start, tr1){
-#'
-#'   #install.packages("reticulate")
-#'   #library(reticulate)
-#'   # testing lines
-#'   #pnts <- sample_points # starting location
-#'   #start <-  cities[cities$NAME == nearest_town,"NAME"]
-#'   #tr1 <- readRDS(file.path(fid$sampling_input_landscape[2], "transition_layer.rds"))
-#'
-#'
-#'   pnts <- tibble::rowid_to_column(pnts, "name")
-#'   pnts_sub <- pnts["name"]
-#'
-#'   #start <- sf::st_as_sfc(start)
-#'   #startPnts <- st_as_sf(data.frame(name = "Start", geometry = start))
-#'   names(start) <- c("name", "geom")
-#'   startPnts <- start
-#'   pnts <- rbind(pnts_sub, startPnts) # add start to the list of points
-#'   pnts2 <- as(pnts, "Spatial")   # convert to spatial points data frame
-#'
-#'   ## create distance matrix between sample points
-#'   test <- gdistance::costDistance(tr1, pnts2, pnts2) # use transition layer from accum cost layer
-#'   dMat2 <- as.matrix(test)
-#'   dMat2 <- dMat2*60 # convert to
-#'   dMat2[is.infinite(dMat2)] <- 1000
-#'
-#'   ##penalty based on quality of points
-#'   # objVals <- sample_points_all$final_obj_continuous
-#'   #  objVals <- max(objVals) - objVals
-#'   objVals <- 0
-#'
-#'   maxTime <- 10L ##hours
-#'   ## time per transect
-#'   plotTime <- 45L ##mins
-#'
-#'   minPen <- (maxTime*60L)/2L
-#'   maxPen <- (maxTime*60L)*2L
-#'   objVals <- scales::rescale(objVals, to = c(minPen,maxPen))
-#'   objVals <- as.integer(objVals)
-#'
-#'   #n = nrow(dMat2)-1
-#'   #ndays <- as.integer(length(objVals)/4)
-#'   #indStart <- as.integer(rep(n, ndays))
-#'
-#'   n = nrow(dMat2)-1
-#'   ndays = 3
-#'   indStart <- as.integer(rep(n, ndays))
-#'
-#'   vrp <- py_mTSP(dat = dMat2, num_days = ndays, start = indStart, end = indStart,
-#'                  max_cost = maxTime*60L, plot_time = plotTime,
-#'                  penalty =  objVals, arbDepot = F, GSC = 8L)
-#'
-#'   result <- vrp[[1]]
-#'
-#'
-#'   ## create spatial paths
-#'   paths <- foreach(j = 0:(length(result)-1), .combine = rbind) %do% {
-#'     #j = 1
-#'     if(length(result[[as.character(j)]]) > 2){
-#'       cat("Drop site",j,"...\n")
-#'       p1 <- result[[as.character(j)]]+1
-#'       out <- foreach(i = 1:(length(p1)-1), .combine = rbind) %do% {
-#'         #i = 2
-#'         temp1 <- pnts[p1[i],]
-#'         temp2 <- pnts[p1[i+1],]
-#'         temp3 <- shortestPath(tr1, st_coordinates(temp1),
-#'                               st_coordinates(temp2),output = "SpatialLines") %>% st_as_sf()
-#'         temp3$Segment = i
-#'         temp3
-#'       }
-#'       out$DropSite = j
-#'       out
-#'     }
-#'
-#'   }
-#'
-#'   paths <- st_transform(paths, 3005)
-#'   st_write(paths, dsn = file.path(out_path, "TSP_3.gpkg"), layer = "Paths", append = T, driver = "GPKG")
-#'
-#'   ## label points
-#'   p2 <- pnts
-#'   p2$PID <- seq_along(p2$name)
-#'   p2 <- p2[,"PID"]
-#'   p2$DropLoc <- NA
-#'   p2$Order <- NA
-#'   for(i in 0:(length(result)-1)){
-#'     p1 <- result[[as.character(i)]]+1
-#'     p1 <- p1[-1]
-#'     p2$DropLoc[p1] <- i
-#'     p2$Order[p1] <- 1:length(p1)
-#'   }
-#'   p2 <- st_transform(p2, 3005)
-#'   st_write(p2, dsn = file.path(out_path, "TSP_3.gpkg"),layer = "Points", append = T,overwrite = T, driver = "GPKG")
-#' }
+
+# ###Example for testing
+# library(sf)
+# library(gdistance)
+# library(sp)
+# library(foreach)
+# tr1 <- readRDS("inputs/transition_layer.rds")
+# pnts <- st_read("inputs/ICHmc1_clhs_sample_1.gpkg")
+# plot(pnts)
+# startLoc <- pnts[10,]
+# pnts_in <- pnts[-10,]
+# test <- create_vrp(tr1,pnts_in, startLoc, 3)
+
+
+#tr1 <- gdistance::transition(cost,transitionFunction = function(x)1/mean(x),8)
+#test <- terra::costDistance(cost, target = 3000)
+# library(leastcostpath)
+# cs <- create_cs(cost)
+# dist <- create_FETE_lcps(cs,pnts,cost_distance = T)
+
+
+create_vrp <- function(transition, clhs_points, start_pos, number_days){
+
+  cat("sourcing python...")
+  reticulate::source_python("R/mTSP.py")
+  clhs_points$PID <- seq_along(clhs_points$geom)
+  clhs_points <- clhs_points['PID']
+  start_pos$PID <- -1
+  clhs_points <- rbind(clhs_points, start_pos['PID'])
+
+  cat("Calculating distance matrix...")
+  pnts2 <- as(clhs_points,"Spatial")
+  temp <- costDistance(transition,pnts2,pnts2)
+  dMat2 <- as.matrix(temp)
+
+  maxTime <- as.integer(min(dMat2[upper.tri(dMat2)])*5+45*5)
+  objVals <- as.integer(rep(maxTime*60L*10,nrow(clhs_points)-1))
+  ndays <- as.integer(number_days)
+  indStart <- as.integer(rep(nrow(dMat2)-1,ndays))
+
+  cat("Running VRP...")
+  vrp <- py_mTSP(dat = dMat2,num_days = ndays,
+                 start = indStart, end = indStart,
+                 max_cost = maxTime, plot_time = 45L,
+                 penalty =  objVals, arbDepot = F,GSC = 20L)
+
+  result <- vrp[[1]]
+
+  cat("Creating Spatial paths...")
+  paths <- foreach(j = 0:(length(result)-1), .combine = rbind) %do% {
+    if(length(result[[as.character(j)]]) > 2){
+      cat("Day",j,"...\n")
+      p1 <- result[[as.character(j)]]+1
+      out <- foreach(i = 1:(length(p1)-1), .combine = rbind) %do% {
+        temp1 <- clhs_points[p1[i],]
+        temp2 <- clhs_points[p1[i+1],]
+        temp3 <- shortestPath(transition,st_coordinates(temp1),
+                              st_coordinates(temp2),output = "SpatialLines") %>% st_as_sf()
+        temp3$Segment = i
+        temp3
+      }
+      out$DayNum = j
+      out
+    }
+
+  }
+
+  paths <- st_transform(paths, 3005)
+  plot(paths['DayNum'])
+
+  p2 <- clhs_points
+  p2$PID <- seq_along(p2$PID)
+  p2 <- p2[,"PID"]
+  p2$DayNumber <- NA
+  p2$Order <- NA
+  for(i in 0:(length(result)-1)){
+    p1 <- result[[as.character(i)]]+1
+    p1 <- p1[c(-1,-length(p1))]
+    p2$DayNumber[p1] <- i
+    p2$Order[p1] <- 1:length(p1)
+  }
+  p2$StartLocation <- F
+  p2$StartLocation[nrow(p2)] <- T
+  if(any(is.na(p2$DayNumber[!p2$StartLocation]))) warning("Could not fit all points. Try increasing number of days or check distances")
+  #p2 <- st_transform(p2, st_crs(paths))
+  plot(p2["DayNumber"],pch = 16)
+  #plot(paths, add = T)
+  return(list(Path = paths, Points = p2))
+}
+
+
