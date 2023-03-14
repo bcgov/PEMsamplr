@@ -10,8 +10,8 @@ library(ggplot2)
 library(sf)
 library(terra)
 
-fid <- setup_folders("CanyonCreek_AOI")
-fid <- setup_folders("DateCreek_AOI")
+fid <- setup_folders("CanyonCreek")
+#fid <- setup_folders("DateCreek_AOI")
 
 # location of the transect layout (sample plan)
 trans_input <- fid$sampleplan_final_transect[2]
