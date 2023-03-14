@@ -1,6 +1,5 @@
 
-
-
+```{r}
 #remotes::install_github("bcgov/PEMprepr", build_vignettes = TRUE)
 devtools::load_all("D:\\PEM_DATA\\PEMprepr")
 devtools::load_all("D:\\PEM_DATA\\PEMsamplr")
@@ -11,7 +10,7 @@ library(ggplot2)
 library(sf)
 library(terra)
 
-
+fid <- setup_folders("CanyonCreek_AOI")
 fid <- setup_folders("DateCreek_AOI")
 
 # location of the transect layout (sample plan)
@@ -147,3 +146,4 @@ allpts <- attribute_points(tpoints_ne, allrasts)
 
 st_write(allpts, dsn = file.path(fid$training_data_1030[2], "allpts.gpkg"), delete_layer = TRUE)
 
+```
