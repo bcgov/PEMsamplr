@@ -47,7 +47,7 @@ prep_cost_layers <- function(vec_dir, dem, heli = FALSE) {
     #   # create a roads raster (buffered)
     rdsAll <- sf::st_buffer(rdsAll, dist = 25, endCapStyle = "SQUARE", joinStyle = "MITRE")
     rdsAll <- sf::st_cast(rdsAll, "MULTIPOLYGON")
-    rdsRast <- terra::rasterize(rdsAll, dem, field = "pace")
+    rdsRast <- terra::rasterize(rdsAll, dem, field = "pace", fun = "max")
     rdsRast[is.nan(rdsRast[])] <- NA
     #rm(allRast)
 
@@ -60,7 +60,7 @@ prep_cost_layers <- function(vec_dir, dem, heli = FALSE) {
       dplyr::mutate(cost = 10000) %>%
       sf::st_cast("MULTIPOLYGON") %>%
       dplyr::select(cost)
-    water_r <- terra::rasterize(water, dem, field = "cost")
+    water_r <- terra::rasterize(water, dem, field = "cost", fun = "max")
 
     dem[water_r] <- 0
     rm(water_r)
