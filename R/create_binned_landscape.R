@@ -12,7 +12,7 @@
 #'
 #' @examples
 #'
-#' create_binned_landscape()
+#' create_binned_landscape(input,covariates = c("dah_LS", "landscape_LS","mrvbf_LS"))
 
 create_binned_landscape <- function(input, covariates = c("dah_LS", "landscape_LS","mrvbf_LS")){
 
