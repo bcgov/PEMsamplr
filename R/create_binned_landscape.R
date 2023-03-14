@@ -5,7 +5,7 @@
 #' Can use either folder or individual files to assess landscape covariate space
 #'
 #' @param input text string with either folder location or individual files
-#'
+#' @param covariates text string with file names (default to dah, landscape, mrvbf)
 #' @return **SpatRaster**
 #'
 #' @export
@@ -14,14 +14,19 @@
 #'
 #' create_binned_landscape()
 
-create_binned_landscape <- function(input){
+create_binned_landscape <- function(input, covariates = c("dah_LS", "landscape_LS","mrvbf_LS")){
 
- # input <- filesoi
+  #input <-outpath
 
   suppressWarnings({
     if(dir.exists(input) & length(input) == 1){
-      print ("using entire directory")
+      #print ("using entire directory")
       rastlist <- list.files(input, full.names = T, include.dirs = FALSE, pattern = "\\..*")
+      rastlist <- rastlist[grep("*_LS.tif", rastlist)]
+
+      print ("using the following files:")
+      print(basename(rastlist))
+
       ancDat <- terra::rast(rastlist)
 
 

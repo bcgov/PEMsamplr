@@ -4,10 +4,15 @@
 \alias{create_binned_landscape}
 \title{Create binned landscape}
 \usage{
-create_binned_landscape(input)
+create_binned_landscape(
+  input,
+  covariates = c("dah_LS", "landscape_LS", "mrvbf_LS")
+)
 }
 \arguments{
 \item{input}{text string with either folder location or individual files}
+
+\item{covariates}{text string with file names (default to dah, landscape, mrvbf)}
 }
 \value{
 \strong{SpatRaster}
