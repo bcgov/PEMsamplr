@@ -5,12 +5,14 @@
 #' This script has been tested with SAGA 8.4 on Windows
 #' Depending on your system the path to `saga_cmd` may need to be specified.
 #'
-#'
 #' @param dtm is a 25m dtm raster object ideally cropped to the AOI watershed boundaries
 #' @param SAGApath Is the location of SAGA on your system.  On linux systems with SAGA GIS installed Use `SAGApath = ""`
 #' @param output Location of where rasters will be saved.
 #' @param sieve_size Remove isolated clusters of below the threshold number of cells
 #' @param rtemplate template of 25m raster to match final output to
+#' @param dah_threshold dah threshold to classify the dah layer into the three respective classes
+#' @param saga_param named list. Parameters that are fed to SAGA MRVBF function. IF supplied it must contain all parameters specified in the SAGA command.
+#' @param covariates character vector of covariates to create. Can be any of c("mrvbf", "dah", "landform")
 #' @import magrittr
 #' @keywords SAGA, covariates, predictors, raster
 #' @export
@@ -31,10 +33,18 @@
 #                              SAGApath ="C:/SAGA/saga-7.7.0_x64/",
 #                               sieve_size = 10)
 
+saga_param <- list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
+                   P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
+                   CLASSIFY = 1, MAX_RES = 100)
+
 
 create_samplr_covariates <- function(dtm, rtemplate,  SAGApath = "",
-                                     output = "./cv-rasters",
-                                     sieve_size = 10){
+                                     output = NULL,
+                                     covariates = NULL,
+                                     sieve_size = 10,
+                                     dah_threshold = 0.2,
+                                     saga_param = NULL
+                                     ){
 
   ##### Link SAGA to R --------------------------------------------------
   if(Sys.info()['sysname']=="Windows"){
@@ -87,22 +97,33 @@ create_samplr_covariates <- function(dtm, rtemplate,  SAGApath = "",
   )
   system(sysCMD)
 
+  # set covariates to include all 3 covariates if no input is given
 
-  ## 1.  Landscape MRVBF
+  if (is.null(covariates)) covariates <- c("mrvbf", "dah", "landform")
+ ## 1.  Landscape MRVBF
   # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_8.html
+
+  if (any(covariates == "mrvbf")){
+
+    if (is.null(saga_param)){
+
+      saga_param <- list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
+                         P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
+                         CLASSIFY = 1, MAX_RES = 100)
+    }
 
   sysCMD <- paste(saga_cmd, "ta_morphometry 8", "-DEM",
                   sDTM,
                   "-MRVBF", MRVBF,
                   "-MRRTF", MRRTF,                       # Outputs
-                  "-T_SLOPE", 64,
-                  "-T_PCTL_V", 6,
-                  "-T_PCTL_R", 2,
-                  "-P_SLOPE", 4.0,
-                  "-P_PCTL", 3.0,
-                  "-UPDATE", 1,
-                  "-CLASSIFY", 1,
-                  "-MAX_RES", 100
+                  "-T_SLOPE", saga_param$T_SLOPE,
+                  "-T_PCTL_V", saga_param$TPCTL_V,
+                  "-T_PCTL_R", saga_param$T_PCTL_R,    # Default Parameters
+                  "-P_SLOPE", saga_param$P_SLOPE,
+                  "-P_PCTL", saga_param$P_PCTL,
+                  "-UPDATE", saga_param$UPDATE,
+                  "-CLASSIFY", saga_param$CLASSIFY,
+                  "-MAX_RES", saga_param$MAX_RES
   )
   system(sysCMD)
 
@@ -115,9 +136,12 @@ create_samplr_covariates <- function(dtm, rtemplate,  SAGApath = "",
 
   terra::writeRaster(mrvbf_rcrop, file.path(saga_tmp_files, "mrvbf_LS.tif"), overwrite = TRUE)
 
-
+}
   ## 2.  Landscape Diuranal Anisotropic Heating
   # http://www.saga-gis.org/saga_tool_doc/7.2.0/ta_morphometry_12.html
+
+
+  if (any(covariates == "dah")){
 
   sysCMD <- paste(saga_cmd, "ta_morphometry 12", "-DEM",
                   sDTM,
@@ -129,7 +153,6 @@ create_samplr_covariates <- function(dtm, rtemplate,  SAGApath = "",
   # reclass and threshold dah
 
   dah_r <- terra::rast(gsub(".sgrd", ".sdat", dah))
-  dah_threshold <- 0.2
 
   # filter based on the 0.3 for Date Cree
   # - review the slope (style into three classes
@@ -154,10 +177,10 @@ create_samplr_covariates <- function(dtm, rtemplate,  SAGApath = "",
   rc_crop <- terra::crop(rc, rtemplate)
 
   terra::writeRaster(rc_crop, file.path(saga_tmp_files, "dah_LS.tif"), overwrite = TRUE)
-
+}
 
   ## 3. Landform Class
-
+  if (any(covariates == "landform")){
   land_class <- create_landform_classes(dtm, scale = 75, sn = 3, ln = 7, n.classes = "six")
 
   # sieve landclass
@@ -173,7 +196,7 @@ create_samplr_covariates <- function(dtm, rtemplate,  SAGApath = "",
   # remove temp Saga files
   # unlink(paste(output, "saga", sep = "/"), recursive = TRUE)
   # delete the files
-
+  }
   to_delete <- grep(".tif", list.files(file.path(saga_tmp_files), full.names = TRUE), value = T, invert = TRUE)
   file.remove(to_delete)
 
