@@ -97,9 +97,7 @@ prep_cost_layers <- function(vec_dir, dem, heli = FALSE) {
 
     gc()
 
-
   }
-
   return(altAll)
 
 }
