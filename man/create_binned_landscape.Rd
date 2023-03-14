@@ -25,5 +25,5 @@ Can use either folder or individual files to assess landscape covariate space
 }
 \examples{
 
-create_binned_landscape()
+create_binned_landscape(input,covariates = c("dah_LS", "landscape_LS","mrvbf_LS"))
 }
