@@ -177,10 +177,18 @@ template = terra::rast(file.path( fid$cov_dir_1020[2],"25m", "template.tif"))
 
 # generate landscape covariates
 
+
+saga_param <- list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
+                   P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
+                   CLASSIFY = 1, MAX_RES = 100)
+
 create_samplr_covariates(dem, SAGApath =  SAGApath_dir,
                          output =  outpath,
                          sieve_size = 10,
-                         rtemplate = template)
+                         rtemplate = template,
+                         dah_threshold = 0.2, 
+                         saga_param = saga_param,
+                         covariates = NULL)
 
 
 fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif")
@@ -223,6 +231,14 @@ vec_dir = fid$shape_dir_1010[2]
 
 dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem.tif"))
 #sort(unique(round(terra::values(dem),0)))
+
+
+roads <- sf::st_read(file.path(vec_dir, "road_major.gpkg"), quiet = TRUE) %>%
+  sf::st_zm()
+
+check_road_layer(roads)
+
+
 
 costprep <- prep_cost_layers(vec_dir, dem, heli = FALSE)
 
