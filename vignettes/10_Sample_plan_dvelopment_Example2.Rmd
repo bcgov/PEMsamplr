@@ -233,6 +233,7 @@ dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem.tif"))
 #sort(unique(round(terra::values(dem),0)))
 
 
+
 roads <- sf::st_read(file.path(vec_dir, "road_major.gpkg"), quiet = TRUE) %>%
   sf::st_zm()
 
@@ -469,9 +470,9 @@ test <- create_vrp(tr1,pnts_in, startLoc, 3)
 
 
 
-# run vrp 
-
-create_vrp <- function(transition, clhs_points, start_pos, number_days){
+# # run vrp 
+# 
+# create_vrp <- function(transition, clhs_points, start_pos, number_days){
 
 
 
