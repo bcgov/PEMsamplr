@@ -26,9 +26,8 @@
 #library(devtools)
 #install_github("josephlewis/leastcostpath")
 #library(leastcostpath)
-
 # need several functions from this
-source("R/prep_cost_layer_LCP_utils.R")
+#source("R/prep_cost_layer_LCP_utils.R")
 # need several functions from this
 #
 # x = terra::rast(file.path("D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/10_clean_inputs/20_covariates", "25m", "dem.tif"))
@@ -39,8 +38,8 @@ source("R/prep_cost_layer_LCP_utils.R")
 #     sf::st_zm()
 #
 
-create_slope_cs_LCP <- function(x, cost_function = "tobler offpath", neighbours = 16, roads, crit_slope = 12, max_slope = NULL, percentile = 0.5, exaggeration = FALSE) {
-
+prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours = 16, roads, crit_slope = 12, max_slope = NULL, percentile = 0.5, exaggeration = FALSE) {
+  source("R/prep_cost_layer_LCP_utils.R")
   # x = terra::rast(file.path("D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/10_clean_inputs/20_covariates", "25m", "dem.tif"))
   # neighbours = 8
   # cost_function = "tobler offpath"
