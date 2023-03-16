@@ -49,7 +49,6 @@ create_slope_cs <- function(x, cost_function = "tobler offpath", neighbours = 16
   # percentile = 0.5
   # exaggeration = FALSE
 
-
   if(terra::is.lonlat(x)) {
     stop("supplied digital elevation model (DEM) is invalid. x argument expects DEM with a projected coordinate system")
   }

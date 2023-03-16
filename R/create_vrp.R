@@ -8,7 +8,7 @@
 #' @import reticulate
 #' @import sf
 #' @importFrom gdistance transition
-#' @importFrom terra costDistance
+#' @import terra
 #' @import sp
 #' @import raster
 #' @import foreach
@@ -55,7 +55,7 @@ create_vrp <- function(transition, clhs_points, start_pos, number_days){
 
   cat("Calculating distance matrix...")
   pnts2 <- as(clhs_points,"Spatial")
-  temp <- costDistance(transition,pnts2,pnts2)
+  temp <- gdistance::costDistance(transition,pnts2,pnts2)
   dMat2 <- as.matrix(temp)
 
   maxTime <- as.integer(min(dMat2[upper.tri(dMat2)])*5+45*5)
