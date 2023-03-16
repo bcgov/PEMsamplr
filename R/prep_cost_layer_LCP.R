@@ -39,7 +39,7 @@ source("R/prep_cost_layer_LCP_utils.R")
 #     sf::st_zm()
 #
 
-create_slope_cs <- function(x, cost_function = "tobler offpath", neighbours = 16, roads, crit_slope = 12, max_slope = NULL, percentile = 0.5, exaggeration = FALSE) {
+create_slope_cs_LCP <- function(x, cost_function = "tobler offpath", neighbours = 16, roads, crit_slope = 12, max_slope = NULL, percentile = 0.5, exaggeration = FALSE) {
 
   # x = terra::rast(file.path("D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/10_clean_inputs/20_covariates", "25m", "dem.tif"))
   # neighbours = 8
