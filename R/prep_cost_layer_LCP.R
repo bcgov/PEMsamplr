@@ -102,7 +102,6 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
   #Calculate the rise/run
   rspeed <- road_values[radj[,1]]
 
-
   # prepare slope component
 
   # identify cells and which are NA
