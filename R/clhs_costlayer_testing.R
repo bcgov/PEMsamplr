@@ -200,43 +200,114 @@
 #'
 #' }
 #'
-#'
-#'
-#' # # Vineyettw
-#' # #
-#' # #
-#' # # # create  transition layer
-#' # # tr <- transition(altAll, transitionFunction = function(x) 1/mean(x), directions = 8, symm = F)
-#' # #
-#' # # saveRDS(tr, file.path(out_path,"input_raster", "transition_layer.rds"))
-#' # # #tr <- readRDS(file.path(out_path,"input_raster", "transition_layer.rds"))
-#' # #
-#' # # rm(altAll)
-#' # # rm(rdsAll)
-#' # # rm(rdsRast)
-#' # # rm(alt)
-#' # # gc()
-#' # #
-#' # # tr1 <- geoCorrection(tr)
-#' # #
-#' # # rm(tr)
-#' # # gc()
-#' # #
-#' # # #plot(raster(tr1))
-#' # #
-#' # # # output transition layer to use in creating TSP paths
-#' # # saveRDS(tr1, file.path(out_path,"input_raster", "transition_layer.rds"))
-#' # #
-#' # # #tr1 <- readRDS(file.path(out_path,"input_raster", "transition_layer.rds"))
-#' # # #tr1 = tr
-#' # #
-#' # #
-#' # # acost <- accCost(tr1,start)
-#' # #
-#' # # # calculate the cost layer for travel
-#' # # plot(acost)
-#' # #
-#' # # writeRaster(acost, file.path(out_path,"input_raster", "acost.tif"), format = "GTiff", overwrite = TRUE)
-#' # #
-#' # # rm(tr1)
-#' # # gc()
+#
+## OLD VERSION
+#
+# prep_cost_layers <- function(vec_dir, dem, heli = FALSE) {
+#
+#   if(heli == FALSE) {
+#
+#     demr <- raster(dem)
+#
+#
+#     ## read in the major roads
+#     roads <- sf::st_read(file.path(vec_dir, "road_major.gpkg"), quiet = TRUE) %>%
+#       sf::st_zm()
+#
+#     roads$ROAD_CLASS[roads$trail == 1] <- "trail"
+#     roads <- roads[,c("ROAD_SURFACE","ROAD_CLASS", "ROAD_NAME_FULL")]
+#     roads <- roads %>% dplyr::rename('road_surface' = ROAD_CLASS,
+#                                      'surface' = ROAD_SURFACE,
+#                                      'name' = ROAD_NAME_FULL)
+#     rdsAll <-  data.table::as.data.table(roads) %>% sf::st_as_sf()
+#     rSpd <- dplyr::tibble(
+#       "road_surface" = c("resource", "unclassified", "recreation", "trail", "local", "collector", "highway", "service", "arterial", "freeway", "strata", "lane", "private", "yield", "ramp", "restricted", "water", "ferry", "driveway","unclassifed"),
+#       "speed" = c(30, 30, 50, 4.5, 50, 80, 80, 50, 80, 80, 30, 30, 4.5, 30, 60, 4.5, 0.1, 0.1, 4.5, 30))
+#     #"speed" = c(3000, 3000, 5000, 4.5, 5000, 8000, 8000, 50, 8000, 8000, 3000, 3000, 4.5, 3000, 6000, 4.5, 0.1, 3000, 4.5, 3000))
+#
+#     #   # convert
+#     rSpd <- as.data.table(rSpd)
+#     rdsAll <- merge(rdsAll, rSpd, by = "road_surface", all = F)
+#     rdsAll <- rdsAll[,"speed"] #km/h
+#     allRast <- raster(rdsAll, resolution = 25)
+#
+#     #   # create a roads raster (buffered)
+#     rdsAll <- sf::st_buffer(rdsAll, dist = 25, endCapStyle = "SQUARE", joinStyle = "MITRE")
+#     rdsAll <- sf::st_cast(rdsAll, "MULTIPOLYGON")
+#     rdsRast <- terra::rasterize(rdsAll, dem, field = "speed", fun = "max")
+#     rdsRast[is.nan(rdsRast[])] <- NA
+#     rdsRast <- raster(rdsRast)
+#     #rm(allRast)
+#
+#     print("road layers prepared")
+#
+#     #   # prepare the water data
+#
+#     water <- sf::st_read(file.path(vec_dir, "water.gpkg"),quiet = TRUE) %>%
+#       dplyr::filter(WATERBODY_TYPE != "W") %>%
+#       dplyr::mutate(cost = 10000) %>%
+#       sf::st_cast("MULTIPOLYGON") %>%
+#       dplyr::select(cost)
+#     water_r <- terra::rasterize(water, dem, field = "cost", fun = "max")
+#
+#     dem[water_r] <- 0
+#     rm(water_r)
+#
+#     print("water layer prepared")
+#
+#
+#     altAll <- merge(rdsRast, demr)
+#
+#
+#     # set the threshold in which to determine the slope calculations vs road travel calculation in the transition layer. This may need to be adjusted depedning on terrain.
+#     alt.threshold <- 250 # Date Creek
+#
+#     trFn <- function(x){
+#       if(x[1] > alt.threshold & x[2] > alt.threshold){
+#         x[1]-x[2]
+#       }else{
+#         min(x[1],x[2])
+#       }
+#     }
+#     # identify the areas treated as road and those to be calculatd for slope
+#     rdIdx <- which(values(altAll) < 100)            # road index
+#     slpIdx <- which(values(altAll) > alt.threshold) # slope index
+#     #rdAdj <- adjacent(altAll, cells = rdIdx, pairs = T, directions = 8)
+#     adj <- adjacent(altAll, cells = slpIdx, pairs = T, directions = 8)
+#     adj <- adj[!adj[,1] %in% rdIdx ,]
+#     adj <- adj[!adj[,2] %in% rdIdx ,]
+#
+#     # calculate the altitude difference
+#     tr <- transition(altAll, trFn , directions = 8, symm = F) ##altDiff and speed (km/h)
+#     #convert to slope  i.e. altitude diff / distance travelled
+#     tr1 <- geoCorrection(tr) ##divided by 25 - slope and conductance (km/h/m)
+#
+#     # plot(raster(tr1))
+#
+#     # apply Toblers hiking function to the slope areas
+#     tr1[adj] <- (3/5)*(6*exp(-3.5*abs(tr1[adj] + 0.08))) ##tobler's hiking function * 3/5 - gives km/h
+#     tr1 <- tr1*1000 ##now roads are correct conductance (h/m), and walking in m/h
+#     tr2 <- geoCorrection(tr1) ##have to geocorrect this part again
+#     tr1[adj] <- tr2[adj] ##tr1 values are now all conductance in h/metre
+#
+#     # output transition layer to use in creating TSP paths
+#     #saveRDS(tr1, file.path(out_path,"input_raster", "transition_layer.rds"))
+#
+#     # calculate the cost layer for travel
+#     acost <- accCost(tr1, start)
+#     plot(acost)
+#     #acost[acost >3000]<- NA
+#
+#     terra::rast(acost)
+#     writeRaster
+#
+#     outpath <- fid$sampling_input_landscape[2]
+#
+#     names(cost) <- "acost"
+#
+#     terra::writeRaster(acost, file.path(fid$sampling_input_landscape[2], "acost_old.tif"), overwrite = TRUE)
+#     #terra::plot(sample_cost_masked)
+#
+#
+#
+#   ###
