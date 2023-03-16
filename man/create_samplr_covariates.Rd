@@ -9,7 +9,7 @@ create_samplr_covariates(
   rtemplate = rtemplate,
   SAGApath = "",
   output = NULL,
-  covariates = NULL,
+  covariates = c("mrvbf", "dah", "landform"),
   sieve_size = 10,
   dah_threshold = 0.2,
   saga_param = list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2, P_SLOPE = 4, P_PCTL = 3,

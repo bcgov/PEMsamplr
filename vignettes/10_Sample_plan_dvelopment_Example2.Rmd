@@ -324,7 +324,7 @@ library(clhs)
 library(foreach)
 
 fid <- setup_folders("DateCreek_AOI")
-
+fid <- setup_folders("CanyonCreek")
 ###############################################################
 # 1) generate 
 
@@ -449,6 +449,13 @@ clhs_set <- "ICHmc1_clhs_sample_2.gpkg"
 pnts <- sf::st_read(list.files(fid$samplingplan_clhs[2], pattern = clhs_set, full.names = TRUE))
 
 tr1 <- terra::rast(file.path(fid$sampling_input_landscape[2], "cost_raw.tif"))
+
+tr1 <- "D:\\PEM_DATA\\DateCreek_AOI\\DateCreek_AOI\\10_clean_inputs\\20_covariates\\25m"
+
+tr11<- readRDS(file.path(tr1, "transition_layer.rds"))
+tr11
+list.files(tr1)
+
 #terra::plot(sample_cost_masked)
 
 
@@ -464,17 +471,16 @@ library(foreach)
 
 
 plot(pnts)
+
 startLoc <- pnts[10,]
 pnts_in <- pnts[-10,]
-test <- create_vrp(tr1,pnts_in, startLoc, 3)
 
+test <- create_vrp(tr11, pnts_in , startLoc, 3)
 
 
 # # run vrp 
 # 
 # create_vrp <- function(transition, clhs_points, start_pos, number_days){
-
-
 
 
 
