@@ -29,9 +29,13 @@
 #  fid <- setup_folders("canyoncreek")
 #  output =  fid$sampling_input_landscape[[2]]
 #  SAGApath ="C:/SAGA/saga-7.7.0_x64/"
+# saga_param <- list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
+#   P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
+#   CLASSIFY = 1, MAX_RES = 100)
 # create_samplr_covariates(dtm = dtm,rtemplate = r25, output =  output,
 #                              SAGApath ="C:/SAGA/saga-7.7.0_x64/",
-#                               sieve_size = 10)
+#                               sieve_size = 10, dah_threshold = 0.2,
+#                               saga_param = saga_param)
 
 saga_param <- list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
                    P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
