@@ -25,17 +25,26 @@
 
 #library(devtools)
 #install_github("josephlewis/leastcostpath")
-#library(leastcostpath)
+# library(leastcostpath)
+# library(terra)
+# # need several functions from this
+# source("R/prep_cost_layer_LCP_utils.R")
 # need several functions from this
-#source("R/prep_cost_layer_LCP_utils.R")
-# need several functions from this
+#
+# x = terra::rast("D:/PEM/DateCreek_AOI/1_map_inputs/covariates/25m/dem_preproc.tif")
 #
 # x = terra::rast(file.path("D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/10_clean_inputs/20_covariates", "25m", "dem.tif"))
 # origin <- sf::st_sf(geometry = sf::st_sfc(sf::st_point(c(892344.7, 1154340)),crs = terra::crs(x)))
-# vec_dir <- "D:\\PEM_DATA\\DateCreek_AOI\\DateCreek_AOI\\10_clean_inputs\\10_vector\\"
-#   ## prepare roads layer
-#   roads <- sf::st_read(file.path(vec_dir, "road_major.gpkg"), quiet = TRUE) %>%
-#     sf::st_zm()
+# points(vect(origin))
+#vec_dir <- "D:\\PEM_DATA\\DateCreek_AOI\\DateCreek_AOI\\10_clean_inputs\\10_vector\\"
+  ## prepare roads layer
+# roads <- sf::st_read(file.path(vec_dir, "road_major.gpkg"), quiet = TRUE) %>%
+#   sf::st_zm()
+# library(sf)
+# roads <- st_read("inputs/road_vetted.gpkg")
+# plot(x)
+# points(vect(origin))
+# lines(vect(roads))
 #
 
 prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours = 16, roads, crit_slope = 12, max_slope = NULL, percentile = 0.5, exaggeration = FALSE) {
@@ -70,13 +79,12 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
                                    'surface' = ROAD_SURFACE,
                                    'name' = ROAD_NAME_FULL)
   rdsAll <-  data.table::as.data.table(roads) %>% sf::st_as_sf()
-  rSpd <- dplyr::tibble(
-    "road_surface" = c("resource", "unclassified", "recreation", "trail", "local", "collector", "highway", "service", "arterial", "freeway", "strata", "lane", "private", "yield", "ramp", "restricted", "water", "ferry", "driveway","unclassifed"),
-    "speed" = c(30, 30, 50, 4.5, 50, 80, 80, 50, 80, 80, 30, 30, 4.5, 30, 60, 4.5, 0.1, 0.1, 4.5, 30))
+  rSpd <- data.table::data.table(
+    road_surface = c("resource", "unclassified", "recreation", "trail", "local", "collector", "highway", "service", "arterial", "freeway", "strata", "lane", "private", "yield", "ramp", "restricted", "water", "ferry", "driveway","unclassifed"),
+    speed_kmh = c(30, 30, 50, 4.5, 50, 80, 80, 50, 80, 80, 30, 30, 4.5, 30, 60, 4.5, 0.1, 0.1, 4.5, 30))
   #"speed" = c(3000, 3000, 5000, 4.5, 5000, 8000, 8000, 50, 8000, 8000, 3000, 3000, 4.5, 3000, 6000, 4.5, 0.1, 3000, 4.5, 3000))
+  rSpd[,speed := speed_kmh/3.6] ##convert to m/s
 
-  #   # convert speed to pace
-  rSpd <- data.table::as.data.table(rSpd)
 
   rdsAll <- merge(rdsAll, rSpd, by = "road_surface", all = F)
   rdsAll <- rdsAll[,"speed"]
@@ -146,7 +154,7 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
 
   rspeed[is.na(rspeed)] <- speed
 
-  speed <- rspeed  #speed (km/h)
+  speed <- rspeed  #speed (km/h) - i think it's in m/s?
 
   conductance <- speed/run
 
