@@ -99,7 +99,7 @@ create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
     sf::st_buffer(dist = 150) %>%
     sf::st_cast("MULTIPOLYGON")
 
-  rhc <- terra::rasterize( hcsf, cost, field = "cost")
+  rhc <- terra::rasterize( hcsf, cost, field = "cost", fun = "max")
   return(rhc)
 }
 
