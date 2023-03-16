@@ -39,7 +39,7 @@
 #
 
 prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours = 16, roads, crit_slope = 12, max_slope = NULL, percentile = 0.5, exaggeration = FALSE) {
-  source("R/prep_cost_layer_LCP_utils.R")
+  #source("R/prep_cost_layer_LCP_utils.R")
   # x = terra::rast(file.path("D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/10_clean_inputs/20_covariates", "25m", "dem.tif"))
   # neighbours = 8
   # cost_function = "tobler offpath"
