@@ -9,13 +9,12 @@
 #' @param percentile   \code{numeric} value. Travel rate percentile only used in 'campbell 2019' cost_function. Expected numeric values are 0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99. 0.5 (default)
 #' @param exaggeration \code{logical}. if TRUE, positive slope values (up-hill movement) multiplied by 1.99 and negative slope values (down-hill movement) multiplied by 2.31
 #' @param exaggeration  if TRUE, positive slope values (up-hill movement) multiplied by 1.99 and negative slope values (down-hill movement) multiplied by 2.31
-#' @author  Joseph Lewis (https://github.com/josephlewis/leastcostpath)
+#' @author Joseph Lewis (https://github.com/josephlewis/leastcostpath)
 #' @return \code{conductanceMatrix} that numerically expresses the difficulty of moving across slope based on the provided cost function
+#' @importFrom magrittr "%>%"
 #' @export
-#'
 #' @examples
 #' r <- terra::rast(system.file("extdata/SICILY_1000m.tif", package="leastcostpath"))
-#'
 #' slope_cs <- create_slope_cs(x = r, cost_function = "tobler", neighbours = 4)
 #' slope_cs2 <- create_slope_cs(x = r,
 #' cost_function = function(x) {(6 * exp(-3.5 * abs(x + 0.05))) / 3.6}, neighbours = 4)
@@ -24,11 +23,9 @@
 #' slope_cs <- create_slope_cs(x = r, roads = roads, cost_function = "tobler", neighbours = 4)
 #' cc <- create_accum_cost(x = slope_cs, origin = loc, rescale = TRUE)
 
-
-
-library(devtools)
-install_github("josephlewis/leastcostpath")
-library(leastcostpath)
+#library(devtools)
+#install_github("josephlewis/leastcostpath")
+#library(leastcostpath)
 
 # need several functions from this
 source("R/prep_cost_layer_LCP_utils.R")
@@ -41,7 +38,6 @@ source("R/prep_cost_layer_LCP_utils.R")
 #   roads <- sf::st_read(file.path(vec_dir, "road_major.gpkg"), quiet = TRUE) %>%
 #     sf::st_zm()
 #
-
 
 create_slope_cs <- function(x, cost_function = "tobler offpath", neighbours = 16, roads, crit_slope = 12, max_slope = NULL, percentile = 0.5, exaggeration = FALSE) {
 

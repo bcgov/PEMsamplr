@@ -1,8 +1,9 @@
 #' @noRd
-#' These scripts provide various utility for the cost layer creation. These are all
-#' were written by Joseph Lewis under the leastcostpath package V.2
-#' They are reproduced here as they are not currently available outside the package
-#' https://github.com/josephlewis/leastcostpath/blob/master/R/neighbourhood.R
+
+#These scripts provide various utility for the cost layer creation. These are all
+#were written by Joseph Lewis under the leastcostpath package V.2
+#They are reproduced here as they are not currently available outside the package
+#https://github.com/josephlewis/leastcostpath/blob/master/R/neighbourhood.R
 
 neighbourhood <- function(neighbours) {
 
