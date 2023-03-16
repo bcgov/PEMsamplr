@@ -55,6 +55,14 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
 
   neighbours <- neighbourhood(neighbours = neighbours)
 
+
+  # prepare slope component
+
+  # identify cells and which are NA
+  cells <- which(!is.na(terra::values(x)))
+  na_cells <- which(is.na(terra::values(x)))
+
+
   # prepare roads layer
   roads$ROAD_CLASS[roads$trail == 1] <- "trail"
   roads <- roads[,c("ROAD_SURFACE","ROAD_CLASS", "ROAD_NAME_FULL")]
@@ -83,7 +91,7 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
   road_cells <- which(!is.na(terra::values(rdsRast)))
   not_road_cells <- which(is.na(terra::values(rdsRast)))
 
-  # get cells that are adjacent
+  # get cells that are adjacent (cells = cells or road_cells)
   radj <- terra::adjacent(x = rdsRast, cells = cells, directions = neighbours, pairs = TRUE)
   # remove any that are na
   radj <- radj[!radj[,2] %in% na_cells,]
@@ -180,7 +188,6 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
   return(cs)
 
 }
-
 
 #
 #
