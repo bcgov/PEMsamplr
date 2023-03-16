@@ -14,7 +14,7 @@
 check_bgc_cost <- function(bgc, binned_landscape, cost){
 
   # create a bgc raster
-  rbgc <- terra::rasterize(bgc, binned_landscape, field = "MAP_LABEL", fun= "max")
+  rbgc <- terra::rasterize(bgc, binned_landscape, field = "MAP_LABEL", fun= "min")
   rcost <- c(rbgc, binned_landscape, cost)
 
   rcdf <- as.data.frame(rcost, xy = TRUE)
