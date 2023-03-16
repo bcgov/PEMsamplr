@@ -4,7 +4,7 @@
 #' @param dem SpatRast or Raster of cost layer
 #' @param cost SpatRast or Raster of cost layer
 #' @param costval Numeric value of assigned high cost
-#' @import magrittr
+#' @importFrom magrittr "%>%"
 #' @return SpatRast
 #' @export
 #'

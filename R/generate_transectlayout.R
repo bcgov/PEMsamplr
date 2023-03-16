@@ -4,6 +4,7 @@
 #
 #' @author Genevieve Perkins
 #' @import foreach
+#' @importFrom magrittr "%>%"
 #' @import sf
 #' @return sf vector of lines
 #' @export

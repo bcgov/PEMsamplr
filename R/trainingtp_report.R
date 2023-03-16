@@ -5,13 +5,12 @@
 #' Outputs include the markdown report, the cross validation object,
 #' and a binary model (RDS) that can then be used to predict on new data.
 #'
-#'
 #' @param out_dir  output directory  This defaults to the project's root directory OR where the RMD script is saved.
 #' @param tpts  training points cleaned
 #' @param trans processed transect lines
 #' @keywords training data report
-#' @import rmarkdown
-#' @import tidyr
+#' @importFrom rmarkdown render
+#' @import ggplot2
 #' @export
 #' @examples
 #' trainingpt_report(tpts, trans, out_dir)

@@ -5,7 +5,7 @@
 #' @param vec_dir directory where clean vector layers are stored
 #' @param dem digital terrain model .SpatRast
 #' @param heli TRUE or FALSE to indicate if road or heli design
-#' @import magrittr
+#' @importFrom magrittr "%>%"
 #' @return **SpatRast** cost surface to be used in cost layer creation
 #' @export
 #' @examples

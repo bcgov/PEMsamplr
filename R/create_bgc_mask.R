@@ -6,7 +6,7 @@
 #' @param vec_dir text string with folder location of base vector layers
 #' @param cost_masked SpatRast of cost layer with high cost penalty applied
 #' @param out_dir text string with location of output vector layers
-#' @import magrittr
+#' @importFrom magrittr "%>%"
 #' @return **SpatRast** A masked cost raster layer
 #' @export
 #'

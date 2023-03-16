@@ -5,7 +5,7 @@
 #' @author Genevieve Perkins
 #' @return sf object points based on raster
 #' @export
-#' @import magrittr
+#' @importFrom magrittr "%>%"
 #' @import sf
 #' @importFrom terra rast extract vect
 #' @examples

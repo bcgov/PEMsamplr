@@ -13,41 +13,31 @@
 #' @param dah_threshold dah threshold to classify the dah layer into the three respective classes
 #' @param saga_param named list. Parameters that are fed to SAGA MRVBF function. IF supplied it must contain all parameters specified in the SAGA command.
 #' @param covariates character vector of covariates to create. Can be any of c("mrvbf", "dah", "landform")
-#' @import magrittr
+#' @importFrom magrittr "%>%"
 #' @keywords SAGA, covariates, predictors, raster
 #' @export
 #' @examples
-#  aoi_raw <- system.file("extdata", "aoi.gpkg", package ="PEMprepr")
-#  aoi_raw <- sf::st_read(aoi_raw)
-#  aoi <- PEMprepr::aoi_snap(aoi_raw, "shrink")
-#  t25 <- create_template(aoi, 25)
-#  library(bcmaps)
-#  trim_raw <- cded_raster(aoi)
-#  trim <- terra::rast(trim_raw)
-#  dtm <- terra::project(trim, t25)
-#  sieve_size = 10
-#  fid <- setup_folders("canyoncreek")
-#  output =  fid$sampling_input_landscape[[2]]
-#  SAGApath ="C:/SAGA/saga-7.7.0_x64/"
-# saga_param <- list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
-#   P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
-#   CLASSIFY = 1, MAX_RES = 100)
-# create_samplr_covariates(dtm = dtm,rtemplate = r25, output =  output,
-#                              SAGApath ="C:/SAGA/saga-7.7.0_x64/",
-#                               sieve_size = 10, dah_threshold = 0.2,
-#                               saga_param = saga_param)
+# create_samplr_covariates(dtm = dtm,
+#                          rtemplate = r25,
+#                          output =  output,
+#                         SAGApath ="C:/SAGA/saga-7.7.0_x64/",
+#                         sieve_size = 10,
+#                          dah_threshold = 0.2,
+#                         saga_param = list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
+#                                             P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
+#                                             CLASSIFY = 1, MAX_RES = 100),
+#                          covariates = covs)
 
-saga_param <- list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
-                   P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
-                   CLASSIFY = 1, MAX_RES = 100)
-
-
-create_samplr_covariates <- function(dtm, rtemplate,  SAGApath = "",
+create_samplr_covariates <- function(dtm = dtm,
+                                     rtemplate = rtemplate,
+                                     SAGApath = "",
                                      output = NULL,
                                      covariates = NULL,
                                      sieve_size = 10,
                                      dah_threshold = 0.2,
-                                     saga_param = NULL
+                                     saga_param = list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
+                                                                     P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
+                                                                     CLASSIFY = 1, MAX_RES = 100)
                                      ){
 
   ##### Link SAGA to R --------------------------------------------------

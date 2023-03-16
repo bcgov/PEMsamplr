@@ -7,7 +7,7 @@
 #' @return TRUE if all checks run correctly
 #' @export
 #' @import dplyr
-#' @import magrittr
+#' @importFrom magrittr "%>%"
 #'
 #' @examples
 #' check_road_layer(roads)

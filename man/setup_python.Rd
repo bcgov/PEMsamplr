@@ -15,6 +15,9 @@ setup_python()
 
 \item{number_days}{number of days to sample for}
 }
+\value{
+list of vrp details
+}
 \description{
 Vehicle Routing Problem
 }

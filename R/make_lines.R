@@ -20,6 +20,7 @@
 #' @param PROJ is an optional the PROJ projection code with a default of BC Albers (3005).  Data imported will be transfored to this projection and final data will be exported in this projection.
 #' @keywords points, lines, convertion
 #' @export
+#' @importFrom magrittr "%>%"
 #' @import sf
 #' @examples
 #' ## Convert GPS waypoints to line features (i.e. transect data)

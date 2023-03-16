@@ -4,7 +4,7 @@
 #'
 #' @param datafolder text string with location of raw files in shp or gpk format
 #' @param transect_layout_buf sf spatial object with transect buffered data
-#'
+#' @importFrom magrittr "%>%"
 #' @return sf multiline vector
 #' @export
 #'

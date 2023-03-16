@@ -7,7 +7,7 @@
 #' @param mask_poly **sf** spatial object of mask for specific bgc
 #' @param centroid_distance Numeric value at which the triangles are placed apart, default is 400 based on albers crs meters
 #' @param out_path text string with location in which output sample plan as a geopackage is written
-#' @import magrittr
+#' @importFrom magrittr "%>%"
 #' @import LearnGeom
 #' @import sf
 #' @import foreach

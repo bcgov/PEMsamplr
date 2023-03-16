@@ -4,8 +4,10 @@
 #' @param cov_dir folder containing covariate files
 #' @return an sf object
 #' @keywords SAGA, covariates, predictors, raster
-#' @import sf
+#' @importFrom sf st_as_sf
 #' @importFrom terra rast extract
+#' @importFrom magrittr "%>%"
+#' @importFrom dplyr select
 #' @export
 #' @examples
 #' tpoints_ne <- attribute_points(dat_pts, cov_dir)

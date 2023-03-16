@@ -4,10 +4,11 @@
 #' @param clhs_points sample locations (sf)
 #' @param start_pos start position (sf)
 #' @param number_days number of days to sample for
-#' @return
+#' @return list of vrp details
 #' @import reticulate
 #' @import sf
-#' @import gdistance
+#' @importFrom gdistance transition
+#' @importFrom terra costDistance
 #' @import sp
 #' @import raster
 #' @import foreach
@@ -109,7 +110,8 @@ create_vrp <- function(transition, clhs_points, start_pos, number_days){
   #p2 <- st_transform(p2, st_crs(paths))
   plot(p2["DayNumber"],pch = 16)
   #plot(paths, add = T)
-  return(list(Path = paths, Points = p2))
+  outvrp <- list(Path = paths, Points = p2)
+  return(outvrp)
 
   }
 

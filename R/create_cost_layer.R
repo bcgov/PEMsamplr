@@ -4,7 +4,7 @@
 #' @param start **SpatVec of sf object with Start Locations for the cost layer.
 #' @param trans_output TRUE/FALSE - do you want to save output of transition layer as rds (to be used in vrp)
 #' @param transition_outdir **filepath for where to output transition rds
-#' @import magrittr
+#' @importFrom magrittr "%>%"
 #' @import gdistance
 #' @return RasterLayer with Cost and output the transition file for Vrp use
 #' @export

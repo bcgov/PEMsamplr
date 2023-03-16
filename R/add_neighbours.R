@@ -6,8 +6,9 @@
 #' @param template the baseline raster template for the entire map area
 #' @return an sfpoints object
 #' @import data.table
-#' @import sf
-#' @import terra
+#' @importFrom dplyr select
+#' @importFrom sf st_drop_geometry st_as_sf
+#' @importFrom terra vect
 #' @keywords training data, accuracy assessment, neighbours
 #' @export
 #' @examples
