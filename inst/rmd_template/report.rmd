@@ -19,11 +19,11 @@ knitr::opts_chunk$set(echo = TRUE, cache=FALSE,
 ```{r global_options, include=FALSE}
 
 ## Load library
-library(data.table)
-library(rmarkdown)
-library(knitr)
-library(dplyr)
-library(ggplot2)
+#library(data.table)
+#library(rmarkdown)
+#library(knitr)
+#library(dplyr)
+#library(ggplot2)
 
 tpts <- params$tpts
 trans <- params$trans
