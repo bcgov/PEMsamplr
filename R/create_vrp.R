@@ -47,7 +47,7 @@ setup_python <- function(){
 create_vrp <- function(transition, clhs_points, start_pos, number_days){
 
   cat("sourcing python...")
-  reticulate::source_python("R/mTSP.py")
+  #reticulate::source_python("R/mTSP.py")
   clhs_points$PID <- seq_along(clhs_points$geom)
   clhs_points <- clhs_points['PID']
   start_pos$PID <- -1
