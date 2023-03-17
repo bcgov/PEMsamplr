@@ -30,7 +30,7 @@ library(terra)
 library(bcmaps)
 library(leastcostpath)
 
-
+fid <- setup_folders("CanyonCreek")
 fid <- setup_folders("DateCreek_AOI")
 
 aoi_raw <- st_read(file.path(fid$shape_dir_0010[2], "aoi_raw.gpkg"))
