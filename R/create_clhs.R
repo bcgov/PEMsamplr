@@ -10,18 +10,15 @@
 #'@param num_sample Number of samples to run CLHS on
 #'@return sf dataframe with sampled points and labels for slice number and point number
 #'@author Kiri Daust
-#'@import clhs
 #'@import data.table
 #'@importFrom terra spatSample extract
 #'@import sf
+#'@import clhs
 #'
 #'@export
 
 ###testing
-# library(clhs)
-# library(terra)
-# library(data.table)
-# library(sf)
+
 #
 # covs <- c(rast("../PEM_Data/cost.tif"),
 #           rast("../PEM_Data/dah_LS.tif"),
@@ -36,8 +33,19 @@
 # min_dist = 1000
 # num_sample = 5000000
 #
+
+# library(devtools)
+# install_github("kdaust/clhs")
+# library(clhs)
+# library(terra)
+# library(data.table)
+# library(sf)
+# covs <- rast("C:/Users/kirid/Downloads/ICHmc1_clhs_sample_mask (1).tif")
+# library(PEMsamplr)
+# test <- create_clhs(covs, num_slices = 5, min_dist = 1000)
+
 create_clhs <- function(all_cov, num_slices, to_include = NULL,
-                        n_points = 5, min_dist = 600, num_sample = 5000000){
+                        n_points = 5, min_dist = 900, num_sample = 5000000){
   if(num_slices < 1) stop("Hold up! Must have at least one slice.")
 
   layer_names <- names(all_cov)
@@ -63,7 +71,7 @@ create_clhs <- function(all_cov, num_slices, to_include = NULL,
   }
 
   if(num_slices == 1){
-    print("Gen-R-ating one slice...")
+    message("Gen-R-ating one slice...")
 
     for(i in 1:5){
       templhs <- clhs(curr_dat, size = size,
@@ -80,7 +88,7 @@ create_clhs <- function(all_cov, num_slices, to_include = NULL,
 
 
   }else{
-    print("Gen-R-ating multiple slices...")
+    message("Gen-R-ating multiple slices...")
     #inc_idx = NULL
     for(snum in 1:num_slices){
       # snum = 2
@@ -99,7 +107,7 @@ create_clhs <- function(all_cov, num_slices, to_include = NULL,
         if(sum(templhs$final_obj_distance) == 0){
           break
         }else{
-          cat("Points too close. Trying again...")
+          message("Points too close. Trying again...")
         }
       }
       #print(templhs$final_obj_distance)
@@ -109,11 +117,15 @@ create_clhs <- function(all_cov, num_slices, to_include = NULL,
     }
   }
   # uncomment to plot points and check distance
+  if(any(templhs$final_obj_distance != 0))
+    warning("Some points fall within minimum distance!")
+
   out <- as.data.table(samp_dat[templhs$index_samples,])
   out[,`:=`(slice_num = rep(num_slices:1,each = n_points),
              point_num = rep(1:n_points, times = num_slices))]
-   out_sf <- st_as_sf(out,coords = c("x","y"),crs = 3005)
-  # st_distance(out_sf,out_sf)
-  # plot(out_sf['slice_num'], pch = 16)
+  out_sf <- st_as_sf(out,coords = c("x","y"),crs = 3005)
+  #dist_mat <- st_distance(out_sf,out_sf)
+  plot(all_cov$cost)
+  points(vect(out_sf["slice_num"]))
   return(out_sf)
 }
