@@ -19,7 +19,7 @@ This example runs through all the steps required for developing a sample plan
 #remotes::install_github("bcgov/PEMprepr", build_vignettes = TRUE)
 devtools::load_all("D:\\PEM_DATA\\PEMprepr")
 devtools::load_all("D:\\PEM_DATA\\PEMsamplr")
-#devtools::install_github("kdaust/clhs") 
+devtools::install_github("kdaust/clhs") 
 #install_github("josephlewis/leastcostpath")
 
 library(PEMprepr)
