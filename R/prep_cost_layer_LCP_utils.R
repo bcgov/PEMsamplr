@@ -5,6 +5,49 @@
 #They are reproduced here as they are not currently available outside the package
 #https://github.com/josephlewis/leastcostpath/blob/master/R/neighbourhood.R
 
+get_coordinates <- function(x) {
+
+  if(inherits(x, "sf")) {
+    coords <- sf::st_coordinates(x)[, 1:2, drop = FALSE]
+  }
+  else if (inherits(x, "SpatVector")) {
+    coords <- terra::crds(x)
+  }
+  else if (inherits(x, "data.frame")) {
+    coords <- as.matrix(x)
+  }
+  else if (inherits(x, "matrix")) {
+    coords <- x
+  }
+  else if (inherits(x, "numeric")) {
+    coords <- matrix(x, nrow = 1)
+  }
+
+  return(coords)
+
+}
+
+lcp_dist_mat <- function(x, origins, destinations, cost_distance = FALSE) {
+
+  cs_rast <- terra::rast(nrow = x$nrow, ncol = x$ncol, xmin = x$extent[1], xmax = x$extent[2], ymin = x$extent[3], ymax = x$extent[4],crs = x$crs)
+
+  from_coords <- get_coordinates(origins)
+  to_coords <- get_coordinates(destinations)
+
+  from_cell <- terra::cellFromXY(cs_rast, from_coords)
+  to_cell <- terra::cellFromXY(cs_rast, to_coords)
+
+  cm_graph <- igraph::graph_from_adjacency_matrix(x$conductanceMatrix, mode = "directed", weighted = TRUE)
+
+  igraph::E(cm_graph)$weight <- (1/igraph::E(cm_graph)$weight)
+
+  message("Calculating distance matrix...")
+  cost <- igraph::distances(graph = cm_graph, v = from_cell, to = to_cell, mode = "out")
+  distMat <- as.matrix(cost)
+
+  return(distMat)
+}
+
 neighbourhood <- function(neighbours) {
 
   neighbours_32 <- matrix(c(0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1,
