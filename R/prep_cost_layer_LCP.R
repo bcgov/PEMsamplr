@@ -9,6 +9,7 @@
 #' @param percentile   \code{numeric} value. Travel rate percentile only used in 'campbell 2019' cost_function. Expected numeric values are 0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99. 0.5 (default)
 #' @param exaggeration \code{logical}. if TRUE, positive slope values (up-hill movement) multiplied by 1.99 and negative slope values (down-hill movement) multiplied by 2.31
 #' @param exaggeration  if TRUE, positive slope values (up-hill movement) multiplied by 1.99 and negative slope values (down-hill movement) multiplied by 2.31
+#' @param multistart  if TRUE, allocate very high speed for paved roads (currently workaround of no multistart point)
 #' @author Joseph Lewis (https://github.com/josephlewis/leastcostpath)
 #' @return \code{conductanceMatrix} that numerically expresses the difficulty of moving across slope based on the provided cost function
 #' @importFrom magrittr "%>%"
@@ -47,15 +48,17 @@
 # lines(vect(roads))
 #
 
-prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours = 16, roads, crit_slope = 12, max_slope = NULL, percentile = 0.5, exaggeration = FALSE) {
-  #source("R/prep_cost_layer_LCP_utils.R")
+prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours = 16, roads, crit_slope = 12, max_slope = NULL, percentile = 0.5, exaggeration = FALSE, multistart =FALSE) {
+  # #source("R/prep_cost_layer_LCP_utils.R")
   # x = terra::rast(file.path("D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/10_clean_inputs/20_covariates", "25m", "dem.tif"))
-  neighbours = 8
-  cost_function = "tobler offpath"
-  crit_slope = 12
-  max_slope = 40
-  percentile = 0.5
-  exaggeration = FALSE
+  # roads = st_read("D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/10_clean_inputs/10_vector/road_major.gpkg")
+  # neighbours = 8
+  # cost_function = "tobler offpath"
+  # crit_slope = 12
+  # max_slope = 40
+  # percentile = 0.5
+  # exaggeration = FALSE
+  # multistart = TRUE
 
   if(terra::is.lonlat(x)) {
     stop("supplied digital elevation model (DEM) is invalid. x argument expects DEM with a projected coordinate system")
@@ -79,10 +82,21 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
                                    'surface' = ROAD_SURFACE,
                                    'name' = ROAD_NAME_FULL)
   rdsAll <-  data.table::as.data.table(roads) %>% sf::st_as_sf()
+
+
+  if(multistart == FALSE){
   rSpd <- data.table::data.table(
     road_surface = c("resource", "unclassified", "recreation", "trail", "local", "collector", "highway", "service", "arterial", "freeway", "strata", "lane", "private", "yield", "ramp", "restricted", "water", "ferry", "driveway","unclassifed"),
     speed_kmh = c(30, 30, 50, 4.5, 50, 80, 80, 50, 80, 80, 30, 30, 4.5, 30, 60, 4.5, 0.1, 0.1, 4.5, 30))
   #"speed" = c(3000, 3000, 5000, 4.5, 5000, 8000, 8000, 50, 8000, 8000, 3000, 3000, 4.5, 3000, 6000, 4.5, 0.1, 3000, 4.5, 3000))
+  }else{
+    rSpd <- data.table::data.table(
+      road_surface = c("resource", "unclassified", "recreation", "trail", "local", "collector", "highway", "service", "arterial", "freeway", "strata", "lane", "private", "yield", "ramp", "restricted", "water", "ferry", "driveway","unclassifed"),
+      speed_kmh = c(30, 30, 50, 4.5, 50, 1000, 1000, 50, 1000, 1000, 30, 30, 4.5, 30, 60, 4.5, 0.1, 0.1, 4.5, 30))
+
+    }
+
+
   rSpd[,speed := speed_kmh/3.6] ##convert to m/s
 
   rdsAll <- merge(rdsAll, rSpd, by = "road_surface", all = F)

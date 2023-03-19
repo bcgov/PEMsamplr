@@ -17,16 +17,12 @@
 #' @keywords SAGA, covariates, predictors, raster
 #' @export
 #' @examples
-# create_samplr_covariates(dtm = dtm,
-#                          rtemplate = r25,
-#                          output =  output,
-#                         SAGApath ="C:/SAGA/saga-7.7.0_x64/",
-#                         sieve_size = 10,
+#create_samplr_covariates(dtm = dtm,SAGApath ="C:/SAGA/saga-7.7.0_x64/",
+#                          output =  output, sieve_size = 10,rtemplate = r25,
 #                          dah_threshold = 0.2,
-#                         saga_param = list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
+#                          saga_param = list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
 #                                             P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
-#                                             CLASSIFY = 1, MAX_RES = 100),
-#                          covariates = covs)
+#                                             CLASSIFY = 1, MAX_RES = 100), covariates = covs)
 
 create_samplr_covariates <- function(dtm = dtm,
                                      rtemplate = rtemplate,
