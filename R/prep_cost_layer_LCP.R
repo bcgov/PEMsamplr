@@ -85,7 +85,6 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
   #"speed" = c(3000, 3000, 5000, 4.5, 5000, 8000, 8000, 50, 8000, 8000, 3000, 3000, 4.5, 3000, 6000, 4.5, 0.1, 3000, 4.5, 3000))
   rSpd[,speed := speed_kmh/3.6] ##convert to m/s
 
-
   rdsAll <- merge(rdsAll, rSpd, by = "road_surface", all = F)
   rdsAll <- rdsAll[,"speed"]
 

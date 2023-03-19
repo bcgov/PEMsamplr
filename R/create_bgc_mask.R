@@ -36,7 +36,7 @@ create_bgc_mask <- function(vec_dir, cost_masked, out_dir) {
 
     mask_poly_boi <- terra::as.polygons(boi_mask, dissolve = TRUE)
     mask_poly_boi <- st_as_sf(mask_poly_boi)
-    st_write(mask_poly_boi, file.path(out_dir,paste0(b, "_exclude_poly.gpkg")), delete_layer = TRUE)
+    st_write(mask_poly_boi, file.path(out_dir,paste0(b, "_exclude_poly.gpkg")), delete_dsn = TRUE)
   }
   return(TRUE)
 
