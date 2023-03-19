@@ -29,15 +29,15 @@
 # library(terra)
 # # need several functions from this
 # source("R/prep_cost_layer_LCP_utils.R")
-# need several functions from this
+# #need several functions from this
 #
 # x = terra::rast("D:/PEM/DateCreek_AOI/1_map_inputs/covariates/25m/dem_preproc.tif")
 #
 # x = terra::rast(file.path("D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/10_clean_inputs/20_covariates", "25m", "dem.tif"))
 # origin <- sf::st_sf(geometry = sf::st_sfc(sf::st_point(c(892344.7, 1154340)),crs = terra::crs(x)))
 # points(vect(origin))
-#vec_dir <- "D:\\PEM_DATA\\DateCreek_AOI\\DateCreek_AOI\\10_clean_inputs\\10_vector\\"
-  ## prepare roads layer
+# vec_dir <- "D:\\PEM_DATA\\DateCreek_AOI\\DateCreek_AOI\\10_clean_inputs\\10_vector\\"
+# # prepare roads layer
 # roads <- sf::st_read(file.path(vec_dir, "road_major.gpkg"), quiet = TRUE) %>%
 #   sf::st_zm()
 # library(sf)
@@ -50,12 +50,12 @@
 prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours = 16, roads, crit_slope = 12, max_slope = NULL, percentile = 0.5, exaggeration = FALSE) {
   #source("R/prep_cost_layer_LCP_utils.R")
   # x = terra::rast(file.path("D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/10_clean_inputs/20_covariates", "25m", "dem.tif"))
-  # neighbours = 8
-  # cost_function = "tobler offpath"
-  # crit_slope = 12
-  # max_slope = 40
-  # percentile = 0.5
-  # exaggeration = FALSE
+  neighbours = 8
+  cost_function = "tobler offpath"
+  crit_slope = 12
+  max_slope = 40
+  percentile = 0.5
+  exaggeration = FALSE
 
   if(terra::is.lonlat(x)) {
     stop("supplied digital elevation model (DEM) is invalid. x argument expects DEM with a projected coordinate system")
@@ -97,6 +97,7 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
 
   # identify cells and which are NA
   road_cells <- which(!is.na(terra::values(rdsRast)))
+
   not_road_cells <- which(is.na(terra::values(rdsRast)))
 
   # get cells that are adjacent (cells = cells or road_cells)

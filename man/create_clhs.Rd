@@ -9,7 +9,7 @@ create_clhs(
   num_slices,
   to_include = NULL,
   n_points = 5,
-  min_dist = 600,
+  min_dist = 900,
   num_sample = 5e+06
 )
 }
