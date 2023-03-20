@@ -28,6 +28,7 @@
 #install_github("josephlewis/leastcostpath")
 # library(leastcostpath)
 # library(terra)
+# library(sf)
 # # need several functions from this
 # source("R/prep_cost_layer_LCP_utils.R")
 # #need several functions from this
@@ -35,7 +36,9 @@
 # x = terra::rast("D:/PEM/DateCreek_AOI/1_map_inputs/covariates/25m/dem_preproc.tif")
 #
 # x = terra::rast(file.path("D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/10_clean_inputs/20_covariates", "25m", "dem.tif"))
-# origin <- sf::st_sf(geometry = sf::st_sfc(sf::st_point(c(892344.7, 1154340)),crs = terra::crs(x)))
+# start <- st_read("inputs/major_towns_bc.gpkg")
+# origin <- start[start$NAME == "datecreek_test","geom"]
+# #origin <- sf::st_sf(geometry = sf::st_sfc(sf::st_point(c(892344.7, 1154340)),crs = terra::crs(x)))
 # points(vect(origin))
 # vec_dir <- "D:\\PEM_DATA\\DateCreek_AOI\\DateCreek_AOI\\10_clean_inputs\\10_vector\\"
 # # prepare roads layer
@@ -77,10 +80,12 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
 
   # prepare roads layer
   roads$ROAD_CLASS[roads$trail == 1] <- "trail"
-  roads <- roads[,c("ROAD_SURFACE","ROAD_CLASS", "ROAD_NAME_FULL")]
-  roads <- roads %>% dplyr::rename('road_surface' = ROAD_CLASS,
-                                   'surface' = ROAD_SURFACE,
-                                   'name' = ROAD_NAME_FULL)
+  roads <- roads[,"ROAD_CLASS"]
+  colnames(roads)[1] <- "road_surface"
+  # roads <- roads[,c("ROAD_SURFACE","ROAD_CLASS", "ROAD_NAME_FULL")]
+  # roads <- roads %>% dplyr::rename('road_surface' = ROAD_CLASS,
+  #                                  'surface' = ROAD_SURFACE,
+  #                                  'name' = ROAD_NAME_FULL)
   rdsAll <-  data.table::as.data.table(roads) %>% sf::st_as_sf()
 
 
@@ -210,16 +215,7 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
 
 }
 
-#
-#
-# create_slope_cs(x, cost_function = "tobler offpath",
-#                 neighbours = 8,
-#                 roads = roads,
-#                 crit_slope = 12,
-#                 max_slope = 50,
-#                 percentile = 0.5,
-#                 exaggeration = FALSE)
-#
-#
-# acost <- create_accum_cost(cs, origin, rescale = FALSE)
-# terra::plot(acost)
+# cs <- prep_cost_layers_lcp(x, roads = roads)
+# acost <- create_accum_cost_multistart(cs, origins = origin)
+# plot(acost)
+

@@ -1,9 +1,41 @@
 #' @noRd
+#' @importFrom Rfast colMins
 
 #These scripts provide various utility for the cost layer creation. These are all
 #were written by Joseph Lewis under the leastcostpath package V.2
 #They are reproduced here as they are not currently available outside the package
 #https://github.com/josephlewis/leastcostpath/blob/master/R/neighbourhood.R
+
+create_accum_cost_multistart <- function(x, origins, rescale = FALSE) {
+
+  cs_rast <- terra::rast(nrow = x$nrow, ncol = x$ncol, xmin = x$extent[1], xmax = x$extent[2], ymin = x$extent[3], ymax = x$extent[4],crs = x$crs)
+
+  from_coords <- get_coordinates(origins)
+  from_cell <- terra::cellFromXY(cs_rast, from_coords)
+
+  cm_graph <- igraph::graph_from_adjacency_matrix(x$conductanceMatrix, mode = "directed", weighted = TRUE)
+
+  igraph::E(cm_graph)$weight <- (1/igraph::E(cm_graph)$weight)
+
+  from_distances <- igraph::distances(cm_graph, v = from_cell,  mode="out")
+  if(length(from_cell) > 1){
+    from_distances <- Rfast::colMins(from_distances, value = T)
+  }
+  accum_rast <- terra::setValues(cs_rast, as.numeric(from_min))
+
+  accum_rast[is.infinite(accum_rast)] <- NA
+
+  if(rescale) {
+    rast_min <- terra::minmax(accum_rast)[1]
+    rast_max <- terra::minmax(accum_rast)[2]
+
+    accum_rast <- ((accum_rast - rast_min)/(rast_max - rast_min))
+  }
+
+  return(accum_rast)
+
+}
+
 
 get_coordinates <- function(x) {
 

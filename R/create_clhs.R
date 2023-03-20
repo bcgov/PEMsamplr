@@ -38,11 +38,15 @@
 # install_github("kdaust/clhs")
 # library(clhs)
 # library(terra)
-# # library(data.table)
-# # library(sf)
+# library(data.table)
+# library(sf)
 # covs <- rast("C:/Users/kirid/Downloads/ICHmc1_clhs_sample_mask (1).tif")
 # library(PEMsamplr)
 # test <- create_clhs(covs, num_slices = 5, min_dist = 1000)
+# tbuf <- st_buffer(test,dist = 500)
+# plot(tbuf["slice_num"])
+# plot(covs$cost)
+# points(vect(tbuf["slice_num"]))
 
 create_clhs <- function(all_cov, num_slices, to_include = NULL,
                         n_points = 5, min_dist = 900, num_sample = 5000000){
