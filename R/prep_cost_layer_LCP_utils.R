@@ -18,10 +18,12 @@ create_accum_cost_multistart <- function(x, origins, rescale = FALSE) {
   igraph::E(cm_graph)$weight <- (1/igraph::E(cm_graph)$weight)
 
   from_distances <- igraph::distances(cm_graph, v = from_cell,  mode="out")
+
   if(length(from_cell) > 1){
     from_distances <- Rfast::colMins(from_distances, value = T)
   }
-  accum_rast <- terra::setValues(cs_rast, as.numeric(from_min))
+
+  accum_rast <- terra::setValues(cs_rast, as.numeric(from_distances))
 
   accum_rast[is.infinite(accum_rast)] <- NA
 
