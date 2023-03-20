@@ -14,6 +14,9 @@
 # function to assign high cost and format output
 
 
+
+
+
 create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
 
   # 1. Assign high cost for cutblocks
