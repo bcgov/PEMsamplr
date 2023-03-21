@@ -167,12 +167,11 @@ create_samplr_covariates(dem, SAGApath =  SAGApath_dir,
                          saga_param = saga_param,
                          covariates = NULL)
 
+# generate landscape validation 
 
 fileoi <- c("dah_LS.tif", "mrvbf_LS.tif", "landform_LS.tif")
 
 filesoi <- list.files(outpath, full.names = TRUE)[list.files(outpath) %in% fileoi]
-
-# generate landscape validation 
 
 landscapes <- create_binned_landscape(outpath)
 
@@ -181,118 +180,91 @@ terra::plot(landscapes)
 terra::writeRaster(landscapes, file.path(outpath, "landscape_variable_validation.tif"), overwrite = TRUE)
 
 
-# Check the landscape by bgc:
+# Check the landscape distribution by bgc
 
 becpath <-fid$shape_dir_1010[1]
+
 bec <- sf::st_read(file.path(becpath, "bec.gpkg")) %>%
   sf::st_cast(., "MULTIPOLYGON") 
 
-routdf <- check_bgc_landscapes(bec,landscapes )
+routdf <- check_bgc_landscapes(bec,landscapes)
 
-p1 <- ggplot2::ggplot(routdf, aes(landscape)) +
+ggplot2::ggplot(routdf, aes(landscape)) +
   ggplot2::geom_histogram() +
   ggplot2::facet_wrap(~MAP_LABEL)
 
-p1
-
-p2 <- ggplot2::ggplot(routdf, aes(landscape, fill = MAP_LABEL)) +
-  ggplot2::geom_histogram() 
-
-p2
+#ggplot2::ggplot(routdf, aes(landscape, fill = MAP_LABEL)) +
+#  ggplot2::geom_histogram() 
 
 
-# generate sample plans
-# identify vector dir
-vec_dir = fid$shape_dir_1010[2]
+#############################################
+# Generate Cost layer 
 
-dem = terra::rast(file.path(fid$cov_dir_1020[2], "25m", "dem.tif"))
-#sort(unique(round(terra::values(dem),0)))
+dem <- terra::rast(file.path( fid$cov_dir_1020[2],"25m", "dem.tif"))
+vec_dir <- fid$shape_dir_1010[2]
 
-roads_raw <- sf::st_read(file.path(vec_dir, "road_major.gpkg"), quiet = TRUE) %>%
-  sf::st_zm()
-
-check_road_layer(roads_raw)
-
-roads_raw <- sf::st_read(file.path(vec_dir, "road_major.gpkg"), quiet = TRUE) %>%
-  sf::st_zm()
-
-check_road_layer(roads_raw)
-
-costprep <- prep_cost_layers_lcp(x = dem,
-                cost_function = "tobler offpath", 
-                neighbours = 16, 
-                roads = roads_raw, 
-                crit_slope = 12, 
-                max_slope = NULL, 
-                percentile = 0.5, 
-                exaggeration = FALSE) 
-  
-
-terra::plot(costprep)
-
-
-# Define start points 
-# 1) used pre defined the start location using nearest town
 cities <- st_read(file.path(vec_dir, "major_towns_bc.gpkg"))
 nearest_town = "datecreek_test"
-start <- cities[cities$NAME == nearest_town,"NAME"]%>% 
-  as("Spatial")
+start <- cities[cities$NAME == nearest_town,"NAME"]
 
-outpath <- fid$sampling_input_landscape[2]
+roads_raw <- sf::st_read(file.path(vec_dir, "road_major.gpkg"), quiet = TRUE) %>%
+  sf::st_zm()
 
-# run accumulates cost layer 
-acost <- create_accum_cost(x = costprep, origin = start)
-names(acost) <- "cost"
-terra::plot(acost)
+# check the roads layer
+check_road_layer(roads_raw)
 
-
-
-
+## generate transition layer 
+costprep <- prep_cost_layers_lcp(x = dem,
+                                 cost_function = "tobler offpath", 
+                                 neighbours = 8, 
+                                 roads = roads_raw, 
+                                 crit_slope = 12, 
+                                 max_slope = NULL, 
+                                 percentile = 0.5, 
+                                 exaggeration = FALSE) 
+# build cost layer 
+acost <- create_accum_cost(x = costprep, origin = start, FUN = min)
+names(acost) = "cost"
 
 terra::writeRaster(acost, file.path(fid$sampling_input_landscape[2], "cost_raw.tif"), overwrite = TRUE)
 
-
-# binned landscape
+# Check costs by bgc vs binned landscape
 landscape <- terra::rast(file.path(outpath, "landscape_variable_validation.tif"))
-bgccost <- check_bgc_cost(bgc = bec, binned_landscape = landscape, cost = cost)
+bgccost <- check_bgc_cost(bgc = bec, 
+                          binned_landscape = landscape, 
+                          cost = acost)
 
-# map the costs per BGC
-p3 <- ggplot2::ggplot(bgccost, ggplot2::aes(landscape, fill = cost_code)) +
+ggplot2::ggplot(bgccost, ggplot2::aes(landscape, fill = cost_code)) +
   ggplot2::geom_histogram(bins = 30) +
   ggplot2::facet_wrap(~MAP_LABEL)
-
-p3
 
 
 # generate cost penalty 
 
-
-Set up linear function <- 80 % 
-75% for vri 
-Cost val 1. 
-Cost val 2.
-
-
-
 final_cost <- create_cost_penalty(vec_dir = vec_dir, 
                                   cost = acost, 
-                                  dem = dem , 
-                                  costval = 3000)
-terra::plot(final_cost)
+                                  dem = dem, 
+                                  costval = 3000,
+                                  vri_cost = 2500,
+                                  calc_by_qq = TRUE)
 
+
+terra::plot(final_cost)
 
 # create no sample areas 
 cost_masked <- create_cost_nosample(vec_dir = vec_dir, 
                                     cost = final_cost)
 
-terra::writeRaster(cost_masked, file.path(fid$sampling_input_landscape[2],  "cost.tif"), overwrite = TRUE)
-#terra::plot(sample_cost_masked)
-
+terra::writeRaster(cost_masked, 
+                   file.path(fid$sampling_input_landscape[2],  
+                   "cost.tif"), overwrite = TRUE)
 
 # generate a BGC cost mask per BGC in map area
+
 exclusion_path <- fid$sampling_input_exclusion[2]
 
 create_bgc_mask(vec_dir, cost_masked, exclusion_path)
+
 
 ```
 
@@ -300,11 +272,6 @@ create_bgc_mask(vec_dir, cost_masked, exclusion_path)
 # part 3: PEMsamplr generate sample plan
 
 ```{r}
-
-#remotes::install_github("bcgov/PEMprepr", build_vignettes = TRUE)
-devtools::load_all("D:\\PEM_DATA\\PEMprepr")
-devtools::load_all("D:\\PEM_DATA\\PEMsamplr")
-#devtools::install_github("kdaust/clhs") 
 
 library(PEMprepr)
 library(PEMsamplr)
@@ -318,7 +285,6 @@ fid <- setup_folders("DateCreek_AOI")
 fid <- setup_folders("CanyonCreek")
 ###############################################################
 # 1) generate 
-
 
 # set output folder for clhs plans
 clhs_outpath <- fid$samplingplan_clhs[2]
@@ -370,11 +336,6 @@ for(b in boi) {
 
 # Review the sample plans and select the method with 
 
-#1) Using simple cost metrics #or
-#2) Using vehicle routing problem 
-
-
-
 # read in all the points per bgc, collate and assign value based on travel cost
 
 ftemp <- list.files(clhs_outpath, pattern = ".gpkg$", full.names = TRUE)
@@ -419,64 +380,6 @@ p1
 # Alternatively run Vehicle routing problem 
 # this is still in development 
 
-
-
-
-
-# set up start location
-vec_dir = fid$shape_dir_1010[2]
-cities <- st_read(file.path(vec_dir, "major_towns_bc.gpkg"))
-nearest_town = "datecreek_test"
-start <- cities[cities$NAME == nearest_town,"NAME"]
-
-#cost <- terra::rast(file.path(fid$sampling_input_landscape[2], "cost.tif"))
-vrp_outpath <- fid$samplingplan_vrp[2]
-
-# example with one clhs
-boi <- "ICHmc1"
-clhs_set <- "ICHmc1_clhs_sample_2.gpkg"
-
-# define selected clhs option
-pnts <- sf::st_read(list.files(fid$samplingplan_clhs[2], pattern = clhs_set, full.names = TRUE))
-
-tr1 <- terra::rast(file.path(fid$sampling_input_landscape[2], "cost_raw.tif"))
-
-tr1 <- "D:\\PEM_DATA\\DateCreek_AOI\\DateCreek_AOI\\10_clean_inputs\\20_covariates\\25m"
-
-tr11<- readRDS(file.path(tr1, "transition_layer.rds"))
-tr11
-list.files(tr1)
-
-#terra::plot(sample_cost_masked)
-
-
-## THis needs work to complete vrp 
-
-# check python setup 
-setup_python()
-
-library(sf)
-library(gdistance)
-library(sp)
-library(foreach)
-
-
-plot(pnts)
-
-startLoc <- pnts[10,]
-pnts_in <- pnts[-10,]
-
-test <- create_vrp(tr11, pnts_in , startLoc, 3)
-
-
-# # run vrp 
-# 
-# create_vrp <- function(transition, clhs_points, start_pos, number_days){
-
-
-
-### Once the best sample plan is selected: 
-
 #3) Generate Location Options for Paired Samples
 
 #For sampling efficiency and field safety paired transects at a cLHS points is desireable. The cLHS point is the centre point of the first transect. We generate additional points at 400m from the cLHS points in the eight cardinal and ordinal directions . This distance provides a minimum 100m spacing from the cLHS transect to any second transect. Cardinal points that fall outside the buffered cost surface are removed as candidates.
@@ -485,10 +388,8 @@ test <- create_vrp(tr11, pnts_in , startLoc, 3)
 #Currently the second location is based on the least cost.
 
 
-
 # select the bec variant of interest and the clhs chosen
 # note this needs to be repeated for each bcg unit 
-
 
 boi <- "ICHmc1"
 clhs_set <- "ICHmc1_clhs_sample_2.gpkg"
@@ -532,7 +433,6 @@ for (ii in 1:length(boi)) {
   write.csv(pointsout, file.path(out_path, paste0(b, "_tracking_sheet.csv")))
   
 }
-
 
 ```
 
