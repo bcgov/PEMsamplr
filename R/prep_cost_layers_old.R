@@ -15,7 +15,7 @@
 
 # Prepare the input layers for the cost layers
 
-prep_cost_layers <- function(vec_dir, dem, heli = FALSE) {
+prep_cost_layers_old <- function(vec_dir, dem, heli = FALSE) {
 
   if(heli == FALSE) {
 
