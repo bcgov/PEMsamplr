@@ -38,6 +38,9 @@ check_road_layer <- function(roads){
   rsurface = unique(roads_check$surface)
   if("overgrown" %in% rsurface ) {
     print("check 2: road class contains overgrown road segment, are you sure these are actual roads?")
+  }else{
+
+    print("check 2: road class does not contain overgrown road segment")
   }
 
   rSpd <- dplyr::tibble(
