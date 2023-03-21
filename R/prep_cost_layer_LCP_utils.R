@@ -6,7 +6,7 @@
 #They are reproduced here as they are not currently available outside the package
 #https://github.com/josephlewis/leastcostpath/blob/master/R/neighbourhood.R
 
-create_accum_cost_multistart <- function(x, origins, rescale = FALSE) {
+create_accum_cost <- function(x, origins, FUN = mean, rescale = FALSE) {
 
   cs_rast <- terra::rast(nrow = x$nrow, ncol = x$ncol, xmin = x$extent[1], xmax = x$extent[2], ymin = x$extent[3], ymax = x$extent[4],crs = x$crs)
 
@@ -17,13 +17,17 @@ create_accum_cost_multistart <- function(x, origins, rescale = FALSE) {
 
   igraph::E(cm_graph)$weight <- (1/igraph::E(cm_graph)$weight)
 
-  from_distances <- igraph::distances(cm_graph, v = from_cell,  mode="out")
+  from_distances <- igraph::distances(cm_graph, v = from_cell,  mode="out", algorithm = "dijkstra")
 
-  if(length(from_cell) > 1){
-    from_distances <- Rfast::colMins(from_distances, value = T)
+  accum_rasts <- c(rep(cs_rast, nrow(from_distances)))
+
+  for(i in 1:terra::nlyr(accum_rasts))  {
+
+    accum_rasts[[i]] <- terra::setValues(accum_rasts[[i]], from_distances[i,])
+
   }
 
-  accum_rast <- terra::setValues(cs_rast, as.numeric(from_distances))
+  accum_rast <- terra::app(accum_rasts, fun = FUN)
 
   accum_rast[is.infinite(accum_rast)] <- NA
 
@@ -37,7 +41,6 @@ create_accum_cost_multistart <- function(x, origins, rescale = FALSE) {
   return(accum_rast)
 
 }
-
 
 get_coordinates <- function(x) {
 
