@@ -4,7 +4,14 @@
 \alias{create_cost_penalty}
 \title{Create cost penalty layer}
 \usage{
-create_cost_penalty(vec_dir, dem, cost, costval = 3000)
+create_cost_penalty(
+  vec_dir,
+  dem,
+  cost,
+  costval = 3000,
+  vri_cost = 2500,
+  calc_by_qq = TRUE
+)
 }
 \arguments{
 \item{vec_dir}{text string with folder location of base vector layers}
@@ -13,7 +20,11 @@ create_cost_penalty(vec_dir, dem, cost, costval = 3000)
 
 \item{cost}{SpatRast or Raster of cost layer}
 
-\item{costval}{Numeric value of assigned high cost}
+\item{costval}{Numeric value of assigned high cost (ie default is 3000)}
+
+\item{vri_cost}{Numeric value of assigned secondary high cost (i.e default is 2500)}
+
+\item{calc_by_qq}{TRUE/FALSE if cost is assigned by distribution rather than specified in cost_val anc vri_cost}
 }
 \value{
 SpatRast
