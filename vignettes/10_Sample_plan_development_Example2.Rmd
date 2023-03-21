@@ -29,6 +29,7 @@ library(sf)
 library(terra)
 library(bcmaps)
 library(leastcostpath)
+library(clhs)
 
 fid <- setup_folders("CanyonCreek")
 fid <- setup_folders("DateCreek_AOI")
@@ -64,7 +65,6 @@ res_scale = "5m"
 r5 <- terra::rast(file.path( fid$cov_dir_1020[2],res_scale, "template.tif"))
 #r25 <- create_template(aoi, 25)
 r25 <- terra::rast(file.path( fid$cov_dir_1020[2],"25m", "template.tif"))
-
 
 # read in base DEM and align the dEM
 demfile <- file.path( fid$cov_dir_1020[2],res_scale, "dem.tif")
@@ -245,6 +245,10 @@ acost <- create_accum_cost(x = costprep, origin = start)
 names(acost) <- "cost"
 terra::plot(acost)
 
+
+
+
+
 terra::writeRaster(acost, file.path(fid$sampling_input_landscape[2], "cost_raw.tif"), overwrite = TRUE)
 
 
@@ -261,6 +265,15 @@ p3
 
 
 # generate cost penalty 
+
+
+Set up linear function <- 80 % 
+75% for vri 
+Cost val 1. 
+Cost val 2.
+
+
+
 final_cost <- create_cost_penalty(vec_dir = vec_dir, 
                                   cost = acost, 
                                   dem = dem , 
