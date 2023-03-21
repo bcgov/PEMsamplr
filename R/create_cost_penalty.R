@@ -3,21 +3,31 @@
 #' @param vec_dir text string with folder location of base vector layers
 #' @param dem SpatRast or Raster of cost layer
 #' @param cost SpatRast or Raster of cost layer
-#' @param costval Numeric value of assigned high cost
+#' @param costval Numeric value of assigned high cost (ie default is 3000)
+#' @param vri_cost Numeric value of assigned secondary high cost (i.e default is 2500)
+#' @param calc_by_qq TRUE/FALSE if cost is assigned by distribution rather than specified in cost_val anc vri_cost
 #' @importFrom magrittr "%>%"
+#' @importFrom terra global cover classify
+#' @importFrom sf st_as_sf st_read st_buffer st_cast
 #' @return SpatRast
 #' @export
 #'
 #' @examples
 #' create_cost_penalty(vec_dir, dem, cost, costval = 3000)
 #'
-# function to assign high cost and format output
 
+create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000,
+                                vri_cost = 2500, calc_by_qq = TRUE) {
 
+  # calculate 65% and 70% quantiles if determining the high cost threshold
+  if (calc_by_qq == T){
 
+    qq <- terra::global(cost, quantile, probs = c(0.65, 0.70), na.rm = T)
 
+    vri_cost <- qq$X65.
+    costval <- qq$X70.
 
-create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
+  }
 
   # 1. Assign high cost for cutblocks
   if(file.exists(file.path(vec_dir, "cutblocks.gpkg"))){
@@ -35,7 +45,7 @@ create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
 
   # 3. Assign a slightly lower cost to age class 3.
   if(file.exists(file.path(vec_dir, "vri_class3.gpkg"))){
-    rvri3_class <- .assign_highcost(file.path(vec_dir, "vri_class3.gpkg"), costval = costval, cost = cost)
+    rvri3_class <- .assign_highcost(file.path(vec_dir, "vri_class3.gpkg"), costval = vri_cost, cost = cost)
     hc <- terra::cover(rvri3_class, hc)
   }
 
@@ -81,12 +91,12 @@ create_cost_penalty <- function(vec_dir, dem, cost, costval = 3000) {
   # degrees (45 degrees = 100%, use around 30 degrees ~ 60% )
 
    m <- c( 0, 30, NA,
-          30, 45, 3000)
+          30, 45, costval)
 
     rclmat <- matrix(m, ncol=3, byrow =TRUE)
     rc <- terra::classify(slope, rclmat)
 
-    hc_out  <- terra::cover( rc, hc)
+    hc_out  <- terra::cover(rc, hc)
     names(hc_out)<- "cost"
 
     return(hc_out)
