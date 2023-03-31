@@ -22,11 +22,13 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
   }
 
   points <- list.files(file.path(datafolder), pattern = ".gpkg$|.shp$", full.names = TRUE, recursive = TRUE)
- #points <-  points[1:135]
+  # points <-  points[c(1:3,5:18)]
+  # 4 = turn off duplicates
+  # 9 = names issues
 
   all_points <- foreach(x = points, .combine = rbind) %do% {
 
-   # x = points[18]
+    # x = points[18]
     print(x)
 
     s1_layers <- sf::st_layers(x)
@@ -86,11 +88,11 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
           dplyr::rename(transect_id = x01_transec)
       }
 
-       if("x01_transe" %in% names(points_read)){
-         points_read <- points_read %>%
+      if("x01_transe" %in% names(points_read)){
+        points_read <- points_read %>%
           dplyr::mutate() %>%
           dplyr::rename(transect_id = x01_transe)
-       }
+      }
 
       if("x01_transect_id" %in% names(points_read)){
         points_read <- points_read %>%
@@ -137,6 +139,12 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
         points_read <- points_read %>%
           dplyr::rename(point_type = x6pointtype)
       }
+      # 3) point_type
+      if("pt_type" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(point_type = pt_type)
+      }
+
 
       # 4) Mapunit1
       if("x04_mapunit" %in% names(points_read)){
@@ -159,6 +167,11 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
       if("x2mapunit1" %in% names(points_read)){
         points_read <- points_read %>%
           dplyr::rename(mapunit1 = x2mapunit1)
+      }
+      #  Mapunit1
+      if("x2mapunit" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(mapunit1 = x2mapunit)
       }
 
 
@@ -225,6 +238,10 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
         points_read <- points_read %>%
           dplyr::rename(struc_stage = x07_struct_stage)
       }
+      if("x7structsta" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(struc_stage = x7structsta)
+      }
 
 
       # 8) Stand struc
@@ -251,6 +268,13 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
           dplyr::rename(edatope = x10_edatope)
       }
 
+      # 9) Edatope
+      if("x6edatope" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(edatope = x6edatope)
+      }
+
+
       # # 9) Edatope
       # if("f10_edatope" %in% names(points_read)){
       #   points_read <- points_read %>%
@@ -259,7 +283,10 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
       #
 
       # 10) comments
-
+      if("x5comments" %in% names(points_read)){
+        points_read <- points_read %>%
+          dplyr::rename(comments = x5comments)
+      }
       if("x09_comment" %in% names(points_read)){
         points_read <- points_read %>%
           dplyr::rename(comments = x09_comment)
@@ -319,22 +346,30 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
       }
 
       if(("order" %in% names(points_read)) == FALSE){
-          points_read <- points_read %>%
-            dplyr::mutate(order = as.numeric(seq(1, length(points_read$geom),1)))
-        }
+        points_read <- points_read %>%
+          dplyr::mutate(order = as.numeric(seq(1, length(points_read$geom),1)))
+      }
 
       #print(length(points_read$order))
       #names(points_read)
 
       # Transect id
-      points_read <- points_read %>%
-        sf::st_join(., transect_layout_buf, join = st_intersects) %>%
-        dplyr::rename_all(.funs = tolower) %>%
-        dplyr::distinct()
+      if("id" %in% names(points_read)){
 
-      points_read <- points_read %>%
-        dplyr::mutate(id = gsub("\\s", "", id)) %>%
-        dplyr::mutate(transect_id = id)
+        #print("transect id already present")
+
+      } else {
+        points_read <- points_read %>%
+          sf::st_join(., transect_layout_buf, join = st_intersects) %>%
+          dplyr::rename_all(.funs = tolower) %>%
+          dplyr::distinct()
+
+        points_read <- points_read %>%
+          dplyr::mutate(id = gsub("\\s", "", id)) %>%
+          dplyr::mutate(transect_id = id)
+      }
+      #  st_write(points_read, "testpts.gpkg")
+
 
       #print(length(points_read$order))
 
@@ -342,21 +377,20 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
         dplyr::mutate(data_type = ifelse(is.na(transect_id), "incidental", "s1"))
 
       # convert "" to NA then check observer
-
       points_read <- points_read %>%
-       dplyr::mutate(observer = stringr::str_trim(observer)) %>%
-       dplyr::mutate(observer = dplyr::na_if(observer, ""))
+        dplyr::mutate(observer = stringr::str_trim(observer)) %>%
+        dplyr::mutate(observer = dplyr::na_if(observer, ""))
 
       if(all(is.na(points_read$observer))){
 
         stop(print("observer name missing in original data, check and re-run, check:"))
         print( x )
 
-        } else {
+      } else {
 
-      # print ("filling observer names")
+        # print ("filling observer names")
 
-      points_read <- .fill_observer(points_read)
+        points_read <- .fill_observer(points_read)
 
       }
 
@@ -395,99 +429,101 @@ format_fielddata <- function(datafolder = NULL, transect_layout_buf){
 
       # add missing columns if not in data
 
-    if("photos" %in% names(points_read)) {
-
-    } else {
-
-      # add missing columns if not in data
-      if("pdfmaps_ph" %in% names(points_read)) {
-        points_read <- points_read %>%
-          dplyr::mutate(photos = pdfmaps_ph)
+      if("photos" %in% names(points_read)) {
 
       } else {
 
-      points_read <- points_read %>%
-        dplyr::mutate(photos = NA)
-      }
-    }
-
-      # add missing columns if not in data
-      if("edatope" %in% names(points_read)) {
+        # add missing columns if not in data
+        if("pdfmaps_ph" %in% names(points_read)) {
+          points_read <- points_read %>%
+            dplyr::mutate(photos = pdfmaps_ph)
 
         } else {
 
           points_read <- points_read %>%
-            dplyr::mutate(edatope = NA)
+            dplyr::mutate(photos = NA)
         }
+      }
 
       # add missing columns if not in data
-      if("edatope" %in% names(points_read)) {
+
+      if("comments" %in% names(points_read)) {
 
       } else {
 
         points_read <- points_read %>%
-          dplyr::mutate(edatope = NA)
+          dplyr::mutate(comments = NA)
       }
+    }
 
-      # add missing columns if not in data
-      if(("date_ymd" %in% names(points_read))== FALSE) {
-       points_read <- points_read %>%
-          dplyr::mutate(date_ymd = NA,
-                        time_hms = NA)
-      }
 
-      # add missing columns if not in data
-      if("struc_stage" %in% names(points_read)) {
+    # add missing columns if not in data
+    if("edatope" %in% names(points_read)) {
 
-      } else {
+    } else {
 
-        points_read <- points_read %>%
-          dplyr::mutate(struc_stage = NA)
-      }
-      # add missing columns if not in data
-      if("struc_mod" %in% names(points_read)) {
+      points_read <- points_read %>%
+        dplyr::mutate(edatope = NA)
+    }
 
-      } else {
 
-        points_read <- points_read %>%
-          dplyr::mutate(struc_mod = NA)
-      }
+    # add missing columns if not in data
+    if(("date_ymd" %in% names(points_read))== FALSE) {
+      points_read <- points_read %>%
+        dplyr::mutate(date_ymd = NA,
+                      time_hms = NA)
+    }
+
+    # add missing columns if not in data
+    if("struc_stage" %in% names(points_read)) {
+
+    } else {
+
+      points_read <- points_read %>%
+        dplyr::mutate(struc_stage = NA)
+    }
+    # add missing columns if not in data
+    if("struc_mod" %in% names(points_read)) {
+
+    } else {
+
+      points_read <- points_read %>%
+        dplyr::mutate(struc_mod = NA)
+    }
     # subset and export
 
-     points_read <- points_read %>%
-        dplyr::select(any_of(c("order", "mapunit1", "mapunit2", "point_type", "transect_id",
-                               "observer", "transition",  "struc_stage", "struc_mod",
-                               "date_ymd", "time_hms", "edatope","comments", "photos", "data_type"))) %>%
-        dplyr::group_by(transect_id) %>%
-        dplyr::arrange(as.numeric(order), by_group = TRUE) %>%
-        dplyr::ungroup()
+    points_read <- points_read %>%
+      dplyr::select(any_of(c("order", "mapunit1", "mapunit2", "point_type", "transect_id",
+                             "observer", "transition",  "struc_stage", "struc_mod",
+                             "date_ymd", "time_hms", "edatope","comments", "photos", "data_type"))) %>%
+      dplyr::group_by(transect_id) %>%
+      dplyr::arrange(as.numeric(order), by_group = TRUE) %>%
+      dplyr::ungroup()
 
-      sf::st_geometry(points_read) <- "geom"
+    sf::st_geometry(points_read) <- "geom"
 
-      endlength = length(points_read$order)
+    endlength = length(points_read$order)
 
-      if(endlength != start_length){
+    if(endlength != start_length){
 
-        stop(print("length of input file does not match cleaned file review raw data:"))
-        print(x)
-      }
+      # stop(print("length of input file does not match cleaned file review raw data:"))
+      print(x)
+    }
 
-      points_read
+    points_read
 
     }
 
-  }
-
-  return(all_points)
-  # add fid unique value
-}
+return(all_points)
+# add fid unique value
+ }
 
 
 
 
 .fill_observer <- function(input_data){
 
- # input_data <- points_read
+  # input_data <- points_read
 
   observer_key <- input_data %>%
     dplyr::select(transect_id, observer) %>%
