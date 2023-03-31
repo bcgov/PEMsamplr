@@ -23,7 +23,7 @@ format_tracklog <- function(datafolder, transect_layout_buf){
    #x = lines[2]
 
     s1_layers <- sf::st_layers(x)
-    lns <- which(s1_layers[["geomtype"]] %in% c("LINE","LINESTRING","3D Line String", "3D Measured Multi Line String"))
+    lns <- which(s1_layers[["geomtype"]] %in% c("LINE","LINESTRING","3D Line String", "3D Measured Multi Line String","3D Multi Line String"))
 
     if(length(lns)>0) {
 
@@ -31,7 +31,7 @@ format_tracklog <- function(datafolder, transect_layout_buf){
 
       tdat <- sf::st_read(x, quiet = TRUE) %>%
         sf::st_transform(3005) %>%
-        sf::st_zm() %>%
+        #sf::st_zm() %>%
         dplyr::rename_all(.funs = tolower)
 
       # if more than onw linestring then check?
