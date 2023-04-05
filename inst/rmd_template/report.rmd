@@ -7,6 +7,7 @@ params:
   out_dir: out_dir
 ---
 
+This report is a breakdown of training point data and line segments. 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache=FALSE,
@@ -32,9 +33,12 @@ out_dir <- params$out_dir
 ```
 
 
-# type of points
+## Data type
+### Points
 
-```{r}
+Points can be allocated into sampling stage types (s1,s2) or where points are collected outside of standard transect (incidentals). 
+
+```{r format raw point data, echo = FALSE}
 ptsdf <- tpts %>%
   sf::st_drop_geometry()
 
@@ -44,19 +48,16 @@ pttype <- ptsdf  %>%
   dplyr::mutate(count = n()) %>%
   dplyr::distinct()
 
-kable(pttype)
+knitr::kable(pttype)
 
 ```
-# length of transect segments
 
-```{r}
+### Length of transect segments
 
+```{r, echo = FALSE}
 all_trans <- trans %>%  
     mutate(length = st_length(.)) %>%
     st_drop_geometry() 
-
-#all_trans_i <- all_trans %>%
-#  dplyr::filter(data_type == "incidental")
 
 # total type of points with primary and secondary 
 trans_type_p <- all_trans %>%
@@ -82,43 +83,83 @@ A total length of `r round(sum(trans_type$primary),1)` meters was surveyed durin
 
 Alternate calls were made for `r round(sum(trans_type$secondary, na.rm = TRUE),2)` meters, with an average of `r round(sum(trans_type$secondary, na.rm = TRUE)/sum(trans_type$primary, na.rm = TRUE)*100, 1) ` % of all calls.
 
-```{r}
-kable(trans_type)
+```{r, echo = FALSE}
+knitr::kable(trans_type)
 ```
 
-# number of points per transects
+## Transect summary 
+The number of sites and slices per BGC. A full list of transect points per trasnect are show in Appendices below
 
-```{r}
-nopts <- ptsdf  %>% 
+```{r, echo = FALSE, fig.width = 8, fig.height=5}
+# no of slices
+nopts <- ptsdf %>% 
   dplyr::select(transect_id) %>%
-  group_by( transect_id) %>%
-  mutate(count = n()) %>%
-  distinct()
+  group_by(transect_id) %>%
+  dplyr::mutate(count = n()) %>%
+  dplyr::distinct() %>% 
+  arrange(transect_id)
 
-kable(nopts)
+trans_slice_site <- nopts %>%
+  dplyr::rowwise() %>%
+  mutate(bgc = unlist(strsplit(transect_id, "_"))[1]) %>%
+  mutate(slice_site = unlist(strsplit(transect_id, "_"))[2]) %>%
+  mutate(slice = stringr::str_sub(slice_site, 1,1)) %>%
+  mutate(site = stringr::str_sub(slice_site, 3,3))       
+
+trDat_slices <- trans_slice_site %>%
+  dplyr::group_by (bgc) %>%
+  dplyr::summarise(n.transect = length(unique(transect_id)),
+                   n.sites = length(unique(slice_site))) %>% 
+  tidyr::pivot_longer(cols = c("n.transect", "n.sites"), names_to = "type", values_to = "number")
+
+ggplot2::ggplot(trDat_slices, aes(bgc, number, fill = type)) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  theme(axis.text.x = element_text(angle = 90))+
+  theme_minimal()+
+  colorspace::scale_fill_discrete_sequential(palette = "Light Grays")
+
 
 ```
 
-# Observers
+### Field Observers
 
-```{r, eval = FALSE}
+```{r observer summary, echo = FALSE}
+# noobs <- ptsdf  %>% 
+#   dplyr::select(observer) %>%
+#   group_by(observer) %>%
+#   mutate(count = n()) %>%
+#   distinct()
+# 
+# knitr::kable(noobs)
 
-noobs <- ptsdf  %>% 
-  dplyr::select(observer) %>%
-  group_by(observer) %>%
-  mutate(count = n()) %>%
-  distinct()
-
-kable(noobs)
-```
-
-
-# Call type
-
-# Primary and Secondary Calls
-
-```{r, eval = FALSE}
 # total type of points with primary and secondary 
+ptob_type_p <- ptsdf %>%
+  filter(!is.na(mapunit1)) %>%
+  st_drop_geometry() %>%
+  dplyr::group_by(observer) %>%
+  dplyr::summarise(primary = n())
+
+ptob_type_s <-  ptsdf%>%
+  st_drop_geometry() %>%
+  filter(!is.na(mapunit2)) %>%
+  group_by(observer) %>%
+  dplyr::summarise(secondary = n())
+
+trans_type <- left_join(ptob_type_p, ptob_type_s,by = join_by(observer)) %>%
+  mutate(pc.sec = round((secondary/primary * 100),0))
+
+
+knitr::kable(trans_type)
+
+
+
+```
+
+There were `r length(noobs$observer)` observers recording data, including unnamed recorders (NA). The table below shows the total calls and the proportion of calls which also had a secondary call. 
+
+```{r, include = FALSE}
+# total type of points with primary and secondary 
+
 pt_type_p <- ptsdf  %>%
   group_by(data_type) %>%
   dplyr::summarise(all.calls = n())
@@ -129,144 +170,80 @@ pt_type_s <- ptsdf %>%
   dplyr::summarise(sec.calls = n())
 
 pt_type <- left_join(pt_type_p, pt_type_s) %>%
-  mutate(percent.sec = sec.calls/all.calls * 100)
+  mutate(percent.sec = sec.calls/all.calls * 100) 
 
 #pt_types <- unique(pt_type$data_type)
 
-kable(pt_type)
+knitr::kable(pt_type)
 
 ```
+## Mapunits per BGC
 
-```{r, echo = FALSE, fig.width = 10, fig.height=10}
-#all_trans
-
-trans_f <- all_trans %>%
+```{r, echo = FALSE}
+ppts <- ptsdf %>%
   mutate(mapunit2 = ifelse(mapunit2 == "", NA, mapunit2),
          mapunit1 = ifelse(mapunit1 == "", NA, mapunit1)) %>%
   group_by(mapunit1, mapunit2) %>%
-  dplyr::summarise(length = sum(length)) %>%
-  ungroup()
-  
-# primary calls: 
-trans_f_p <- trans_f %>%
-  filter(is.na(mapunit2)) 
+  dplyr::mutate(count = n()) %>%
+  ungroup()%>%
+  filter(is.na(mapunit2))
 
-# format secondary calls:
-trans_f_s12 <- trans_f %>%
-  filter(!is.na(mapunit2)) %>%
-  mutate(order = "mapunit12")
-       
-trans_f_s21 <- trans_f %>%
-  filter(!is.na(mapunit2)) %>%
-  mutate(order = "mapunit21",
-         mapunit3 = mapunit1, 
-         mapunit4 = mapunit2) %>%
-  dplyr::select(-c(mapunit1, mapunit2)) %>%
-  dplyr::rename(mapunit1 = mapunit4, 
-                mapunit2 = mapunit3)
-
-trans_secondary <- bind_rows(trans_f_s12, trans_f_s21) %>%
-  arrange(mapunit1, mapunit2) %>%
-  group_by(mapunit1, mapunit2) %>%
-  dplyr::summarise(length = sum(length)) 
-
-trans_secondary_f1 <- trans_secondary %>%
-  group_by(length) %>%
-  arrange(length, group_by = TRUE) %>%
-  aggregate(.~length, . , FUN=head, 1) %>%
-  dplyr::select(mapunit1, mapunit2, length)%>%
-  arrange(mapunit1) %>%
-  mutate(length = round(length, 2))
-
-
-trans_summary <- bind_rows(trans_f_p, trans_secondary_f1) 
-  
-trans_total <- trans_summary %>%
-  arrange(mapunit1) %>%
-  rowwise() %>%
+ppts <- ppts %>%
+  dplyr::arrange(mapunit1) %>%
+  dplyr::rowwise() %>%
   mutate(bgc = unlist(strsplit(mapunit1, "/"))[1]) %>%
   mutate(bgc = ifelse(stringr::str_detect(mapunit1, "/"), bgc, "non-forest")) %>%
-  ungroup() %>%
-  mutate(length = as.numeric(round(length, 1))) %>%
-  filter(!is.na(mapunit1)) %>%
-  mutate(mapunit12 = ifelse(is.na(mapunit2), mapunit1, paste0(mapunit1, "/", mapunit2)))
+  ungroup()
 
-bgc_list <- unique(trans_total$bgc)
+ppts <- ppts %>%
+  dplyr::select(mapunit1, bgc) %>% 
+  group_by(mapunit1)%>%
+  dplyr::mutate(count = n()) %>%
+  dplyr::distinct()
+
+pptsbec <- ppts %>%
+  dplyr::group_by(bgc) %>%
+  dplyr::summarise(bgc_freq = sum(count)) 
+ # mutate(prop = round(count/sum(count),3))
+
+ppts <- ppts %>%
+  dplyr::left_join(pptsbec) %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(prop = round(count/bgc_freq,3)*100) %>%
+  arrange(bgc)
+
+#knitr::kable(ppts)
+
+bgc_list <- unique(ppts$bgc)
 
 ```
 
-The length of calls per bgc varied, along with proportion of primary and secondary calls. Figures below show the length of calls for all data types grouped by predominant bgc.
-
-```{r, echo = FALSE, fig.width= 12, fig.height = 16}
+```{r, echo = FALSE, fig.width = 8, fig.height=5}
 # plot the freqency 
 
 for(b in bgc_list) {
  # b = unique(pt_total$bgc)[3]
-  pt_total_bgc <- trans_total %>%
+  pt_total_bgc <- ppts %>%
     filter(bgc == b)
   
-  p <- ggplot(pt_total_bgc , aes(y = reorder(mapunit12, length), x = length)) +
+  p <- ggplot(pt_total_bgc , aes(x = reorder(mapunit1, prop), y = prop)) +
   geom_bar(stat = "identity") + 
+  theme(axis.text.x = element_text(angle = 90))+
+  #theme_pem()+
+  colorspace::scale_fill_discrete_sequential(palette = "Light Grays")
+
   labs(title = b, y = "mapunit")
   
   print(p)
   
 }
-
 ```
 
+## Appendices
 
-```{r, eval = FALSE}
+The number of points per transects. Note this is the raw points and not the processed transects so point numbers will vary. 
 
-# group by observer
-all_trans_ob <- all_trans %>%
-  dplyr::group_by(transect_id) %>%
-  tidyr::fill(observer, .direction = "downup")
-
-all_trans_ob_sum <- all_trans_ob %>%
-   group_by(transect_id, observer) %>%
-   dplyr::summarise(count = n())
-
-trans_ob_p <- all_trans_ob %>%
- # dplyr::filter(is.na(mapunit2)) %>%
-  group_by(observer) %>%
-  summarise(all.calls = sum(length))
-
-trans_ob_s <- all_trans_ob %>%
-  dplyr::filter(!is.na(mapunit2)) %>%
-  group_by(observer) %>%
-  summarise(sec.calls = sum(length))
-
-trans_obs_type <- left_join(trans_ob_p, trans_ob_s) %>%
-  mutate(pc.sec = round((sec.calls/all.calls * 100),1))
-
-trans_obs_type<- trans_obs_type %>%
-  mutate(observer = case_when(
-    observer == "EAC GP" ~ "EAC",
-    observer == "EAC GCP" ~ "EAC",
-    observer == "EC" ~ "EAC",
-    observer == "CC LJ" ~ "CC",
-    observer == "DF LJ" ~ "DF",
-    observer =="DJM DF" ~ "DJM",
-    observer == "PD AR" ~ "PD", 
-    observer =="SRan" ~ "SR",
-    observer == "SR/MZ" ~ "SR",
-    observer == "WM" ~ "WHM",
-        TRUE ~ observer)) %>%
-      group_by(observer) %>%
-      summarise(across(where(is.numeric), sum)) %>%
-  mutate(pc.sec = round(sec.calls/all.calls * 100,1))
-
-
+```{r}
+knitr::kable(nopts)
 ```
-
-There were `r length(trans_ob_s$observer)` observers recording data, including unnamed recorders (NA). The table below shows the total calls and the proportion of calls which also had a secondary call. The average proportion of transect length that has a secondary call was `r mean(trans_ob_s$pc.sec)`. Note this data does not include repeat transects, in which multiple observers recorded at the same location. 
-
-```{r, results  = "asis", hide = TRUE, echo = FALSE}
-
-kable(trans_obs_type)
-
-```
-
-
 
