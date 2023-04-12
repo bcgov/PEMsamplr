@@ -60,7 +60,7 @@ theme_pem_foundation <- function(base_size, base_family) {
 # colour themes: options
 #scale_fill_discrete_sequential(palette = "Light Grays")
 #scale_fill_discrete_sequential(palette = "Blues")
-#require(flextable)
+require(flextable)
 init_flextable_defaults()
 set_flextable_defaults(
   font.family = "Helvetica",

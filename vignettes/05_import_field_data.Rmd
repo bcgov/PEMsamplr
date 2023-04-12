@@ -11,16 +11,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Import and Clean Field data 
 
-Once the field data has been collected, we can preprocesses. 
-Depending on the size of the study area or areas, we reccomend storing the track and point data in a spatial file or database. 
+Once the field data has been collected, we can preprocess to standardize the fields and datatypes. Depending on the size of the study area or areas, we recommend storing the track and point data in a spatial file or database. 
 
-In this example we will process a group of spatial files - either shapefiles or geopackages and tidy them to be put into a central database/spatial database.
+In this example we will process a group of spatial files - either shapefiles or geopackages and standardize them to be put into a central database/spatial database.
 
 In this example we will use some test data
 
 ```{r libraries}
-
 devtools::load_all()
+
 library(PEMprepr)
 library(sf)
 library(foreach)
