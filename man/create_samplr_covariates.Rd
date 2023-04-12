@@ -33,6 +33,9 @@ create_samplr_covariates(
 
 \item{saga_param}{named list. Parameters that are fed to SAGA MRVBF function. IF supplied it must contain all parameters specified in the SAGA command.}
 }
+\value{
+\strong{SpatRast} series of rast objects
+}
 \description{
 Generates base landscape covariates from a 25m TRIM DEM using SAGA GIS and converts to classes for use in the sample plan cLHS
 }

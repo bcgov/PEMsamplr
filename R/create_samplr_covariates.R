@@ -15,14 +15,20 @@
 #' @param covariates character vector of covariates to create. Can be any of c("mrvbf", "dah", "landform")
 #' @importFrom magrittr "%>%"
 #' @keywords SAGA, covariates, predictors, raster
+#' @return **SpatRast** series of rast objects
 #' @export
 #' @examples
-#create_samplr_covariates(dtm = dtm,SAGApath ="C:/SAGA/saga-7.7.0_x64/",
-#                          output =  output, sieve_size = 10,rtemplate = r25,
+# covs <- create_samplr_covariates(dtm = dtm,
+#                          rtemplate = r25,
+#                          SAGApath ="C:/SAGA/saga-7.7.0_x64/",
+#                          output =  output,
+#                          covariates = c("mrvbf", "dah", "landform"),
+#                          sieve_size = 10,
 #                          dah_threshold = 0.2,
 #                          saga_param = list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
 #                                             P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
-#                                             CLASSIFY = 1, MAX_RES = 100), covariates = covs)
+#                                             CLASSIFY = 1, MAX_RES = 100)
+#                           )
 
 create_samplr_covariates <- function(dtm = dtm,
                                      rtemplate = rtemplate,
@@ -32,8 +38,8 @@ create_samplr_covariates <- function(dtm = dtm,
                                      sieve_size = 10,
                                      dah_threshold = 0.2,
                                      saga_param = list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
-                                                                     P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
-                                                                     CLASSIFY = 1, MAX_RES = 100)
+                                                    P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
+                                                    CLASSIFY = 1, MAX_RES = 100)
                                      ){
 
   ##### Link SAGA to R --------------------------------------------------

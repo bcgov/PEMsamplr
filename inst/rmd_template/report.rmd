@@ -88,7 +88,7 @@ knitr::kable(trans_type)
 ```
 
 ## Transect summary 
-The number of sites and slices per BGC. A full list of transect points per trasnect are show in Appendices below
+The number of sites and slices per BGC. A full list of transect points per transect are show in Appendices below
 
 ```{r, echo = FALSE, fig.width = 8, fig.height=5}
 # no of slices
@@ -152,10 +152,9 @@ trans_type <- left_join(ptob_type_p, ptob_type_s,by = join_by(observer)) %>%
 knitr::kable(trans_type)
 
 
-
 ```
 
-There were `r length(noobs$observer)` observers recording data, including unnamed recorders (NA). The table below shows the total calls and the proportion of calls which also had a secondary call. 
+There were `r length(trans_type$observer)` observers recording data, including unnamed recorders (NA). The table below shows the total calls and the proportion of calls which also had a secondary call. 
 
 ```{r, include = FALSE}
 # total type of points with primary and secondary 
@@ -177,7 +176,10 @@ pt_type <- left_join(pt_type_p, pt_type_s) %>%
 knitr::kable(pt_type)
 
 ```
+
 ## Mapunits per BGC
+
+These plots indicate the pure calls (only primary calls).Not including secondary transition calls. 
 
 ```{r, echo = FALSE}
 ppts <- ptsdf %>%
@@ -215,6 +217,7 @@ ppts <- ppts %>%
 #knitr::kable(ppts)
 
 bgc_list <- unique(ppts$bgc)
+bgc_list <- bgc_list[!is.na(bgc_list)]
 
 ```
 
@@ -222,17 +225,19 @@ bgc_list <- unique(ppts$bgc)
 # plot the freqency 
 
 for(b in bgc_list) {
- # b = unique(pt_total$bgc)[3]
+ 
+  #b = "ESSFmc"
   pt_total_bgc <- ppts %>%
     filter(bgc == b)
   
-  p <- ggplot(pt_total_bgc , aes(x = reorder(mapunit1, prop), y = prop)) +
+  p <- ggplot(pt_total_bgc , aes(x = reorder(mapunit1, count, decreasing = TRUE), y = count)) +
   geom_bar(stat = "identity") + 
   theme(axis.text.x = element_text(angle = 90))+
   #theme_pem()+
-  colorspace::scale_fill_discrete_sequential(palette = "Light Grays")
-
-  labs(title = b, y = "mapunit")
+  colorspace::scale_fill_discrete_sequential(palette = "Light Grays")+
+  labs(title = b, y = "mapunit", x = "count")+
+  geom_text(data=pt_total_bgc, aes(label=paste0(prop,"%"),
+                               y=count+25), size=3)
   
   print(p)
   
