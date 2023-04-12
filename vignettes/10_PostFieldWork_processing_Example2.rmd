@@ -42,6 +42,11 @@ points <- format_fielddata(rawdat, transect_layout_buf)
 sf::st_write(points, file.path(cleandat, "s1_points.gpkg"), delete_layer = TRUE)
 
 
+# split apart repeat samples and incidental samples 
+inc_points <- points %>% dplyr::filter(data_type == "incidental")
+points <- points %>% dplyr::filter(data_type != "incidental")
+
+
 # format tracklog
 
 tracks <- format_tracklog(rawdat, transect_layout_buf)
@@ -66,12 +71,6 @@ st_write(processed_transects,  file.path(cleandat, "proc_s1_transects.gpkg"),
 # Create a Summary of the training point data
 
 trainingpt_report(tpts = points, trans = processed_transects, out_dir = cleandat)
-
-
-
-
-
-
 
 
 
@@ -106,6 +105,15 @@ if("ID" %in% colnames(processed_transects) == FALSE){
 }
 
 processed_transects_id <- st_drop_geometry(processed_transects)
+
+
+# make sure that the points are also attributed
+
+
+
+
+
+
 
 # transv <- terra::vect(file.path(cleandat, "proc_s1_transects_datecreek.gpkg"))
 
