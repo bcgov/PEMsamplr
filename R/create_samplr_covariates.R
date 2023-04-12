@@ -4,7 +4,6 @@
 #'
 #' This script has been tested with SAGA 8.4 on Windows
 #' Depending on your system the path to `saga_cmd` may need to be specified.
-#'
 #' @param dtm is a 25m dtm raster object ideally cropped to the AOI watershed boundaries
 #' @param SAGApath Is the location of SAGA on your system.  On linux systems with SAGA GIS installed Use `SAGApath = ""`
 #' @param output Location of where rasters will be saved.
@@ -18,17 +17,7 @@
 #' @return **SpatRast** series of rast objects
 #' @export
 #' @examples
-# covs <- create_samplr_covariates(dtm = dtm,
-#                          rtemplate = r25,
-#                          SAGApath ="C:/SAGA/saga-7.7.0_x64/",
-#                          output =  output,
-#                          covariates = c("mrvbf", "dah", "landform"),
-#                          sieve_size = 10,
-#                          dah_threshold = 0.2,
-#                          saga_param = list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,
-#                                             P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,
-#                                             CLASSIFY = 1, MAX_RES = 100)
-#                           )
+#' create_samplr_covariates(dtm = dtm,rtemplate = r25,SAGApath ="C:/SAGA/saga-7.7.0_x64/",output =  output,covariates = c("mrvbf", "dah", "landform"),sieve_size = 10,dah_threshold = 0.2,saga_param = list(T_SLOPE = 64, TPCTL_V = 6, T_PCTL_R = 2,P_SLOPE = 4.0, P_PCTL = 3.0, UPDATE = 1,CLASSIFY = 1, MAX_RES = 100))
 
 create_samplr_covariates <- function(dtm = dtm,
                                      rtemplate = rtemplate,
