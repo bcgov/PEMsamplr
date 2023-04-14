@@ -15,7 +15,7 @@ In many of the site series we can roll up finer classification into broader grou
 
 In this case we have a pre-populated legend. 
 
-Once the final level of modelling is decided we convert points to line segments, and then extract all points of the raster size in whcih we will model with, default of 5m. 
+Once the final level of modelling is decided we convert points to line segments, and then extract all points of the raster size in whih we will model with, default of 5m. 
 
 
 
