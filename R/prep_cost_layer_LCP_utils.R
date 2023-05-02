@@ -84,50 +84,50 @@ lcp_dist_mat <- function(x, origins, destinations, cost_distance = FALSE) {
 
   return(distMat)
 }
+#
+# neighbourhood <- function(neighbours) {
+#
+#   neighbours_32 <- matrix(c(0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1,
+#                             1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0), nrow = 7, ncol = 7, byrow = TRUE)
+#
+#   neighbours_48 <- matrix(c(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1,
+#                             1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0,
+#                             1, 0, 1, 0, 1, 0, 1, 0, 1, 0), nrow = 9, ncol = 9, byrow = TRUE)
+#
+#   if (inherits(neighbours, "matrix")) {
+#     neighbours <- neighbours
+#   } else if (neighbours == 4) {
+#     neighbours <- 4
+#   } else if (neighbours == 8) {
+#     neighbours <- 8
+#   } else if (neighbours == 16) {
+#     neighbours <- 16
+#   } else if (neighbours == 32) {
+#     neighbours <- neighbours_32
+#   } else if (neighbours == 48) {
+#     neighbours <- neighbours_48
+#   } else (
+#     stop(paste0("neighbours argument invalid. Expecting 4, 8, 16, 32, 48, or a matrix object"))
+#   )
+#
+#   return(neighbours)
+# }
 
-neighbourhood <- function(neighbours) {
-
-  neighbours_32 <- matrix(c(0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1,
-                            1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0), nrow = 7, ncol = 7, byrow = TRUE)
-
-  neighbours_48 <- matrix(c(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1,
-                            1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0,
-                            1, 0, 1, 0, 1, 0, 1, 0, 1, 0), nrow = 9, ncol = 9, byrow = TRUE)
-
-  if (inherits(neighbours, "matrix")) {
-    neighbours <- neighbours
-  } else if (neighbours == 4) {
-    neighbours <- 4
-  } else if (neighbours == 8) {
-    neighbours <- 8
-  } else if (neighbours == 16) {
-    neighbours <- 16
-  } else if (neighbours == 32) {
-    neighbours <- neighbours_32
-  } else if (neighbours == 48) {
-    neighbours <- neighbours_48
-  } else (
-    stop(paste0("neighbours argument invalid. Expecting 4, 8, 16, 32, 48, or a matrix object"))
-  )
-
-  return(neighbours)
-}
 
 
-
-calculate_distance <- function(x, adj) {
-
-  xy1 <- terra::xyFromCell(x, adj[, 1])
-  xy2 <- terra::xyFromCell(x,adj[, 2])
-
-  xy3 <- (xy1[,1] - xy2[,1])^2
-  xy4 <- (xy1[,2] - xy2[,2])^2
-
-  dist <- sqrt(xy3 + xy4)
-
-  return(dist)
-
-}
+# calculate_distance <- function(x, adj) {
+#
+#   xy1 <- terra::xyFromCell(x, adj[, 1])
+#   xy2 <- terra::xyFromCell(x,adj[, 2])
+#
+#   xy3 <- (xy1[,1] - xy2[,1])^2
+#   xy4 <- (xy1[,2] - xy2[,2])^2
+#
+#   dist <- sqrt(xy3 + xy4)
+#
+#   return(dist)
+#
+# }
 
 
 cost <- function(cost_function, crit_slope, percentile) {
