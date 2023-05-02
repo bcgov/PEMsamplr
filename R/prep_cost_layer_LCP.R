@@ -66,7 +66,7 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
     stop("supplied digital elevation model (DEM) is invalid. x argument expects DEM with a projected coordinate system")
   }
 
-  neighbours <- neighbourhood(neighbours = neighbours)
+  neighbours <- leastcostpath::neighbourhood(neighbours = neighbours)
 
   # prepare slope component
 
@@ -81,8 +81,8 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
   rdsAll <-  data.table::as.data.table(roads) %>% sf::st_as_sf()
 
   rSpd <- data.table::data.table(
-    road_surface = c("resource", "unclassified","unclassifed", "recreation", "trail", "local", "collector", "highway", "service", "arterial", "freeway", "strata", "lane", "private", "yield", "ramp", "restricted", "water", "ferry", "boat", "driveway","unclassifed"),
-    speed_kmh = c(30, 30, 30, 50, 4.5, 50, 80, 80, 50, 80, 80, 30, 30, 4.5, 30, 60, 4.5, 0.1, 0.1,0.1, 4.5, 30))
+    road_surface = c("resource", "unclassified","unclassifed", "recreation", "trail", "local", "collector", "highway", "service", "arterial", "freeway", "strata", "lane", "private", "yield", "ramp", "restricted", "water", "ferry", "boat", "driveway"),
+    speed_kmh = c(30, 30, 30, 50, 4.5, 50, 80, 80, 50, 80, 80, 30, 30, 4.5, 30, 60, 4.5, 0.1, 0.1,0.1, 4.5))
   #"speed" = c(3000, 3000, 5000, 4.5, 5000, 8000, 8000, 50, 8000, 8000, 3000, 3000, 4.5, 3000, 6000, 4.5, 0.1, 3000, 4.5, 3000))
 
   # check that all road types are include?
