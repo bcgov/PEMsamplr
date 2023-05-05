@@ -23,7 +23,7 @@ knitr::opts_chunk$set(echo = TRUE, cache=FALSE,
 #library(data.table)
 #library(rmarkdown)
 #library(knitr)
-#library(dplyr)
+library(dplyr)
 #library(ggplot2)
 
 tpts <- params$tpts
@@ -44,7 +44,7 @@ ptsdf <- tpts %>%
 
 pttype <- ptsdf  %>% 
   dplyr::select(data_type) %>%
-  group_by(data_type)%>%
+  dplyr::group_by(data_type)%>%
   dplyr::mutate(count = n()) %>%
   dplyr::distinct()
 
@@ -56,8 +56,8 @@ knitr::kable(pttype)
 
 ```{r, echo = FALSE}
 all_trans <- trans %>%  
-    mutate(length = st_length(.)) %>%
-    st_drop_geometry() 
+    dplyr::mutate(length = st_length(.)) %>%
+    sf::st_drop_geometry() 
 
 # total type of points with primary and secondary 
 trans_type_p <- all_trans %>%
@@ -65,15 +65,15 @@ trans_type_p <- all_trans %>%
   dplyr::summarise(primary = sum(length, na.rm = TRUE))
 
 trans_type_s <- all_trans %>%
-  filter(!is.na(mapunit2)) %>%
-  group_by(data_type) %>%
+  dplyr::filter(!is.na(mapunit2)) %>%
+  dplyr::group_by(data_type) %>%
   dplyr::summarise(secondary = sum(length, na.rm = TRUE))
 
 trans_type <- left_join(trans_type_p, trans_type_s) %>%
-  mutate(pc.sec = round((secondary/primary * 100),1))
+  dplyr::mutate(pc.sec = round((secondary/primary * 100),1))
 
 trans_type_long <- left_join(trans_type_p, trans_type_s) %>%
-  mutate(pc.sec = secondary/primary * 100)
+  dplyr::mutate(pc.sec = secondary/primary * 100)
 
 trans_types <- unique(trans_type$data_type)
 
@@ -94,17 +94,17 @@ The number of sites and slices per BGC. A full list of transect points per trans
 # no of slices
 nopts <- ptsdf %>% 
   dplyr::select(transect_id) %>%
-  group_by(transect_id) %>%
+  dplyr::group_by(transect_id) %>%
   dplyr::mutate(count = n()) %>%
   dplyr::distinct() %>% 
-  arrange(transect_id)
+  dplyr::arrange(transect_id)
 
 trans_slice_site <- nopts %>%
   dplyr::rowwise() %>%
-  mutate(bgc = unlist(strsplit(transect_id, "_"))[1]) %>%
-  mutate(slice_site = unlist(strsplit(transect_id, "_"))[2]) %>%
-  mutate(slice = stringr::str_sub(slice_site, 1,1)) %>%
-  mutate(site = stringr::str_sub(slice_site, 3,3))       
+  dplyr::mutate(bgc = unlist(strsplit(transect_id, "_"))[1]) %>%
+  dplyr::mutate(slice_site = unlist(strsplit(transect_id, "_"))[2]) %>%
+  dplyr::mutate(slice = stringr::str_sub(slice_site, 1,1)) %>%
+  dplyr::mutate(site = stringr::str_sub(slice_site, 3,3))       
 
 trDat_slices <- trans_slice_site %>%
   dplyr::group_by (bgc) %>%
@@ -134,19 +134,19 @@ ggplot2::ggplot(trDat_slices, aes(bgc, number, fill = type)) +
 
 # total type of points with primary and secondary 
 ptob_type_p <- ptsdf %>%
-  filter(!is.na(mapunit1)) %>%
-  st_drop_geometry() %>%
+  dplyr::filter(!is.na(mapunit1)) %>%
+  sf::st_drop_geometry() %>%
   dplyr::group_by(observer) %>%
   dplyr::summarise(primary = n())
 
 ptob_type_s <-  ptsdf%>%
-  st_drop_geometry() %>%
-  filter(!is.na(mapunit2)) %>%
-  group_by(observer) %>%
+  sf::st_drop_geometry() %>%
+  dplyr::filter(!is.na(mapunit2)) %>%
+  dplyr::group_by(observer) %>%
   dplyr::summarise(secondary = n())
 
-trans_type <- left_join(ptob_type_p, ptob_type_s,by = join_by(observer)) %>%
-  mutate(pc.sec = round((secondary/primary * 100),0))
+trans_type <- left_join(ptob_type_p, ptob_type_s, by = join_by(observer)) %>%
+  dplyr::mutate(pc.sec = round((secondary/primary * 100),0))
 
 
 knitr::kable(trans_type)
@@ -160,16 +160,16 @@ There were `r length(trans_type$observer)` observers recording data, including u
 # total type of points with primary and secondary 
 
 pt_type_p <- ptsdf  %>%
-  group_by(data_type) %>%
+  dplyr::group_by(data_type) %>%
   dplyr::summarise(all.calls = n())
 
 pt_type_s <- ptsdf %>%
-  filter(!is.na(mapunit2)) %>%
-  group_by(data_type) %>%
+  dplyr::filter(!is.na(mapunit2)) %>%
+  dplyr::group_by(data_type) %>%
   dplyr::summarise(sec.calls = n())
 
 pt_type <- left_join(pt_type_p, pt_type_s) %>%
-  mutate(percent.sec = sec.calls/all.calls * 100) 
+  dplyr::mutate(percent.sec = sec.calls/all.calls * 100) 
 
 #pt_types <- unique(pt_type$data_type)
 
@@ -183,23 +183,23 @@ These plots indicate the pure calls (only primary calls).Not including secondary
 
 ```{r, echo = FALSE}
 ppts <- ptsdf %>%
-  mutate(mapunit2 = ifelse(mapunit2 == "", NA, mapunit2),
+  dplyr::mutate(mapunit2 = ifelse(mapunit2 == "", NA, mapunit2),
          mapunit1 = ifelse(mapunit1 == "", NA, mapunit1)) %>%
-  group_by(mapunit1, mapunit2) %>%
+  dplyr::group_by(mapunit1, mapunit2) %>%
   dplyr::mutate(count = n()) %>%
-  ungroup()%>%
-  filter(is.na(mapunit2))
+  dplyr::ungroup()%>%
+  dplyr::filter(is.na(mapunit2))
 
 ppts <- ppts %>%
   dplyr::arrange(mapunit1) %>%
   dplyr::rowwise() %>%
-  mutate(bgc = unlist(strsplit(mapunit1, "/"))[1]) %>%
-  mutate(bgc = ifelse(stringr::str_detect(mapunit1, "/"), bgc, "non-forest")) %>%
-  ungroup()
+  dplyr::mutate(bgc = unlist(strsplit(mapunit1, "/"))[1]) %>%
+  dplyr::mutate(bgc = ifelse(stringr::str_detect(mapunit1, "/"), bgc, "non-forest")) %>%
+  dplyr::ungroup()
 
 ppts <- ppts %>%
   dplyr::select(mapunit1, bgc) %>% 
-  group_by(mapunit1)%>%
+  dplyr::group_by(mapunit1)%>%
   dplyr::mutate(count = n()) %>%
   dplyr::distinct()
 
@@ -212,7 +212,7 @@ ppts <- ppts %>%
   dplyr::left_join(pptsbec) %>%
   dplyr::rowwise() %>%
   dplyr::mutate(prop = round(count/bgc_freq,3)*100) %>%
-  arrange(bgc)
+  dplyr::arrange(bgc)
 
 #knitr::kable(ppts)
 
@@ -228,7 +228,7 @@ for(b in bgc_list) {
  
   #b = "ESSFmc"
   pt_total_bgc <- ppts %>%
-    filter(bgc == b)
+    dplyr::filter(bgc == b)
   
   p <- ggplot(pt_total_bgc , aes(x = reorder(mapunit1, count, decreasing = TRUE), y = count)) +
   geom_bar(stat = "identity") + 
