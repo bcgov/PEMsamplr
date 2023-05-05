@@ -20,5 +20,4 @@ This includes (lakes, and permanently changed landscape i.e roads)
 }
 \examples{
 create_cost_nosample <- function(vec_dir, cost)
-
 }

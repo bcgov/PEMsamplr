@@ -5,6 +5,8 @@
 #' @param bgc Biogeoclimatic classification vector (sf polygon/multipolygon)
 #' @param binned_landscape Raster (SpatRast) with binned landscapes, output of create_binned_landscape() function
 #' @param cost Raster layer (SpatRast) with cost layer
+#' @importFrom terra rasterize
+#' @importFrom dplyr select mutate case_when
 #' @return data.frame
 #' @export
 #'

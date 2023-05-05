@@ -1,17 +1,15 @@
-
 #' Check major road layer
 #' Runs a number of basic checks on the road layer prior to using in costlayer
 #'
 #' @param roads sf object "road_major.gpkg"
-#'
 #' @return TRUE if all checks run correctly
-#' @export
-#' @import dplyr
+#' @importFrom sf st_read st_drop_geometry
+#' @importFrom dplyr select rename tibble filter
 #' @importFrom magrittr "%>%"
-#'
+#' @export
 #' @examples
 #' check_road_layer(roads)
-#'
+
 check_road_layer <- function(roads){
 
   ## read in the major roads

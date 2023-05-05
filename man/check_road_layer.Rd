@@ -19,5 +19,4 @@ Runs a number of basic checks on the road layer prior to using in costlayer
 }
 \examples{
 check_road_layer(roads)
-
 }

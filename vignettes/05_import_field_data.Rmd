@@ -116,15 +116,25 @@ processed_transects <- st_read()
 # Create a Summary of the training point data
 
 Generate a html report on the summary of training point data. 
-this still needs alot of work to get this running 
 
 ```{r}
+
 library(dplyr)
 tpts<- st_read(file.path(cleandat, "s2_points.gpkg"))
 trans <- st_read(file.path(cleandat, "proc_s1_transects_datecreek.gpkg"))
 out_dir <- cleandat
 
-trainingpt_report(tpts = tpts, trans = trans, out_dir = out_dir)
+
+# testing: 
+
+library(sf)
+points <- st_read("D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/20_sample_plan/10_standard_sample/40_transect_data/clean_field_data/s1_points.gpkg")
+
+trans = st_read("D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/20_sample_plan/10_standard_sample/40_transect_data/clean_field_data/proc_s1_transects.gpkg")
+
+out_dir  = "D:/PEM_DATA/DateCreek_AOI/DateCreek_AOI/20_sample_plan/10_standard_sample/40_transect_data/clean_field_data"
+
+trainingpt_report(tpts = points, trans = trans, out_dir = out_dir)
 
 
 ```
