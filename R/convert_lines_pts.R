@@ -12,7 +12,7 @@
 #' convert_to_pts(lines, trast)
 #'
 
-convert_to_pts <- function(processed_transects, trast) {
+convert_lines_pts <- function(processed_transects, trast) {
 
   #processed_transects <- inc_pts
 
