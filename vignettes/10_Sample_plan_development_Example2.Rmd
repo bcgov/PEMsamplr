@@ -416,6 +416,8 @@ build_site_transects(sample_points, cost, mask_poly, centroid_distance = 400, ou
 
 
 # export a tracking sheet for the samples 
+# export a tracking sheet for the samples 
+outname = "s1_sampling.gpkg"
 
 allpoints <- grep("points_all", sf::st_layers(file.path(out_path, "s1_sampling.gpkg"))$name, value = T)
 boi <- stringr::str_extract(allpoints, "[^_]+")
