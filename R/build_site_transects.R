@@ -1,4 +1,3 @@
-
 #' Build site transects
 #' Build the associates triangles, buffered triangles and selected paired triangle to sample, based on lowest cost.
 #'
@@ -162,10 +161,11 @@ build_site_transects <- function(sample_points, cost, mask_poly, centroid_distan
     dplyr::filter(!is.na(rotation))
 
   all_points <- rbind(sample_points_clhs, sample_points_rotations)  %>%
-    dplyr::mutate(id = paste(paste(bgc,slice_num, point_num,cid, sep = "."),rotation, sep = "_"))
+    dplyr::mutate(id = paste(paste(bgc, paste(slice_num, point_num,sep = "."), cid, sep = "_"),rotation, sep = "_"))
 
   paired_sample <- rbind(sample_points_clhs, sample_points_low_cost)  %>%
-    dplyr::mutate(id = paste(paste(bgc,slice_num, point_num,cid, sep = "."),rotation, sep = "_"))
+    dplyr::mutate(id = paste(paste(bgc, paste(slice_num, point_num,sep = "."), cid, sep = "_"),rotation, sep = "_"))
+
 
   # Create triangle around each point and randomly rotate
   print( "generating site transects")
