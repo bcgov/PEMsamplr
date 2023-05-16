@@ -409,7 +409,6 @@ pattern = paste0(boi,"_exclude_poly.gpkg"), full.names = TRUE))
 st_crs(mask_poly) <- 3005
 
 
-
 # Generate the transects and poinst and output as geopacakage
 
 build_site_transects(sample_points, cost, mask_poly, centroid_distance = 400, out_path) 
