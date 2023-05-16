@@ -434,5 +434,31 @@ for (ii in 1:length(boi)) {
   
 }
 
+
+
+# export a tracking sheet for the samples
+# export a tracking sheet for the samples
+outname = "s1_sampling.gpkg"
+
+allpoints <- grep("points_all", sf::st_layers(file.path(out_path, "s1_sampling.gpkg"))$name, value = T)
+boi <- stringr::str_extract(allpoints, "[^_]+")
+
+for (ii in 1:length(boi)) {
+  #ii = 1
+  b <- boi[ii]
+  points <- st_read(file.path(out_path, outname), layer = paste0(b,"_points_all"))
+  pointsout <- points %>%
+    cbind(st_coordinates(points)) %>%
+    dplyr::select(bgc,id, rotation, X,Y) %>%
+    sf::st_drop_geometry() %>%
+    dplyr::mutate(Surveyor = "", Date_Completed = "", Transect_comment = "")
+ 
+  write.csv(pointsout, file.path(out_path, paste0(b, "_tracking_sheet.csv")))
+ 
+}
+
+```
+
+
 ```
 
