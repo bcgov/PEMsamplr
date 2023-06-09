@@ -117,8 +117,8 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
   # prepare slope component
 
   # identify cells and which are NA
-  cells <- which(!is.na(terra::values(x)))
-  na_cells <- which(is.na(terra::values(x)))
+  #cells <- which(!is.na(terra::values(x)))
+  #na_cells <- which(is.na(terra::values(x)))
 
   # get cells that are adjacent
   adj <- terra::adjacent(x = x, cells = cells, directions = neighbours, pairs = TRUE)
@@ -133,7 +133,7 @@ prep_cost_layers_lcp <- function(x, cost_function = "tobler offpath", neighbours
   #Calculate the rise/run
   rise <- (elev_values[adj[,2]] - elev_values[adj[,1]])
   # calculate the distance from each the adjacent pixal
-  run <- calculate_distance(x = x, adj = adj)
+  run <-leastcostpath::calculate_distance(x = x, adj = adj)
 
   mathematical_slope <- rise/run
 
