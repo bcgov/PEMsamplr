@@ -62,7 +62,6 @@ outdat <- "D:\\PEM_DATA\\DateCreek_AOI\\DateCreek_AOI\\10_clean_inputs\\30_train
 
 #1) Convert lines to points 
 
-
 We can choose to extract all adjoining points for each training point. 
 This process is done to overcome spatial missregulation errors. 
 
