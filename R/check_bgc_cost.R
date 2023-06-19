@@ -23,7 +23,7 @@ check_bgc_cost <- function(bgc, binned_landscape, cost){
   rcdf <- na.omit(rcdf)
   rcdf <- rcdf %>% dplyr::select(-c(x, y))
 
-  #names(rcdf) = c("BGC_LABEL","landscape_variable_validation", "cost")
+  names(rcdf)<- c("MAP_LABEL","landscape","cost")
 
   rcdf_class <- rcdf %>%
     dplyr::mutate(cost_code = dplyr::case_when(
