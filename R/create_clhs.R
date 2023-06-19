@@ -129,7 +129,7 @@ create_clhs <- function(all_cov, num_slices, to_include = NULL,
              point_num = rep(1:n_points, times = num_slices))]
   out_sf <- st_as_sf(out,coords = c("x","y"),crs = 3005)
   #dist_mat <- st_distance(out_sf,out_sf)
-  plot(all_cov$cost)
+  #plot(all_cov$cost)
   points(vect(out_sf["slice_num"]))
   return(out_sf)
 }
