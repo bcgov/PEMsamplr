@@ -5,42 +5,42 @@
 #were written by Joseph Lewis under the leastcostpath package V.2
 #They are reproduced here as they are not currently available outside the package
 #https://github.com/josephlewis/leastcostpath/blob/master/R/neighbourhood.R
-
-create_accum_cost <- function(x, origins, FUN = mean, rescale = FALSE) {
-
-  cs_rast <- terra::rast(nrow = x$nrow, ncol = x$ncol, xmin = x$extent[1], xmax = x$extent[2], ymin = x$extent[3], ymax = x$extent[4],crs = x$crs)
-
-  from_coords <- leastcostpath::get_coordinates(origins)
-  from_cell <- terra::cellFromXY(cs_rast, from_coords)
-
-  cm_graph <- igraph::graph_from_adjacency_matrix(x$conductanceMatrix, mode = "directed", weighted = TRUE)
-
-  igraph::E(cm_graph)$weight <- (1/igraph::E(cm_graph)$weight)
-
-  from_distances <- igraph::distances(cm_graph, v = from_cell,  mode="out", algorithm = "dijkstra")
-
-  accum_rasts <- c(rep(cs_rast, nrow(from_distances)))
-
-  for(i in 1:terra::nlyr(accum_rasts))  {
-
-    accum_rasts[[i]] <- terra::setValues(accum_rasts[[i]], from_distances[i,])
-
-  }
-
-  accum_rast <- terra::app(accum_rasts, fun = FUN)
-
-  accum_rast[is.infinite(accum_rast)] <- NA
-
-  if(rescale) {
-    rast_min <- terra::minmax(accum_rast)[1]
-    rast_max <- terra::minmax(accum_rast)[2]
-
-    accum_rast <- ((accum_rast - rast_min)/(rast_max - rast_min))
-  }
-
-  return(accum_rast)
-
-}
+#
+# create_accum_cost <- function(x, origins, FUN = mean, rescale = FALSE) {
+#
+#   cs_rast <- terra::rast(nrow = x$nrow, ncol = x$ncol, xmin = x$extent[1], xmax = x$extent[2], ymin = x$extent[3], ymax = x$extent[4],crs = x$crs)
+#
+#   from_coords <- leastcostpath::get_coordinates(origins)
+#   from_cell <- terra::cellFromXY(cs_rast, from_coords)
+#
+#   cm_graph <- igraph::graph_from_adjacency_matrix(x$conductanceMatrix, mode = "directed", weighted = TRUE)
+#
+#   igraph::E(cm_graph)$weight <- (1/igraph::E(cm_graph)$weight)
+#
+#   from_distances <- igraph::distances(cm_graph, v = from_cell,  mode="out", algorithm = "dijkstra")
+#
+#   accum_rasts <- c(rep(cs_rast, nrow(from_distances)))
+#
+#   for(i in 1:terra::nlyr(accum_rasts))  {
+#
+#     accum_rasts[[i]] <- terra::setValues(accum_rasts[[i]], from_distances[i,])
+#
+#   }
+#
+#   accum_rast <- terra::app(accum_rasts, fun = FUN)
+#
+#   accum_rast[is.infinite(accum_rast)] <- NA
+#
+#   if(rescale) {
+#     rast_min <- terra::minmax(accum_rast)[1]
+#     rast_max <- terra::minmax(accum_rast)[2]
+#
+#     accum_rast <- ((accum_rast - rast_min)/(rast_max - rast_min))
+#   }
+#
+#   return(accum_rast)
+#
+# }
 
 get_coordinates <- function(x) {
 
