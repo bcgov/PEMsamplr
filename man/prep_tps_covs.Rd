@@ -4,21 +4,37 @@
 \alias{prep_tps_covs}
 \title{Prepare training pts bgcs}
 \usage{
-prep_tps_covs(tpts, mcols, outdir = fid$model_inputs0310[2])
+prep_tps_covs(
+  tpts,
+  mcols,
+  res = 5,
+  corr_val = 0.7,
+  corr_plot = TRUE,
+  rastdir = fid$cov_dir_1020[2],
+  outdir = fid$model_inputs0310[2]
+)
 }
 \arguments{
 \item{tpts}{dataframe containing attributed and bgc selected points}
 
 \item{mcols}{string list of cov name}
 
+\item{res}{resolution at which modelling will be done default = 5}
+
+\item{corr_val}{numeric values of correlated cutoff, default = 0.7}
+
+\item{corr_plot}{TRUE/FALSE default = FALSE}
+
+\item{rastdir}{location of covarariates root folder, will use res to determine covars}
+
 \item{outdir}{location of output files for model, default selected based on strandard stucture}
 }
 \value{
-dataframe of final training pts
+dataframe of final training pts and output csv with reducedlist of covars
 }
 \description{
 Prepare training pts bgcs
 }
 \examples{
-prep_tps_covs(tpts, mcols, outdir = fid$model_inputs0310[2])
+final_tp <- prep_tps_covs(tpts, mcols,res = 5 ,corr_val = 0.7, corr_plot = TRUE,rastdir = fid$cov_dir_1020[2],outdir = fid$model_inputs0310[2])
 }
