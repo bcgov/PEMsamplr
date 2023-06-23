@@ -21,7 +21,7 @@ prep_tps_att <- function(clean_dir = fid$trainpts_maps[2],
   # read in the raster template used for modelling (i.e 5m resolution)
   trast <- terra::rast(file.path(covdir, res_folder, "template.tif"))
 
-  processed_transects <- st::st_read(file.path(cleandat, "proc_s1_transects.gpkg"))
+  processed_transects <- sf::st_read(file.path(cleandat, "proc_s1_transects.gpkg"))
 
   # convert lines to points
   allpts <- convert_lines_pts(processed_transects, trast)
