@@ -20,9 +20,9 @@ prep_tps_att <- function(clean_dir = fid$trainpts_maps[2],
   res_folder = paste0(res,"m")
 
   # read in the raster template used for modelling (i.e 5m resolution)
-  trast <- terra::rast(file.path(covdir, res_folder, "template.tif"))
+  trast <- terra::rast(file.path(cov_dir, res_folder, "template.tif"))
 
-  processed_transects <- sf::st_read(file.path(cleandat, "proc_s1_transects.gpkg"))
+  processed_transects <- sf::st_read(file.path(clean_dir, "proc_s1_transects.gpkg"))
 
   # convert lines to points
   allpts <- convert_lines_pts(processed_transects, trast)
@@ -32,7 +32,7 @@ prep_tps_att <- function(clean_dir = fid$trainpts_maps[2],
 
   print("adding neighbours")
   # attribute points
-  allrasts <- file.path(covdir, res_folder)
+  allrasts <- file.path(cov_dir, res_folder)
   allpts <- attribute_points(tpoints_ne, allrasts)
 
   st_write(allpts, dsn = file.path(fid$trainpts_att[2], "allpts.gpkg"), delete_layer = TRUE)
