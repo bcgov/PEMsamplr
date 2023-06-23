@@ -13,6 +13,8 @@ prep_tps_att(
 \arguments{
 \item{clean_dir}{location of clean data point file}
 
+\item{res}{numeric resolution of data to be attributed}
+
 \item{cov_dir}{location of output file}
 }
 \value{

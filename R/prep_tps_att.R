@@ -3,6 +3,7 @@
 #' Prepares training points by adding neighbours, attributing values
 #'
 #' @param clean_dir location of clean data point file
+#' @param res numeric resolution of data to be attributed
 #' @param cov_dir location of output file
 #' @importFrom terra rast
 #' @importFrom sf st_read
