@@ -166,7 +166,6 @@ build_site_transects <- function(sample_points, cost, mask_poly, centroid_distan
   paired_sample <- rbind(sample_points_clhs, sample_points_low_cost)  %>%
     dplyr::mutate(id = paste(paste(bgc, paste(slice_num, point_num,sep = "."), cid, sep = "_"),rotation, sep = "_"))
 
-
   # Create triangle around each point and randomly rotate
   print( "generating site transects")
 
